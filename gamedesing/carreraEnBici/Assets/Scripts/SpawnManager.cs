@@ -20,8 +20,8 @@ public class SpawnManager : MonoBehaviour
     [SerializeField] private float[] lanePositions = { -3f, 0f, 3f };
 
     [Header("Spawn Settings")]
-    [SerializeField] private float spawnZ = 80f;
-    [SerializeField] private float despawnZ = -15f;
+    [SerializeField] private float spawnZ = -80f;
+    [SerializeField] private float despawnZ = 100f;
     [SerializeField] private float initialInterval = 3f;
     [SerializeField] private float minimumInterval = 1.5f;
     [SerializeField] private float difficultyRampSeconds = 60f;
