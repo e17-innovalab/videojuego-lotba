@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68d1441d3138bab40a9d5e7b022ea33f, type: 3}
+  m_Name: cone
+  m_EditorClassIdentifier: Lotba.CityRush::Lotba.CityRush.RushObstacleDefinition
+  id: cone
+  prefab: {fileID: 3790572540505639903, guid: a49ea2229e5f09d4d8273c27a4b894aa, type: 3}
+  width: 1.15
+  height: 1.22
+  length: 1
+  jumpable: 1
+  jumpClearance: 1.25
+  poolCapacity: 12
+  livery:
+    lineNumber: 
+    bodyColour: {r: 1, g: 1, b: 1, a: 1}
+    stripeColour: {r: 1, g: 1, b: 1, a: 1}
