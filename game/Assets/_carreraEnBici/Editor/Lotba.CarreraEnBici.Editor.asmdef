@@ -1,0 +1,6 @@
+{
+  "name": "Lotba.CarreraEnBici.Editor",
+  "rootNamespace": "Lotba.CarreraEnBici.Editor",
+  "includePlatforms": ["Editor"],
+  "autoReferenced": false
+}

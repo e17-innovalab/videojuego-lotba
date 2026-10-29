@@ -1,0 +1,9 @@
+{
+  "name": "Lotba.CarreraEnBici.Legacy",
+  "references": [
+    "Unity.InputSystem",
+    "UnityEngine.UI",
+    "Unity.TextMeshPro"
+  ],
+  "autoReferenced": false
+}
