@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f2c7bfd5218df6f4ebb04055bb2d661a, type: 3}
+  m_Name: GameSettings
+  m_EditorClassIdentifier: Lotba.Game::Lotba.Game.GameSettings
+  duration: 120
+  initialSpeed: 18
+  maximumSpeed: 28
+  accelerationTime: 35
+  laneChangeTime: 0.11
+  initialPatternInterval: 1.3
+  finalPatternInterval: 0.85
+  previewTime: 3.3
+  seed: 2710
+  cameraFollowTime: 0.13
+  cameraFollowStrength: 0.95
+  firstLevelCoins: 8
+  extraCoinsPerLevel: 3
+  streakDrainPerSecond: 0.025
+  levelUpReserve: 0.3

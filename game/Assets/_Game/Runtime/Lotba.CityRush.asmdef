@@ -1,9 +1,0 @@
-{
-  "name": "Lotba.CityRush",
-  "rootNamespace": "Lotba.CityRush",
-  "references": [
-    "Unity.InputSystem",
-    "UnityEngine.UI",
-    "Unity.TextMeshPro"
-  ]
-}

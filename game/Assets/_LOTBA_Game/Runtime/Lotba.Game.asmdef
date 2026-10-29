@@ -1,0 +1,9 @@
+{
+  "name": "Lotba.Game",
+  "rootNamespace": "Lotba.Game",
+  "references": [
+    "Unity.InputSystem",
+    "UnityEngine.UI",
+    "Unity.TextMeshPro"
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "name": "Lotba.Game.Editor",
+  "rootNamespace": "Lotba.Game.Editor",
+  "references": [
+    "Lotba.Game",
+    "Unity.InputSystem",
+    "UnityEngine.UI",
+    "Unity.TextMeshPro"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ]
+}

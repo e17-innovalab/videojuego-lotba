@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e5900be9a67b901489b9031045efef0e, type: 3}
+  m_Name: Obelisco
+  m_EditorClassIdentifier: Lotba.Game::Lotba.Game.MapDefinition
+  displayName: Obelisco
+  modules:
+  - {fileID: 1758627702088989497, guid: aa16d11a5f697ed4eacda3e63f0992fb, type: 3}
+  - {fileID: 5819485553466643210, guid: 35d0b7a4b38dccf4fa981fa402528576, type: 3}
+  - {fileID: 877817224993449836, guid: e04a235d919875c449af6558c29e4bf1, type: 3}
+  - {fileID: 5597058868131221255, guid: bd09f8723457f874586fe23ce633f214, type: 3}
+  landmark: {fileID: 5110343666000951255, guid: 54a4806679a4d2f44968bd0dbffa2441, type: 3}
+  roadMaterial: {fileID: 2100000, guid: 9ba7dc0d513efa840ba3ec4b037afc22, type: 2}
+  obstacles: {fileID: 11400000, guid: 51ab618ef6683aa4daca74b3eb604e48, type: 2}
+  landmarkDistance: 115
+  sky: {r: 0.35, g: 0.72, b: 0.91, a: 1}
+  fog: {r: 0.57, g: 0.77, b: 0.84, a: 1}
+  fogStart: 80
+  fogEnd: 170

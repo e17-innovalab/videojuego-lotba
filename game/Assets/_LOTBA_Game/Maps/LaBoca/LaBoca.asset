@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e5900be9a67b901489b9031045efef0e, type: 3}
+  m_Name: LaBoca
+  m_EditorClassIdentifier: Lotba.Game::Lotba.Game.MapDefinition
+  displayName: La Boca
+  modules:
+  - {fileID: 8444432085023419656, guid: 7bb91858f8a975c41bab7a39240fd66d, type: 3}
+  - {fileID: 5988204119512110108, guid: 46c45812c945a1a479ab5b481b4736da, type: 3}
+  - {fileID: 3179670513061687001, guid: 8a90d4cd5167d324ebb4a42ca32f08a6, type: 3}
+  - {fileID: 528580671798068687, guid: 18f6a7c364c30d046b5c50fe0d55eb0e, type: 3}
+  landmark: {fileID: 0}
+  roadMaterial: {fileID: 2100000, guid: c3daafb666421d84c9f58508abe22b30, type: 2}
+  obstacles: {fileID: 11400000, guid: 3c9abe524fbf02a43b27c96f73d5e282, type: 2}
+  landmarkDistance: 115
+  sky: {r: 0.35, g: 0.72, b: 0.91, a: 1}
+  fog: {r: 0.66, g: 0.78, b: 0.79, a: 1}
+  fogStart: 65
+  fogEnd: 135

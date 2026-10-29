@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68d1441d3138bab40a9d5e7b022ea33f, type: 3}
+  m_Name: bus_46
+  m_EditorClassIdentifier: Lotba.Game::Lotba.Game.ObstacleDefinition
+  id: bus_46
+  prefab: {fileID: 7402609727989344506, guid: 37e9e850d6ad5da498daaec5a2896b36, type: 3}
+  width: 2.15
+  height: 3.25
+  length: 8.8
+  jumpable: 0
+  jumpClearance: 0
+  poolCapacity: 12
+  livery:
+    lineNumber: 46
+    bodyColour: {r: 0.1764706, g: 0.47058824, b: 0.6862745, a: 1}
+    stripeColour: {r: 0.5803922, g: 0.84313726, b: 0.91764706, a: 1}

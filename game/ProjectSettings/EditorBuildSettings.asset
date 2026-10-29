@@ -6,16 +6,16 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/_Game/Scenes/CityRush.unity
+    path: Assets/_LOTBA_Game/Scenes/Game.unity
     guid: edfb19b200bf82f4a8d6c0f3c5817216
   - enabled: 1
-    path: Assets/_Game/Maps/Obelisco/Scenes/Obelisco.unity
+    path: Assets/_LOTBA_Game/Maps/Obelisco/Scenes/Obelisco.unity
     guid: 36b6144e75cbd9740a174327fc211602
   - enabled: 1
-    path: Assets/_Game/Maps/LaBoca/Scenes/LaBoca.unity
+    path: Assets/_LOTBA_Game/Maps/LaBoca/Scenes/LaBoca.unity
     guid: 3f6ff5bafe3bd0d4daef0322dabdf055
   - enabled: 1
-    path: Assets/_Game/Maps/Routes/Scenes/LaBocaToObelisco.unity
+    path: Assets/_LOTBA_Game/Maps/Routes/Scenes/LaBocaToObelisco.unity
     guid: fe7878bc622374b4ab276c55257caeb3
   m_configObjects:
     com.unity.dt.app-ui: {fileID: 11400000, guid: 1b1c20d82303e4b5781c3ef50ac1449f, type: 2}
