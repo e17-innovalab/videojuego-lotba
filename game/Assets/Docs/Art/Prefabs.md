@@ -86,12 +86,12 @@ Si reemplazás sus piezas, actualizá en `BusSkin` las listas **Body Panels**, *
 
 `Coin.prefab` y `Pickup feedback.prefab` también son compartidos. Mantener sus componentes y el origen previsto al cambiar su aspecto: el juego controla su aparición, recogida y reciclado.
 
-En `Game UI.prefab`, conservar botones, textos, componentes y referencias. Los cambios de jerarquía, posiciones y tamaños deben coordinarse con desarrollo porque `GameUiSetup` configura parte de esa estructura. Las fuentes deben seguir funcionando con TextMesh Pro y mostrar los acentos utilizados por el juego.
+En `Game UI.prefab`, conservar botones, textos, componentes y referencias. Los cambios de jerarquía, posiciones y tamaños deben coordinarse con desarrollo para conservar los enlaces de GameHud. La posición de los paneles se edita directamente en el prefab. Las fuentes deben seguir funcionando con TextMesh Pro y mostrar los acentos utilizados por el juego.
 
 ## 6. Revisar el montaje antes de entregar
 
 Para mirar una unión sin modificar la escena de juego, creá una escena de revisión fuera de la lista de escenas del build. Arrastrá dos o tres módulos y colocalos en Z = 0, 12 y 24, con X/Y = 0 y escala uno.
 
-Revisá desde Scene que el suelo no tenga huecos, que se respeten los carriles, que no haya objetos cortados o duplicados en los bordes y que no aparezcan superficies superpuestas parpadeando. Para observar lectura y escala durante el movimiento, el equipo debe revisar también el recorrido desde la cámara del juego.
+Revisá desde Scene que el suelo no tenga huecos, que se respeten los carriles, que no haya objetos cortados o duplicados en los bordes y que no aparezcan superficies superpuestas parpadeando. Para observar lectura y escala durante el movimiento, usá [ArtPreview](Preview.md): Route para una zona completa o un recorrido con transiciones; Module para repetir una sola pieza.
 
 Entregá el prefab, modelos, materiales y texturas necesarios, junto con sus `.meta`, e indicá qué ficha de zona u obstáculo debe usarlos. Para modificar un conjunto visual sin afectar otros usos, entregar sus variantes independientes.

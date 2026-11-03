@@ -20,7 +20,7 @@ El nombre de la aplicación se sincroniza desde esa definición al cargar los sc
 2. Dejar que Unity resuelva los paquetes declarados en `Packages/manifest.json`.
 3. Abrir [Game.unity](../../_LOTBA_Game/Scenes/Game.unity) o usar **LOTBA > Open game**.
 
-En el Editor, Play Mode ejecuta la escena abierta. El orden de escenas del build se gestiona en Editor Build Settings y tiene `Game` como entrada. También incluye las escenas de Obelisco, La Boca y La Boca → Obelisco.
+En el Editor, Play Mode ejecuta la escena abierta. El orden de escenas del build se gestiona en Editor Build Settings y tiene `Game` como entrada. Solo Game integra el build. ArtPreview es una escena de revisión exclusiva del Editor, accesible con LOTBA > Open art preview.
 
 ## Organización de recursos
 
@@ -31,7 +31,7 @@ Las rutas de la tabla son relativas a `Assets/`.
 | `_LOTBA_Game/Runtime` | Estado, control, presentación y soporte de dispositivos |
 | `_LOTBA_Game/Editor` | Herramientas de autoría y configuración de assets |
 | `_LOTBA_Game/Scenes` | Escena de entrada |
-| `_LOTBA_Game/Maps` | Barrios, módulos, transiciones, recorridos y escenas |
+| `_LOTBA_Game/Maps` | Barrios, módulos, transiciones y recorridos |
 | `_LOTBA_Game/Obstacles` | Definiciones, catálogos y prefabs de obstáculos |
 | `_LOTBA_Game/Art` | Meshes, materiales y recursos visuales compartidos |
 | `_LOTBA_Game/Prefabs` | Ciclista, UI, monedas, feedback y modelos compartidos |
@@ -50,7 +50,7 @@ El código principal usa el namespace `Lotba.Game`, con assemblies separadas par
 | `RunnerWorld` | Ciclista, cámara, patrones, pools y detección de encuentros |
 | `GameHud` | Presentación de menús, configuración, HUD y resultados |
 | `RoadStreamer` | Reciclado de módulos y mezcla ambiental según distancia |
-| `GameSceneFlow` | Selección de recorrido y carga de su escena al iniciar |
+| `ArtPreviewController` | Revisión visual en el Editor, con el mismo mundo y sin menú |
 | `DeviceFeedbackAndInput` | Detección de capacidades, vibración y control por inclinación |
 | `AudioFeedback` | Feedback sonoro |
 | `PortraitViewport` | Encuadre vertical y zona segura |
@@ -65,13 +65,13 @@ La lógica de sesión y la presentación se mantienen separadas. Monedas, obstá
 - Orientación de Android: **vertical**.
 - Plataforma prioritaria: **Android**. La integración web es una alternativa en evaluación.
 
-No se requiere un backend ni cuentas para ejecutar la partida. La selección de recorrido y las preferencias de dispositivo se conservan localmente. Eso no sustituye un registro de eventos para el cierre educativo.
+No se requiere un backend ni cuentas para ejecutar la partida. Las preferencias de sonido y dispositivo se conservan localmente. El recorrido se asigna en la escena, fuera de Play. Eso no sustituye un registro de eventos para el cierre educativo.
 
 ## Autoría y mantenimiento
 
 El balance se edita en [GameSettings](../../_LOTBA_Game/Settings/GameSettings.asset). El arte de escenarios y obstáculos se modifica en prefabs y perfiles.
 
-**LOTBA > Update maps and UI** reconstruye las escenas contenedoras y actualiza la interfaz, conservando módulos y perfiles existentes. Guardar las escenas abiertas antes de usarlo. No colocar trabajo artístico definitivo directamente en escenas que esta herramienta reconstruye.
+La escena y los prefabs son las fuentes editables. Guardarlos es suficiente: no hay regeneración ni actualización global de mapas o UI. Los Inspectors de mapas, recorridos y módulos muestran ayuda y validaciones. Ver [prueba de arte](../Art/Preview.md).
 
 Mover o renombrar assets desde Unity para conservar sus referencias. Versionar los `.meta`, `Assets`, `Packages` y `ProjectSettings`. Las carpetas `Library`, `Temp`, `Logs` y `UserSettings` son generadas localmente.
 
@@ -86,7 +86,7 @@ Las claves de preferencias locales son identificadores persistentes y no deben c
 | Regla de puntaje, pérdida, racha o final de partida | `RunSession`; `GameHud` si cambia la información presentada |
 | Balance de velocidad, duración o anticipación | Asset `GameSettings`; consultar sus unidades y la curva en `RunSession` |
 | Prioridad de un control, gesto, pausa o cambio de estado | `GameController`; conservar la prioridad de frenar sobre la simulación |
-| Botón o panel | `GameHud` para referencias y eventos; `GameUiSetup` y `GameSceneBuilder` para autoría y enlaces serializados |
+| Botón o panel | `Game UI.prefab` para autoría; `GameHud` para referencias y eventos serializados |
 | Patrón de monedas o detección de un obstáculo | `RunnerWorld`; mantener el contrato de `ObstacleDefinition` |
 | Recorrido o selección de zona | Perfiles y proceso de integración de [World.md](World.md) |
 | Feedback, sensores o una capacidad de dispositivo | `DeviceFeedbackAndInput`, `AudioFeedback` y el ciclo de pausa/foco de `GameController` |
@@ -94,6 +94,6 @@ Las claves de preferencias locales son identificadores persistentes y no deben c
 
 Al agregar UI, completar los enlaces de los campos serializados además de crear el objeto visible. El HUD emite intenciones y el controlador coordina los cambios de estado; evitar reglas de partida dentro de un botón. Al cambiar la simulación, conservar que el estado de sesión no dependa de objetos visuales.
 
-Las herramientas de autoría se ejecutan con el Editor fuera de Play Mode y las escenas guardadas. Reconstruir los contenedores después de resguardar cualquier edición manual relevante y revisar que las referencias de componentes y perfiles estén completas. La vista previa de Editor y el contenido generado durante la partida son caminos distintos: que un recurso aparezca en la vista previa no garantiza que esté bien registrado en un perfil.
+Los cambios de contenido se preparan fuera de Play. RoadStreamer prepara pools al inicializar: detener y volver a entrar para revisar cambios de módulos, perfiles u obstáculos. ArtPreview comparte la simulación visual, pero no sustituye la revisión del balance y los menús en Game.
 
 Las guías deben describir el estado vigente: actualizar rutas, reglas y contratos junto con el cambio correspondiente. Usar enlaces relativos, evitar duplicar instrucciones y separar las propuestas pendientes de las funciones implementadas. Los Markdown de `Docs` no deben conectarse a recursos cargados por el juego.

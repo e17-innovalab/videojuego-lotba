@@ -10,9 +10,8 @@ namespace Lotba.Game
         [SerializeField] private GameObject readyPanel, pausePanel, resultPanel, raceHud, controls, settingsPanel;
         [SerializeField] private UnityEngine.UI.Button start, retry, menu, pause, resume, brake, pauseMenu;
         [SerializeField] private UnityEngine.UI.Button[] configurationButtons;
-        [SerializeField] private UnityEngine.UI.Button closeSettings, soundButton, vibrationButton, tiltButton, obeliscoButton, laBocaButton, flowButton;
-        [SerializeField] private GameObject locationOptions;
-        [SerializeField] private TMPro.TMP_Text soundLabel, vibrationLabel, tiltLabel, locationLabel, settingsNotice;
+        [SerializeField] private UnityEngine.UI.Button closeSettings, soundButton, vibrationButton, tiltButton;
+        [SerializeField] private TMPro.TMP_Text soundLabel, vibrationLabel, tiltLabel, settingsNotice;
         [SerializeField] private TMPro.TMP_Text score, coins, streak, multiplier, speed, remaining, popup, resultTitle, resultStats;
         [SerializeField] private UnityEngine.UI.Image streakFill;
         [SerializeField] private SpeedGauge gauge;
@@ -20,10 +19,8 @@ namespace Lotba.Game
         private float popupUntil, popupDuration, multiplierPulseUntil;
         private int previousMultiplier = 1;
         private Vector2 popupOrigin;
-        private bool loading;
         public bool SettingsOpen { get; private set; }
         public event Action StartRequested, MenuRequested, PauseRequested, BrakeRequested, SoundRequested, SettingsRequested, VibrationRequested, TiltRequested;
-        public event Action<GameLocation> LocationRequested;
         private void Awake()
         {
             ApplyIdentity();
@@ -38,9 +35,6 @@ namespace Lotba.Game
             soundButton.onClick.AddListener(() => SoundRequested?.Invoke());
             vibrationButton.onClick.AddListener(() => VibrationRequested?.Invoke());
             tiltButton.onClick.AddListener(() => TiltRequested?.Invoke());
-            obeliscoButton.onClick.AddListener(() => LocationRequested?.Invoke(GameLocation.Obelisco));
-            laBocaButton.onClick.AddListener(() => LocationRequested?.Invoke(GameLocation.LaBoca));
-            flowButton.onClick.AddListener(() => LocationRequested?.Invoke(GameLocation.LaBocaToObelisco));
         }
         public void ApplyIdentity()
         {
@@ -66,7 +60,6 @@ namespace Lotba.Game
         }
         public void ResetView() { popupUntil = multiplierPulseUntil = 0; previousMultiplier = 1; SettingsOpen = false; }
         public void OpenSettings() => SettingsOpen = true;
-        public void SetLoading() { loading = true; start.interactable = retry.interactable = false; }
         public void ShowFeedback(long amount, bool impact)
         {
             popup.text = impact ? (amount == 0 ? "¡OJO!" : $"−{Math.Abs(amount)}") : amount > 10 ? $"+10\n<size=22>×{amount / 10} = {amount} pts</size>" : "+10";
@@ -83,12 +76,6 @@ namespace Lotba.Game
             settingsPanel.SetActive(SettingsOpen);
             resultPanel.SetActive(session.State == RunState.Finished);
             raceHud.SetActive(active); controls.SetActive(active);
-            bool menuConfiguration = session.State == RunState.Ready;
-            locationOptions.SetActive(menuConfiguration);
-            var settingsRect = (RectTransform)settingsPanel.transform;
-            settingsRect.anchorMin = new Vector2(.055f, menuConfiguration ? .08f : .24f);
-            settingsRect.anchorMax = new Vector2(.945f, .94f);
-            settingsRect.offsetMin = settingsRect.offsetMax = Vector2.zero;
             pause.interactable = !SettingsOpen;
             score.text = session.Score.ToString(); coins.text = session.CoinValue.ToString();
             streak.text = $"RACHA {session.Streak}"; multiplier.text = $"×{session.Multiplier}";
@@ -110,17 +97,7 @@ namespace Lotba.Game
             vibrationLabel.text = !devices.VibrationAvailable ? "VIBRACIÓN: NO DISPONIBLE" : devices.VibrationEnabled ? "VIBRACIÓN: SÍ" : "VIBRACIÓN: NO";
             tiltButton.interactable = devices.TiltAvailable;
             tiltLabel.text = !devices.TiltAvailable ? "INCLINACIÓN: NO DISPONIBLE" : devices.TiltEnabled ? "INCLINACIÓN: SÍ" : "INCLINACIÓN: NO";
-            GameLocation selected = GameSceneFlow.Selected;
-            locationLabel.text = "ESCENARIO: " + GameSceneFlow.NameFor(selected);
-            obeliscoButton.GetComponentInChildren<TMPro.TMP_Text>().text = selected == GameLocation.Obelisco ? "OBELISCO · ELEGIDO" : "OBELISCO";
-            laBocaButton.GetComponentInChildren<TMPro.TMP_Text>().text = selected == GameLocation.LaBoca ? "LA BOCA · ELEGIDO" : "LA BOCA";
-            flowButton.GetComponentInChildren<TMPro.TMP_Text>().text = selected == GameLocation.LaBocaToObelisco ? "LA BOCA → OBELISCO · ELEGIDO" : "LA BOCA → OBELISCO";
-            settingsNotice.text = menuConfiguration ? "El recorrido se elige antes de empezar. La inclinación es opcional y se calibra al comenzar." : devices.TiltEnabled ? "Al continuar, sostené el teléfono centrado un instante para calibrar la inclinación." : "Los cambios de sonido y vibración se aplican a esta partida.";
-            var noticeRect = settingsNotice.rectTransform;
-            noticeRect.anchorMin = new Vector2(.08f, menuConfiguration ? .11f : .24f);
-            noticeRect.anchorMax = new Vector2(.92f, menuConfiguration ? .22f : .55f);
-            noticeRect.offsetMin = noticeRect.offsetMax = Vector2.zero;
-            if (loading) start.GetComponentInChildren<TMPro.TMP_Text>().text = "PREPARANDO...";
+            settingsNotice.text = devices.TiltEnabled ? "Al continuar, sostené el teléfono centrado un instante para calibrar la inclinación." : "Los cambios de sonido y vibración se aplican a esta partida.";
             if (session.State == RunState.Finished)
             {
                 resultTitle.text = session.Ending == RunEnding.Brake ? "VOS MARCASTE\nEL FINAL" : "RECORRIDO\nCOMPLETADO";

@@ -9,7 +9,6 @@ namespace Lotba.Game
     {
         [SerializeField] private RouteDefinition route;
         [SerializeField] private Camera worldCamera;
-        [SerializeField] private GameObject editorPreview;
         private const int Behind = 2, VisibleModules = 14;
         private readonly Dictionary<RoadModule, Queue<RoadModule>> pools = new Dictionary<RoadModule, Queue<RoadModule>>();
         private readonly List<LandmarkView> landmarks = new List<LandmarkView>();
@@ -17,9 +16,12 @@ namespace Lotba.Game
         private sealed class Slot { public int Index = int.MinValue; public RoadModule Source, View; }
         private sealed class LandmarkView { public Transform View; public float Start, Offset; }
         public RouteDefinition Route => route;
+        /// <summary>Assign before Initialize; changing a live route requires rebuilding its pools.</summary>
+        public void SetRoute(RouteDefinition value) => route = value;
         public void Initialize()
         {
-            if (editorPreview != null) editorPreview.SetActive(false);
+            if (route == null) throw new InvalidOperationException("Assign a route to RoadStreamer in the Inspector.");
+            if (route.ValidationError != null) throw new InvalidOperationException(route.ValidationError);
             slots = new Slot[VisibleModules];
             for (int i = 0; i < slots.Length; i++) slots[i] = new Slot();
             var capacity = new Dictionary<RoadModule, int>();

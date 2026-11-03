@@ -1,77 +1,56 @@
-# Agregar módulos, zonas y recorridos
+# Crear módulos, zonas y recorridos
 
-[Inicio de arte](README.md) · [Prefabs](Prefabs.md) · [Transiciones](ZonesAndTransitions.md)
+[Inicio de arte](README.md) · [Prefabs](Prefabs.md) · [Prueba en movimiento](Preview.md)
 
-## Elegir el tamaño del cambio
+## Agregar un módulo
 
-| Cambio | ¿Se puede preparar sin código? |
-|---|---|
-| Un edificio o aspecto nuevo | Sí: visual del prefab |
-| Otra pieza para una zona existente | Sí: módulo y lista Modules |
-| Una zona para usar dentro de un recorrido existente | Sí: perfil y secciones del recorrido |
-| Un recorrido nuevo para entregar a desarrollo | Sí: perfil RouteDefinition |
-| Otra opción seleccionable en el menú | Requiere integración de desarrollo |
-| Curvas, desniveles o cambio del ancho jugable | Requiere cambios del sistema; no basta con el modelo |
+1. Duplicá un prefab de `Maps/<Zona>/Prefabs/Modules` desde Project.
+2. Conservá RoadModule, Entry, Exit, Road y Art.
+3. Reemplazá o construí los objetos de Art con modelos o prefabs anidados. No hace falta combinar meshes.
+4. Guardá el prefab. Revisá las medidas indicadas en el Inspector de RoadModule.
+5. Abrí el MapDefinition de la zona y agregalo a Modules en el orden deseado.
+6. Revisá sus uniones en [ArtPreview](Preview.md), incluyendo la última pieza contra la primera.
 
-## A. Agregar una variante a un barrio
+Duplicar un módulo mantiene referencias a sus visuales y materiales. Duplicarlos también si el cambio debe ser independiente.
 
-1. En Project, seleccioná un prefab de `Maps/<Zona>/Prefabs/Modules` y duplicalo.
-2. Dale un nombre que describa su uso, por ejemplo `Module_Plaza`.
-3. Cambiá el arte siguiendo [Prefabs](Prefabs.md). Para independizar un visual compartido, duplicalo también y reemplazá su referencia bajo `Art`.
-4. Abrí el perfil de la zona, por ejemplo `Maps/LaBoca/LaBoca.asset`.
-5. En **Modules**, agregá una posición y arrastrá el módulo nuevo. Reordená la lista según la secuencia deseada.
-6. Revisá las uniones con sus vecinos y la unión entre el final y el principio de la lista.
+## Crear una zona
 
-Agregar un prefab a la carpeta no lo conecta al recorrido: debe estar en **Modules**.
+1. Creá `Maps/<Nombre>/Prefabs/Art` y `Prefabs/Modules`.
+2. Prepará uno o varios módulos estándar de 12 m.
+3. Usá **Create > LOTBA > Maps > Map definition** en la carpeta de la zona.
+4. Completá Display Name, Modules, Road Material, Obstacles, Sky y Fog. Landmark es opcional; es un hito separado que se mantiene visible al frente.
+5. Revisá la ayuda y los errores del Inspector.
+6. Creá un RouteDefinition con una sola sección: Map = la zona nueva, Module Count = 0 y Transition desactivado.
+7. Abrí ArtPreview, elegí Route y asigná ese recorrido. Entrá en Play.
 
-## B. Crear una zona nueva
+No hace falta crear una escena propia, agregar código ni registrar la zona en un menú.
 
-Las rutas de trabajo empiezan en `Assets/_LOTBA_Game/`.
-
-1. Creá `Maps/<NombreZona>/Prefabs/Art` y `Maps/<NombreZona>/Prefabs/Modules` desde Project.
-2. Duplicá uno o varios módulos existentes dentro de la carpeta nueva. Conservá su estructura y medidas; reemplazá sus visuales.
-3. En la carpeta de la zona, usá **Create > LOTBA > Maps > Map definition** y asigná un nombre al asset.
-4. Completá su Inspector:
-
-   | Campo | Qué asignar |
-   |---|---|
-   | Display Name | Nombre legible de la zona |
-   | Modules | Una o más piezas de calle, en orden, sin posiciones vacías |
-   | Road Material | Material de la superficie transitable |
-   | Obstacles | Un catálogo de tráfico válido; elegirlo con diseño |
-   | Landmark | Prefab de un hito visual, opcional |
-   | Landmark Distance | Distancia visual de referencia del hito, si existe |
-   | Sky | Color del fondo de cámara |
-   | Fog / Fog Start / Fog End | Color y distancias de niebla |
-
-5. Para los primeros montajes, podés usar el suelo y catálogo de una zona existente, ajustándolos después con el equipo.
-6. Guardá el perfil y revisá el montaje de sus módulos. Un perfil sin módulos o con referencias vacías no está listo para integrarse.
-
-La zona ya queda disponible como recurso para recorridos. No necesita una escena de Unity propia para insertarse como tramo.
-
-## C. Insertarla en un recorrido existente
-
-1. Guardá el trabajo del equipo y seleccioná el perfil correspondiente en `Maps/Routes/Definitions`.
-2. En **Sections**, agregá una sección en el lugar donde deba aparecer la zona.
-3. En **Map**, asigná su ficha. En **Module Count**, indicá cuántas piezas de 12 metros dura el tramo.
-4. Si funciona como enlace hacia otra zona, activá **Transition** y prepará el arte de conexión según la [guía de transiciones](ZonesAndTransitions.md).
-5. Todas las secciones intermedias deben tener una cantidad positiva. Dejá la última en cero como indicación de continuidad.
-6. Revisá la entrada y la salida, el tráfico elegido y la duración total. Cambiar un perfil compartido modifica el recorrido que ya lo utiliza.
-
-Si solo estás proponiendo un recorrido, duplicá el perfil y trabajá en esa propuesta. El duplicado no se selecciona automáticamente en el juego: necesita que desarrollo lo asigne o lo incorpore al menú.
-
-## D. Preparar un recorrido nuevo
+## Crear un recorrido
 
 1. En `Maps/Routes/Definitions`, usá **Create > LOTBA > Maps > Route definition** o duplicá uno existente.
-2. Armá las secciones: zona de origen, transición y destino, o las fases que necesite el diseño.
-3. Asigná un mapa válido a cada sección y una cantidad positiva a todos los tramos anteriores al último.
-4. Prepará una escena de revisión visual de las uniones. Anotá qué perfil debe utilizarse para revisar el recorrido en movimiento.
-5. Entregá el perfil a desarrollo para conectarlo al juego.
+2. En Sections, asigná las zonas en orden.
+3. Indicá Module Count positivo para cada tramo intermedio. Cada unidad equivale a 12 m; el Inspector muestra los metros.
+4. Dejá la última sección con **Module Count = 0**, que significa infinito.
+5. Activá Transition solo en los enlaces que tengan duración positiva y un destino después.
+6. Elegí Route en ArtPreview y asigná el recorrido para revisarlo.
 
-El menú actual ofrece tres opciones concretas; no descubre recorridos nuevos buscando archivos en una carpeta. **LOTBA > Update maps and UI** tampoco registra automáticamente una cuarta opción y reconstruye la lista de escenas de build que conoce su código.
+Ejemplo mínimo: una sola sección, Map = La Boca, Module Count = 0 y Transition desactivado. Repite La Boca y no necesita enlaces.
 
-## Entrega a desarrollo
+Ejemplo con variedad: La Boca 30, transición 16 y Obelisco 0. La transición es una zona con una secuencia artística propia; ver [Transiciones](ZonesAndTransitions.md).
 
-Indicar la ruta del perfil del recorrido, las zonas incluidas, sus módulos y la duración prevista en metros. Señalar si se cambia un recorrido existente o se pide una opción nueva en el menú. Incluir modelos, prefabs, materiales, texturas y sus `.meta`.
+## Elegir el recorrido del producto
 
-El equipo de desarrollo se encarga de la selección de recorrido, la escena contenedora si hace falta, el menú y la lista de escenas del build. Su procedimiento está en [Mundo y recorridos](../Development/World.md).
+El jugador no elige recorrido. El equipo lo configura fuera de Play:
+
+1. Abrir `Scenes/Game.unity`.
+2. Seleccionar Game world.
+3. Asignar el RouteDefinition en **RoadStreamer > Route**.
+4. Guardar la escena.
+
+Ese cambio define el recorrido de todas las partidas. Para ensayar alternativas, usar ArtPreview sin cambiar Game. No hay un comando de regeneración de escenas o UI.
+
+## Entrega
+
+Incluir prefabs, modelos, materiales, texturas, perfiles y sus `.meta`. Indicar qué zona utiliza los nuevos módulos y qué recorrido permite revisarlos. Mantener modelos fuente editables; los placeholders existentes sirven como referencia de tamaño y montaje.
+
+El sistema mantiene calzada recta, nivelada y de ancho fijo. Curvas, pendientes u otras dimensiones requieren desarrollo; mover Entry o Exit no cambia el contrato del sistema.

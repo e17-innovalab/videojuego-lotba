@@ -66,9 +66,9 @@ Al activarlo, el juego mezcla el color del fondo y los valores de niebla del per
 
 ## Cómo revisar la transición
 
-Primero mirar las uniones en una escena de revisión: origen/primera pieza, cada pareja intermedia y última pieza/destino. Después pedir una revisión del recorrido completo desde la cámara del juego, incluyendo la aproximación antes de entrar a la transición.
+Primero mirar las uniones en una escena de revisión: origen/primera pieza, cada pareja intermedia y última pieza/destino. Después usar [ArtPreview](Preview.md) en modo Route para revisar desde la cámara del juego, incluyendo la aproximación antes de entrar a la transición.
 
-El recorrido contiene un tramo inicial de 360 m: la vista previa del inicio no alcanza para juzgar la transición. Verificarla desde la partida o coordinar con desarrollo una configuración de recorrido corta para revisión; no cambiar el orden de producción solamente para verla antes.
+El recorrido contiene un tramo inicial de 360 m: la vista previa del inicio no alcanza para juzgar la transición. Duplicar el recorrido con un origen corto y asignar esa copia a ArtPreview; no cambiar el orden de producción solamente para verla antes.
 
 | Si se observa… | Revisar |
 |---|---|

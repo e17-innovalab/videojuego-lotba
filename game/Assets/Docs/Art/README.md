@@ -6,6 +6,7 @@ Esta guía permite trabajar en el arte del juego sin tener que entender sus scri
 
 | Quiero… | Guía |
 |---|---|
+| Ver una zona o módulo en movimiento sin menús | [Prueba de arte](Preview.md) |
 | Cambiar edificios, vegetación, materiales o un obstáculo | [Reemplazar arte y trabajar con prefabs](Prefabs.md) |
 | Entender cómo se repite una calle y hacer una transición creíble | [Zonas y transiciones](ZonesAndTransitions.md) |
 | Crear módulos, una zona nueva o un recorrido | [Nuevos mapas y recorridos](NewMaps.md) |
@@ -42,8 +43,10 @@ Abrí el prefab desde **Project** para editarlo en **Prefab Mode**. Guardá all�
 
 ## Qué podés hacer sin programar
 
-Podés reemplazar modelos, duplicar módulos, ordenar sus variantes, crear fichas de zonas y modificar los tramos de un recorrido existente. Crear una zona no agrega automáticamente un botón al menú. Para una nueva opción seleccionable, entregá sus recursos a desarrollo siguiendo [Nuevos mapas](NewMaps.md).
+Podés reemplazar modelos, duplicar módulos, ordenar variantes, crear zonas y recorridos. Para revisarlos, usar **LOTBA > Open art preview** y elegir la referencia en el Inspector. No hace falta crear una escena por zona ni añadir código.
 
-Las escenas de juego se reconstruyen con una herramienta del equipo. El arte definitivo debe quedar en prefabs y fichas de configuración. Coordiná el uso de **LOTBA > Update maps and UI**: reconstruye escenas, interfaz y vistas previas; no es necesario ejecutarlo por cada cambio visual de un prefab.
+Guardá el trabajo visual en prefabs y perfiles. No hay un paso de regeneración ni obligación de combinar meshes. Los placeholders existentes contienen meshes combinados: sirven como referencia; desempaquetarlos no recupera las piezas originales. El arte nuevo puede conservar edificios, árboles y mobiliario como prefabs anidados editables.
+
+El recorrido del producto se asigna en Game world > RoadStreamer > Route dentro de Game.unity. Para experimentar, usá la escena de revisión y conservá esa asignación.
 
 Para problemas de reglas, carga o generación, consultá la [guía de desarrollo](../Development/README.md).

@@ -7,20 +7,51 @@ namespace Lotba.Game
     public sealed class RouteSection
     {
         [SerializeField] private MapDefinition map;
-        [Tooltip("Number of 12 m modules; the last section repeats indefinitely. Use positive counts before it.")]
+        [Tooltip("Number of 12 m modules. Zero means infinite and is allowed only in the final section.")]
         [SerializeField, Min(0)] private int moduleCount;
         [SerializeField] private bool transition;
         public MapDefinition Map => map;
         public int ModuleCount => moduleCount;
         public bool Transition => transition;
+#if UNITY_EDITOR
+        internal void SetPreviewMap(MapDefinition value) => map = value;
+#endif
     }
 
-    /// <summary>Distance-based visual itinerary. The last section continues indefinitely.</summary>
+    /// <summary>Distance-based itinerary. A final zero-length section repeats indefinitely.</summary>
     [CreateAssetMenu(menuName = "LOTBA/Maps/Route definition")]
     public sealed class RouteDefinition : ScriptableObject
     {
         [SerializeField] private RouteSection[] sections;
         public RouteSection[] Sections => sections;
+        public string ValidationError
+        {
+            get
+            {
+                if (sections == null || sections.Length == 0) return "Add at least one section.";
+                for (int i = 0; i < sections.Length; i++)
+                {
+                    var section = sections[i];
+                    if (section == null || section.Map == null) return $"Section {i + 1}: assign a zone.";
+                    if (section.Map.ValidationError != null) return $"Section {i + 1}: {section.Map.ValidationError}";
+                    if (i < sections.Length - 1 && section.ModuleCount <= 0) return "Only the final section can use zero (infinite).";
+                    if (i == sections.Length - 1 && section.ModuleCount != 0) return "Set the final section to zero (infinite).";
+                    if (section.Transition && (i == sections.Length - 1 || section.ModuleCount <= 0)) return "A transition needs a positive length and a destination section.";
+                }
+                return null;
+            }
+        }
+#if UNITY_EDITOR
+        /// <summary>Creates an unsaved, single-zone route for the artist preview.</summary>
+        public static RouteDefinition CreatePreview(MapDefinition map)
+        {
+            var route = CreateInstance<RouteDefinition>();
+            route.hideFlags = HideFlags.DontSave;
+            route.sections = new[] { new RouteSection() };
+            route.sections[0].SetPreviewMap(map);
+            return route;
+        }
+#endif
         public int SectionAt(float distance, out float startDistance)
         {
             startDistance = 0;

@@ -9,6 +9,7 @@ La documentación se divide según la tarea que quieras hacer:
 | Entender el código, cambiar reglas o integrar funciones | [Desarrollo](Development/README.md) |
 | Reemplazar modelos, editar prefabs o preparar escenarios | [Arte](Art/README.md) |
 | Ajustar duración, velocidad o racha | [Jugabilidad y configuración](Development/Gameplay.md) |
+| Probar una zona o módulo sin abrir los menús del juego | [Prueba de arte](Art/Preview.md) |
 | Entender la repetición de calles y preparar una transición | [Zonas y transiciones](Art/ZonesAndTransitions.md) |
 | Crear una zona para incorporarla al juego | [Nuevos mapas y recorridos](Art/NewMaps.md) |
 

@@ -27,5 +27,18 @@ namespace Lotba.Game
         public Transform ArtRoot => artRoot;
         public Transform Entry => entry;
         public Transform Exit => exit;
+        public string ValidationError
+        {
+            get
+            {
+                if (artRoot == null || roadSurface == null || entry == null || exit == null)
+                    return "Assign Art Root, Road Surface, Entry and Exit.";
+                if (Vector3.Distance(transform.localScale, Vector3.one) > .001f) return "Keep module root scale at one.";
+                if (Vector3.Distance(entry.localPosition, Vector3.zero) > .001f ||
+                    Vector3.Distance(exit.localPosition, Vector3.forward * RoadStandard.ModuleLength) > .001f)
+                    return "Entry must be at (0,0,0); Exit at (0,0,12).";
+                return null;
+            }
+        }
     }
 }

@@ -34,6 +34,18 @@ namespace Lotba.Game
         private int safeLane = 1;
         private int wave;
         private float pedalAngle;
+#if UNITY_EDITOR
+        private bool previewCoins = true, previewObstacles = true, previewInvulnerable;
+        public void ConfigureArtPreview(bool coins, bool obstacles, bool showRider)
+        {
+            bool visibilityChanged = coins != previewCoins || obstacles != previewObstacles;
+            previewCoins = coins; previewObstacles = obstacles; previewInvulnerable = true;
+            rider.gameObject.SetActive(showRider); riderShadow.gameObject.SetActive(showRider);
+            if (visibilityChanged)
+                foreach (TrackItem item in items)
+                    item.View.gameObject.SetActive(item.Active && (item.Kind == ItemKind.Coin ? coins : obstacles));
+        }
+#endif
         public event Action<long, bool> EncounterFeedback;
         private enum ItemKind { Coin, Obstacle }
         private sealed class TrackItem
@@ -155,7 +167,11 @@ namespace Lotba.Game
                     item.Collecting = true; item.CollectTime = 0; item.PickupOrigin = item.View.localPosition;
                     Emit(false); EncounterFeedback?.Invoke(reward, false);
                 }
-                else if (item.Kind == ItemKind.Obstacle && !session.IsProtected)
+                else if (item.Kind == ItemKind.Obstacle && !session.IsProtected
+#if UNITY_EDITOR
+                    && !previewInvulnerable
+#endif
+                )
                 {
                     item.ObstacleHit = true;
                     long loss = session.Hit(); Emit(true); EncounterFeedback?.Invoke(-loss, true);
@@ -213,7 +229,12 @@ namespace Lotba.Game
                 if (item.Active || item.Kind != kind || item.Definition != definition) continue;
                 item.Active = true; item.Collecting = item.ObstacleHit = false; item.View.localScale = item.Scale;
                 item.View.SetLocalPositionAndRotation(new Vector3((lane - 1) * LaneSpacing, kind == ItemKind.Coin ? height : 0, z), Quaternion.identity);
-                item.View.gameObject.SetActive(true); return;
+                // Visibility does not change pool ownership or simulation progress.
+                bool visible = true;
+#if UNITY_EDITOR
+                visible = kind == ItemKind.Coin ? previewCoins : previewObstacles;
+#endif
+                item.View.gameObject.SetActive(visible); return;
             }
         }
         /// <summary>Override map selection for an event or experiment; pass null to restore map-defined traffic.</summary>
@@ -268,6 +289,9 @@ namespace Lotba.Game
         }
         private void Emit(bool impact)
         {
+#if UNITY_EDITOR
+            if (!impact && !previewCoins) return;
+#endif
             var emission = new ParticleSystem.EmitParams { position = rider.position + Vector3.up * 1.15f, startColor = impact ? new Color(1, .35f, .15f) : new Color(1, .86f, .25f) };
             sparks.Emit(emission, impact ? 14 : 7);
         }

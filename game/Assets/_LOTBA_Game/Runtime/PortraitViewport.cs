@@ -23,6 +23,8 @@ namespace Lotba.Game
                 ? new Rect((1f - targetAspect / screenAspect) * .5f, 0f, targetAspect / screenAspect, 1f)
                 : new Rect(0f, 0f, 1f, 1f);
             worldCamera.rect = viewport;
+            // Art preview shares the camera framing without requiring a Canvas.
+            if (safeArea == null) return;
             Rect physicalSafeArea = Screen.safeArea;
             safeArea.anchorMin = new Vector2(Mathf.Max(viewport.xMin, physicalSafeArea.xMin / Screen.width), physicalSafeArea.yMin / Screen.height);
             safeArea.anchorMax = new Vector2(Mathf.Min(viewport.xMax, physicalSafeArea.xMax / Screen.width), physicalSafeArea.yMax / Screen.height);

@@ -6,7 +6,7 @@ El menú permite empezar y abrir Configuración. Antes de empezar se puede elegi
 
 **FRENAR** termina la partida y muestra los resultados. La pausa permite continuar, configurar sonido y dispositivos o volver al inicio. Volver al inicio descarta la partida en curso. Los resultados permiten reintentar o regresar al menú.
 
-El selector de recorrido está disponible antes de empezar; durante una partida solo se muestran ajustes de efecto inmediato. Las instrucciones de control están en el menú principal.
+El recorrido se asigna desde el Editor en RoadStreamer; no se elige desde el menú. La configuración del jugador contiene sonido, vibración e inclinación según disponibilidad. Las instrucciones de control están en el menú principal.
 
 | Acción | Teclado | Celular |
 |---|---|---|

@@ -37,6 +37,16 @@ namespace Lotba.Game
             Speed = PeakSpeed = settings.InitialSpeed;
         }
         public void Start() { if (State == RunState.Ready) State = RunState.Running; }
+#if UNITY_EDITOR
+        /// <summary>Artist preview advances without a time limit or progression curve.</summary>
+        public void TickPreview(float dt, float speed)
+        {
+            if (State != RunState.Running) return;
+            Elapsed += dt;
+            Speed = PeakSpeed = speed;
+            Distance += speed * dt;
+        }
+#endif
         public void Tick(float dt)
         {
             if (State != RunState.Running) return;

@@ -1,90 +1,61 @@
-# Mundo, recorridos e integración
+# Mundo y recorridos
 
-[Desarrollo](README.md) · [Jugabilidad](Gameplay.md) · [Obstáculos](Obstacles.md) · [Autoría para artistas](../Art/NewMaps.md)
+[Desarrollo](README.md) · [Arte](../Art/README.md) · [Prueba de arte](../Art/Preview.md)
 
-## Separación de responsabilidades
+## Una escena, un recorrido
 
-`GameSceneFlow` carga la escena elegida al comenzar una partida. Dentro de esa escena, `RoadStreamer` recorre un `RouteDefinition` según la distancia de `RunSession`. El cambio de barrio no carga otra escena ni reinicia estado, tiempo o sensores.
+`Scenes/Game.unity` contiene el juego completo. En `Game world`, el componente `RoadStreamer` tiene el campo **Route**: esa referencia define el recorrido de todas las partidas. No hay elección de zonas en el menú ni carga de otra escena al empezar, reintentar o cambiar de barrio.
 
-| Tipo | Datos o responsabilidad |
+El recorrido predeterminado es `Maps/Routes/Definitions/LaBocaToObelisco.asset`: La Boca durante 30 módulos (360 m), transición durante 16 (192 m) y Obelisco infinito. La sesión puede terminar por tiempo o frenado antes de recorrerlo entero.
+
+Para cambiarlo: abrir Game, seleccionar Game world, asignar otro RouteDefinition y guardar la escena. No hace falta regenerar nada ni añadir escenas al build. La lista del build contiene solamente Game; ArtPreview es una herramienta local del Editor.
+
+## Datos y responsabilidades
+
+| Tipo | Responsabilidad |
 |---|---|
-| `RoadStandard` | Medidas comunes del espacio jugable |
-| `RoadModule` | Prefab con conectores de referencia, superficie y un hijo Art reemplazable |
-| `MapDefinition` | Módulos ordenados, suelo, ambiente, landmark y catálogo de obstáculos |
-| `RouteSection` | Mapa, cantidad de módulos y flag Transition |
-| `RouteDefinition` | Resolución de sección y módulo por distancia; detección de fronteras para patrones suaves |
-| `RoadStreamer` | Pools visuales, colocación de módulos, ambiente y landmarks |
-| `RunnerWorld` | Patrones de recogidas y obstáculos, separados de la decoración |
+| RoadStandard | Longitud de 12 m, calzada de 9 m, carriles a 2,7 m y altura libre de 4,2 m |
+| RoadModule | Contenedor con Entry, Exit, Road y Art |
+| MapDefinition | Secuencia ordenada de módulos, suelo, ambiente, hito visual y obstáculos |
+| RouteSection | Zona, cantidad de módulos y condición de transición |
+| RouteDefinition | Sección y módulo correspondientes a una distancia |
+| RoadStreamer | Reciclado de módulos, ambiente e hitos |
+| RunnerWorld | Ciclista, cámara, monedas, patrones y encuentros |
 
-El [contrato de arte](../Art/Prefabs.md) es la referencia de montaje. Cambiar las constantes de `RoadStandard` requiere revisar generación, prefabs y circulación; los conectores Entry/Exit no calculan automáticamente un nuevo tamaño ni una curva.
+Los módulos y perfiles son assets normales editables. No hay generadores de arte ni un comando global de actualización. La interfaz se edita en `Prefabs/Game UI.prefab`; las escenas se editan y guardan directamente.
 
-## Reciclado y repetición
+## Repetición y validación
 
-`RoadStreamer` mantiene 14 slots y comienza dos índices detrás del avance. Calcula el primer índice con `floor(distancia / longitud) − 2`; coloca cada instancia en Z = `índice × longitud − distancia`.
+Modules se recorre cíclicamente en orden: A, B, C, A... Cada sección empieza por el primer módulo de su zona. Module Count controla cuántos módulos dura una sección; no cambia el tamaño de las piezas.
 
-Al cambiar un índice, devuelve la instancia anterior a su pool y toma el prefab que corresponde al nuevo. `Initialize` prepara pools por variante considerando su frecuencia en los perfiles del recorrido. No editar las listas durante una partida esperando que se amplíen automáticamente esos pools.
+Reglas:
 
-`MapDefinition.ModuleAt` usa módulo matemático sobre la longitud de su array: la elección es ordenada y cíclica, no aleatoria. `RouteDefinition` transforma el índice global en uno local de sección. Cada sección comienza desde el inicio de su lista.
+- Al menos una sección, con una zona válida y módulos asignados.
+- Secciones intermedias: cantidad positiva.
+- Última sección: **0 = infinito**.
+- Una transición necesita duración positiva y una sección de destino.
+- Cada módulo conserva Entry en (0,0,0), Exit en (0,0,12), escala uno y referencias completas.
 
-Las secciones anteriores a la última tienen una longitud finita: `ModuleCount × RoadStandard.ModuleLength`. La última es continua por la lógica de `SectionAt`; su contador se deja en cero como convención de autoría. Validar antes de integrar que:
+Los Inspectors muestran ayuda y errores. RoadStreamer valida la ruta antes de inicializar los pools. Una ruta de una sola zona con cantidad cero es válida y no requiere transición.
 
-- El recorrido tenga al menos una sección y todas tengan Map.
-- Cada mapa tenga Modules no vacío y sin referencias nulas.
-- Los tramos intermedios tengan Module Count positivo.
-- El suelo y el catálogo de tráfico sean los previstos para cada mapa.
+RoadStreamer mantiene 14 posiciones, dos detrás del avance. Cada instancia se coloca en Z = índice × 12 − distancia. Las instancias que salen se devuelven a pools por prefab. No modificar el contenido del recorrido durante Play: los pools se preparan al inicializarlo. `SetRoute` se utiliza antes de Initialize, no es un cambio de recorrido en caliente.
 
-Estas condiciones son necesarias para los cálculos y la inicialización; no hay un validador completo de recorridos en el Inspector.
+## Transiciones
 
-## Ambiente y encuentros durante una transición
+Transition mezcla Sky, Fog, Fog Start y Fog End desde el perfil de enlace hacia el destino. El inicio utiliza el ambiente del propio enlace: hacerlo compatible con el origen. La arquitectura se cambia mediante módulos, no por interpolación de meshes. Tampoco hay fundido automático de texturas de calzada.
 
-Si la sección activa tiene Transition y existe una siguiente, se interpolan Sky, Fog, Fog Start y Fog End desde su mapa hacia el mapa siguiente usando el progreso normalizado de esa sección. La entrada a la transición parte de su propio perfil; no hay un fundido previo desde la sección de origen.
+`NeedsGentlePatterns` suaviza oleadas que cruzan fronteras o caen dentro de una transición. Los obstáculos se eligen por la zona correspondiente a su posición futura.
 
-El material de superficie se asigna por mapa cuando se coloca el módulo. No hay interpolación de texturas, morph de arquitectura, curvas ni desniveles. El enlace visual se prepara con arte y, si hace falta, varias secciones de perfiles intermedios. Ver [diseño de transiciones](../Art/ZonesAndTransitions.md).
+El tramo de enlace actual contiene dos posiciones de salida, ocho de calle arbolada y seis de aproximación. Si Module Count supera la longitud de Modules, la secuencia vuelve a empezar. Consultar [Transiciones](../Art/ZonesAndTransitions.md).
 
-`NeedsGentlePatterns` comprueba el intervalo de una oleada: devuelve verdadero si cruza una frontera de sección o toca una transición. `RunnerWorld` utiliza esa información para simplificar el encuentro y filtrar tráfico largo. La duración y el catálogo también afectan cómo se percibe el paso entre zonas.
+## Prueba artística y mantenimiento
 
-Los landmarks se instancian separadamente y se mantienen como referencia visual al frente. No forman parte de la repetición de cada cuadra ni se comportan como obstáculos del carril.
+ArtPreviewController está disponible solo en el Editor. Tiene dos modos: Route utiliza un RouteDefinition elegido, con una o varias zonas; Module crea perfiles temporales en memoria para repetir una pieza usando el ambiente del MapDefinition asignado en Module Environment. Reutiliza RunnerWorld y RoadStreamer, con velocidad fija y sin límite temporal. Su TickPreview no sustituye las reglas de producción de RunSession.
 
-## Organización de assets
+El Inspector presenta modo, selección de contenido, velocidad y visibilidad. El Foldout Referencias internas está cerrado por defecto y agrupa Settings, World y Road Stream: parámetros compartidos, presentación y reciclado de módulos respectivamente. Settings apunta a un asset compartido; modificar sus valores afecta también a Game. Speed es el control de velocidad específico de la revisión.
 
-Rutas relativas a `Assets/_LOTBA_Game/`:
+No hay daño al ciclista ni feedback de dispositivo en esta revisión. Sí se usan los patrones, dimensiones, movimiento y animaciones del mundo real. Es una revisión visual, no una validación del balance de partida.
 
-```text
-Maps/
-  Shared/Prefabs/Road base.prefab
-  <Zona>/
-    <Zona>.asset
-    Prefabs/Art/
-    Prefabs/Modules/
-    Prefabs/Landmarks/       Si corresponde
-    Scenes/                 Si tiene una escena contenedora
-  Transitions/<OrigenADestino>/
-    Transition.asset
-    Prefabs/Art/
-    Prefabs/Modules/
-  Routes/
-    Definitions/
-    Scenes/
-```
+La escena de revisión conserva su propia composición y referencias a los mismos assets visuales. Si cambia el contrato de RunnerWorld, revisar ambas escenas. No mantener escenas separadas por barrio.
 
-Una zona nueva puede incorporarse a las secciones de un recorrido existente sin sumar una escena. Un RouteDefinition nuevo debe asignarse a un RoadStreamer antes de su inicialización. El sistema no ofrece un cambio público de ruta en caliente.
-
-## Incorporar una nueva opción de recorrido al menú
-
-Crear assets no alcanza para registrar una opción seleccionable. La selección actual es explícita y tiene tres valores. Para ampliarla:
-
-1. Recibir los MapDefinition, RouteDefinition, módulos y catálogos preparados. Revisar referencias y continuidad con [la guía de entrega de arte](../Art/NewMaps.md).
-2. Agregar un valor a `GameLocation` sin renumerar los existentes, que se guardan en preferencias locales.
-3. Actualizar el rango de `GameSceneFlow.Selected`, la ruta de escena y los casos de `PathFor` y `NameFor`. Sus alternativas actuales no descubren assets automáticamente.
-4. Agregar la selección al HUD: campos y eventos de `GameHud`, botón y enlaces de `GameUiSetup`, y las conexiones de `GameController` que correspondan. Mantener el selector oculto durante una partida.
-5. Preparar una escena contenedora con el RouteDefinition asignado a RoadStreamer. Adaptar `MapAssetSetup` y su generación de escenas para conservar esa conexión. `ConfigureWorld` se utiliza desde la misma assembly de Editor.
-6. Incluir la escena en Editor Build Settings **y** en la lista que produce `MapAssetSetup.Apply`. La herramienta reemplaza esa lista; una adición solo manual no permanece al reconstruir.
-7. Revisar apertura desde el menú, reintento y retorno al inicio, además de la progresión entre secciones.
-
-Los pasos de revisión se realizan por el equipo al integrar el cambio; este documento no presupone que una opción nueva esté implementada.
-
-## Herramientas de autoría
-
-`MapAssetSetup` conecta perfiles, carretera, cámara y vista previa. `MapArtBuilder` y `TransitionArtBuilder` generan recursos visuales base; `PrototypeArt` concentra recursos compartidos. `GameSceneBuilder` compone la escena de entrada y `GameUiSetup` actualiza el HUD.
-
-**LOTBA > Update maps and UI** reconstruye los contenedores de las opciones conocidas y conserva perfiles y módulos existentes. Las vistas previas tienen tag EditorOnly y se ocultan durante la inicialización. Las ediciones artísticas persistentes pertenecen a prefabs y perfiles, no a esos objetos de vista previa.
+Los placeholders combinados son assets válidos y se conservan como referencia. Los modelos nuevos pueden usar prefabs anidados editables. No hay combinación obligatoria de meshes ni procesamiento automático de optimización en el build; cualquier optimización futura debe conservar las fuentes y justificarse con mediciones en Android.

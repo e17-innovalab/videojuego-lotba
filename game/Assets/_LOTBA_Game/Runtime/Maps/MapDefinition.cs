@@ -19,6 +19,28 @@ namespace Lotba.Game
         public Material RoadMaterial => roadMaterial;
         public string DisplayName => displayName;
         public RoadModule[] Modules => modules;
+        public string ValidationError
+        {
+            get
+            {
+                if (modules == null || modules.Length == 0) return "Assign at least one module to the zone.";
+                foreach (var module in modules)
+                {
+                    if (module == null) return "The zone has an empty module slot.";
+                    if (module.ValidationError != null) return $"{module.name}: {module.ValidationError}";
+                }
+                return null;
+            }
+        }
+#if UNITY_EDITOR
+        public static MapDefinition CreatePreview(MapDefinition environment, RoadModule module)
+        {
+            var map = Instantiate(environment);
+            map.hideFlags = HideFlags.DontSave;
+            map.modules = new[] { module };
+            return map;
+        }
+#endif
         public GameObject Landmark => landmark;
         public float LandmarkDistance => landmarkDistance;
         public Color Sky => sky;
