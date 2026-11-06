@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -9,13 +8,17 @@ namespace Lotba.Game
     {
         // Persistent keys are independent of type names and namespaces.
         private const string Prefix = "Lotba.CityRush.";
-        private bool initialized, vibrationRequested = true, tiltRequested;
+        private bool initialized, tiltRequested;
         private Accelerometer sensor;
         private bool sensorOwned;
-        private float neutralX, filteredX, nextTiltCommand, nextVibration, calibrationUntil;
-        private int tiltLane = 1;
+        private float neutralX, filteredX, nextVibration, calibrationUntil;
+        private int vibrationLevel = 2;
+        private bool tiltArmed;
+        private float neutralSince = -1f;
+        public string VibrationLevelLabel => vibrationLevel == 0 ? "NO" :
+            vibrationLevel == 1 ? "BAJA" : vibrationLevel == 2 ? "MEDIA" : "ALTA";
         public bool VibrationAvailable { get; private set; }
-        public bool VibrationEnabled => VibrationAvailable && vibrationRequested;
+        public bool VibrationEnabled => VibrationAvailable && vibrationLevel > 0;
         public bool TiltAvailable => Application.isMobilePlatform && Accelerometer.current != null;
         public bool TiltEnabled => TiltAvailable && tiltRequested;
 #if UNITY_ANDROID && !UNITY_EDITOR
@@ -26,7 +29,8 @@ namespace Lotba.Game
         {
             if (initialized) return;
             initialized = true;
-            vibrationRequested = PlayerPrefs.GetInt(Prefix + "Vibration", 1) != 0;
+            int defaultLevel = PlayerPrefs.GetInt(Prefix + "Vibration", 1) == 0 ? 0 : 2;
+            vibrationLevel = Mathf.Clamp(PlayerPrefs.GetInt(Prefix + "VibrationLevel", defaultLevel), 0, 3);
             tiltRequested = PlayerPrefs.GetInt(Prefix + "Tilt", 0) != 0;
 #if UNITY_ANDROID && !UNITY_EDITOR
             try
@@ -40,12 +44,15 @@ namespace Lotba.Game
             catch (AndroidJavaException) { VibrationAvailable = false; }
 #endif
         }
-        public void ToggleVibration()
+        public void CycleVibrationLevel()
         {
             if (!VibrationAvailable) return;
-            vibrationRequested = !vibrationRequested;
-            PlayerPrefs.SetInt(Prefix + "Vibration", vibrationRequested ? 1 : 0); PlayerPrefs.Save();
-            if (!vibrationRequested) CancelFeedback();
+            vibrationLevel = (vibrationLevel + 1) % 4;
+            PlayerPrefs.SetInt(Prefix + "VibrationLevel", vibrationLevel);
+            PlayerPrefs.Save();
+            CancelFeedback();
+            nextVibration = 0;
+            Feedback(false);
         }
         public void ToggleTilt()
         {
@@ -70,21 +77,30 @@ namespace Lotba.Game
         {
             if (!TiltEnabled) return;
             SetSampling(true);
-            neutralX = filteredX = ReadHorizontalGravity(); tiltLane = 1; calibrationUntil = Time.unscaledTime + .35f; nextTiltCommand = calibrationUntil;
+            neutralX = filteredX = ReadHorizontalGravity();
+            calibrationUntil = Time.unscaledTime + .35f;
+            tiltArmed = false;
+            neutralSince = -1f;
         }
-        public int ReadLaneDirection(int currentLane)
+        public int ReadLaneDirection()
         {
             if (!TiltEnabled || sensor == null || !sensor.added || !sensor.enabled) return 0;
+            float now = Time.unscaledTime;
             filteredX = Mathf.Lerp(filteredX, ReadHorizontalGravity(), 1 - Mathf.Exp(-10 * Time.unscaledDeltaTime));
-            if (Time.unscaledTime < calibrationUntil) { neutralX = filteredX; return 0; }
+            if (now < calibrationUntil) { neutralX = filteredX; return 0; }
+
             float tilt = filteredX - neutralX;
-            // Hysteresis prevents jitter around lane boundaries; neutral returns to the middle.
-            if (tilt > .2f) tiltLane = 2;
-            else if (tilt < -.2f) tiltLane = 0;
-            else if (Mathf.Abs(tilt) < .1f) tiltLane = 1;
-            if (Time.unscaledTime < nextTiltCommand || currentLane == tiltLane) return 0;
-            nextTiltCommand = Time.unscaledTime + .16f;
-            return Math.Sign(tiltLane - currentLane);
+            if (!tiltArmed)
+            {
+                if (Mathf.Abs(tilt) >= .11f) neutralSince = -1f;
+                else if (neutralSince < 0f) neutralSince = now;
+                else if (now - neutralSince >= .09f) tiltArmed = true;
+                return 0;
+            }
+            if (Mathf.Abs(tilt) < .17f) return 0;
+            tiltArmed = false;
+            neutralSince = -1f;
+            return tilt < 0f ? -1 : 1;
         }
         private float ReadHorizontalGravity()
         {
@@ -99,15 +115,17 @@ namespace Lotba.Game
 #if UNITY_ANDROID && !UNITY_EDITOR
             try
             {
+                long duration = (impact ? 35L : 12L) + (vibrationLevel - 1) * 8L;
                 if (androidSdk >= 26)
                 {
+                    int amplitude = vibrator.Call<bool>("hasAmplitudeControl")
+                        ? 120 + (vibrationLevel - 1) * 55 + (impact ? 20 : 0)
+                        : -1;
                     using (var effects = new AndroidJavaClass("android.os.VibrationEffect"))
-                    using (var effect = androidSdk >= 29
-                        ? effects.CallStatic<AndroidJavaObject>("createPredefined", impact ? 0 : 2)
-                        : effects.CallStatic<AndroidJavaObject>("createOneShot", impact ? 35L : 12L, -1))
+                    using (var effect = effects.CallStatic<AndroidJavaObject>("createOneShot", duration, amplitude))
                         vibrator.Call("vibrate", effect);
                 }
-                else vibrator.Call("vibrate", impact ? 35L : 12L);
+                else vibrator.Call("vibrate", duration);
             }
             catch (AndroidJavaException) { VibrationAvailable = false; }
 #endif

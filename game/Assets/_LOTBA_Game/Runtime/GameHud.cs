@@ -6,9 +6,9 @@ namespace Lotba.Game
     /// <summary>Scene UI bindings. Configuration exposes only implemented, available capabilities.</summary>
     public sealed class GameHud : MonoBehaviour
     {
-        [SerializeField] private TMPro.TMP_Text gameTitle, developmentLabel, identityFooter;
+        [SerializeField] private TMPro.TMP_Text gameTitle, developmentLabel, identityFooter, buildVersion;
         [SerializeField] private GameObject readyPanel, pausePanel, resultPanel, raceHud, controls, settingsPanel;
-        [SerializeField] private UnityEngine.UI.Button start, retry, menu, pause, resume, brake, pauseMenu;
+        [SerializeField] private UnityEngine.UI.Button start, retry, menu, pause, resume, brake, pauseMenu, exit;
         [SerializeField] private UnityEngine.UI.Button[] configurationButtons;
         [SerializeField] private UnityEngine.UI.Button closeSettings, soundButton, vibrationButton, tiltButton;
         [SerializeField] private TMPro.TMP_Text soundLabel, vibrationLabel, tiltLabel, settingsNotice;
@@ -24,6 +24,8 @@ namespace Lotba.Game
         private void Awake()
         {
             ApplyIdentity();
+            exit.gameObject.SetActive(Application.platform != RuntimePlatform.WebGLPlayer);
+            exit.onClick.AddListener(ExitGame);
             popupOrigin = popup.rectTransform.anchoredPosition;
             start.onClick.AddListener(() => StartRequested?.Invoke()); retry.onClick.AddListener(() => StartRequested?.Invoke());
             pauseMenu.onClick.AddListener(() => MenuRequested?.Invoke());
@@ -35,6 +37,14 @@ namespace Lotba.Game
             soundButton.onClick.AddListener(() => SoundRequested?.Invoke());
             vibrationButton.onClick.AddListener(() => VibrationRequested?.Invoke());
             tiltButton.onClick.AddListener(() => TiltRequested?.Invoke());
+        }
+        private static void ExitGame()
+        {
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
         }
         public void ApplyIdentity()
         {
@@ -57,9 +67,16 @@ namespace Lotba.Game
                 developmentLabel.fontSizeMax = 17;
             }
             if (identityFooter != null) identityFooter.text = GameIdentity.FooterLabel;
+            if (buildVersion != null) buildVersion.text = $"v{Application.version}";
         }
         public void ResetView() { popupUntil = multiplierPulseUntil = 0; previousMultiplier = 1; SettingsOpen = false; }
         public void OpenSettings() => SettingsOpen = true;
+        public bool IsRaceButtonAt(Vector2 screenPoint) =>
+            IsButtonAt(pause, screenPoint) || IsButtonAt(brake, screenPoint);
+
+        private static bool IsButtonAt(UnityEngine.UI.Button button, Vector2 screenPoint) =>
+            button.isActiveAndEnabled && button.IsInteractable() &&
+            RectTransformUtility.RectangleContainsScreenPoint((RectTransform)button.transform, screenPoint);
         public void ShowFeedback(long amount, bool impact)
         {
             popup.text = impact ? (amount == 0 ? "¡OJO!" : $"−{Math.Abs(amount)}") : amount > 10 ? $"+10\n<size=22>×{amount / 10} = {amount} pts</size>" : "+10";
@@ -94,7 +111,7 @@ namespace Lotba.Game
             else speedLines.ClearEffect();
             soundLabel.text = muted ? "SONIDO: NO" : "SONIDO: SÍ";
             vibrationButton.interactable = devices.VibrationAvailable;
-            vibrationLabel.text = !devices.VibrationAvailable ? "VIBRACIÓN: NO DISPONIBLE" : devices.VibrationEnabled ? "VIBRACIÓN: SÍ" : "VIBRACIÓN: NO";
+            vibrationLabel.text = !devices.VibrationAvailable ? "VIBRACIÓN: NO DISPONIBLE" : "VIBRACIÓN: " + devices.VibrationLevelLabel;
             tiltButton.interactable = devices.TiltAvailable;
             tiltLabel.text = !devices.TiltAvailable ? "INCLINACIÓN: NO DISPONIBLE" : devices.TiltEnabled ? "INCLINACIÓN: SÍ" : "INCLINACIÓN: NO";
             settingsNotice.text = devices.TiltEnabled ? "Al continuar, sostené el teléfono centrado un instante para calibrar la inclinación." : "Los cambios de sonido y vibración se aplican a esta partida.";

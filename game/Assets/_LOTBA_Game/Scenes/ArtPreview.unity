@@ -153,7 +153,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9471e4270e854174dbc77f05184dc61f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Lotba.Game::Lotba.Game.ArtPreviewController
-  mode: 1
+  mode: 2
   zone: {fileID: 11400000, guid: d5659d2fa0913f848a5d52f88d8950d9, type: 2}
   route: {fileID: 11400000, guid: 79ee1060281310c4aa5b10553f5ae5bd, type: 2}
   module: {fileID: 877817224993449836, guid: e04a235d919875c449af6558c29e4bf1, type: 3}

@@ -40,6 +40,19 @@ La configuración actual de partida es de **120 segundos**. Esa duración sirve 
 
 La base técnica permite evaluar jugabilidad y presentación. No implica que se haya validado su efecto educativo ni aprobado una versión final por parte de LOTBA.
 
+## Abrir el proyecto por primera vez
+
+Después de clonar el repositorio, instalá Git LFS si todavía no lo tenés y ejecutá estos comandos desde la raíz del repositorio:
+
+```bash
+git lfs install
+git lfs pull
+```
+
+Después, abrí la carpeta `game/` desde Unity Hub con la versión indicada en [ProjectVersion.txt](game/ProjectSettings/ProjectVersion.txt).
+
+Si el piso de La Boca aparece blanco, buscá `La Boca cobblestones.png` en Project y comprobá que el Inspector muestra la textura. Si Unity ya estaba abierto cuando la descargaste, seleccioná el PNG y usá **Reimport**.
+
 ## Tecnología y documentación
 
 Se utiliza **Unity**, con Android como plataforma prioritaria. El acceso web se mantiene como alternativa en evaluación para facilitar pruebas y distribución. No se requiere una cuenta ni un backend para jugar; la disponibilidad sin conexión y la compatibilidad final deben comprobarse en el entorno de entrega.

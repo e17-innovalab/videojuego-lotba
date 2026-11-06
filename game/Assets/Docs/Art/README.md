@@ -2,16 +2,29 @@
 
 Esta guía permite trabajar en el arte del juego sin tener que entender sus scripts. El objetivo es que el equipo pueda reemplazar modelos y sumar variantes manteniendo la misma circulación y reglas.
 
+## Tu primer cambio de arte
+
+Vas a cambiar una cuadra de La Boca y verla en movimiento. Trabajá en el duplicado para conservar el módulo que usa el juego.
+
+1. En **Project**, abrí `Assets/_LOTBA_Game/Maps/LaBoca/Prefabs/Modules`. Seleccioná `Module 0.prefab`, duplicalo con **Ctrl+D** y nombrá la copia `Module_Practica`.
+2. Abrí la copia con doble clic. En **Hierarchy**, expandí **Art**. Reemplazá el hijo **Placeholder visual** por un prefab visual propio o por un cubo de prueba. Si usás un cubo, ponelo en la posición local **(5.7, 1, 6)** para verlo sobre la vereda. Conservá la raíz, **Entry**, **Exit**, **Road** y el contenedor **Art**.
+3. Guardá el prefab y salí de **Prefab Mode**. Abrí **LOTBA > Open art preview** y seleccioná **Art preview - configure here** en **Hierarchy**.
+4. En el **Inspector**, elegí **Mode = Module**, arrastrá `Module_Practica` a **Module** y asigná `Maps/LaBoca/LaBoca.asset` a **Module Environment**.
+5. Entrá en **Play**. Deberías ver el nuevo objeto en la misma posición de cada tramo, con la superficie de La Boca. Podés desactivar **Show Obstacles** y **Show Coins** para mirar la cuadra con más claridad.
+
+Si ves la cuadra original, comprobá que **Module** apunta a la copia y que guardaste el cambio bajo **Art**. Para ajustar la posición, salí de Play y editá el prefab. Consultá la [guía de prefabs](Prefabs.md) y la [guía de ArtPreview](Preview.md) para seguir trabajando.
+
 ## Elegí una tarea
 
 | Quiero… | Guía |
 |---|---|
 | Ver una zona o módulo en movimiento sin menús | [Prueba de arte](Preview.md) |
 | Cambiar edificios, vegetación, materiales o un obstáculo | [Reemplazar arte y trabajar con prefabs](Prefabs.md) |
+| Elegir qué obstáculos pueden aparecer en cada barrio | [Catálogos de obstáculos por zona](../Development/Obstacles.md#catálogos-y-pools) |
 | Entender cómo se repite una calle y hacer una transición creíble | [Zonas y transiciones](ZonesAndTransitions.md) |
 | Crear módulos, una zona nueva o un recorrido | [Nuevos mapas y recorridos](NewMaps.md) |
 
-Para empezar, seguí las guías en ese orden. No hace falta crear un mapa nuevo para reemplazar el arte de uno existente.
+Después del primer ejercicio, elegí la guía que corresponda a tu tarea.
 
 ## Las cinco piezas del escenario
 

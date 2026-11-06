@@ -26,7 +26,7 @@ namespace Lotba.Game
             hud.StartRequested += RequestStart; hud.BrakeRequested += RequestBrake;
             hud.PauseRequested += RequestPause; hud.MenuRequested += RequestMenu;
             hud.SoundRequested += ToggleSound; hud.SettingsRequested += OpenSettings;
-            hud.VibrationRequested += devices.ToggleVibration; hud.TiltRequested += devices.ToggleTilt;
+            hud.VibrationRequested += devices.CycleVibrationLevel; hud.TiltRequested += devices.ToggleTilt;
             world.EncounterFeedback += OnEncounter;
             hud.Render(session, settings, muted, devices);
         }
@@ -36,8 +36,12 @@ namespace Lotba.Game
             if (keyboard != null && keyboard.spaceKey.wasPressedThisFrame) RequestBrake();
             if (hud.SettingsOpen) return;
             ReadSwipe();
-            if (session.State == RunState.Running && laneRequested == 0 && Time.unscaledTime - lastManualLane > .35f)
-                laneRequested = devices.ReadLaneDirection(session.Lane);
+            if (session.State == RunState.Running)
+            {
+                int tiltDirection = devices.ReadLaneDirection();
+                if (laneRequested == 0 && Time.unscaledTime - lastManualLane > .35f)
+                    laneRequested = tiltDirection;
+            }
             if (keyboard == null) return;
             if (keyboard.escapeKey.wasPressedThisFrame || keyboard.pKey.wasPressedThisFrame) RequestPause();
             if (keyboard.leftArrowKey.wasPressedThisFrame || keyboard.aKey.wasPressedThisFrame) RequestLane(-1);
@@ -94,7 +98,7 @@ namespace Lotba.Game
             if (pointer.press.wasPressedThisFrame)
             {
                 swipeOrigin = pointer.position.ReadValue();
-                trackingSwipe = session.State == RunState.Running && swipeOrigin.y > Screen.height * .2f && swipeOrigin.y < Screen.height * .9f;
+                trackingSwipe = session.State == RunState.Running && !hud.IsRaceButtonAt(swipeOrigin);
             }
             if (!trackingSwipe) return;
             if (session.State != RunState.Running) { trackingSwipe = false; return; }
@@ -135,7 +139,7 @@ namespace Lotba.Game
             hud.StartRequested -= RequestStart; hud.BrakeRequested -= RequestBrake;
             hud.PauseRequested -= RequestPause; hud.MenuRequested -= RequestMenu;
             hud.SoundRequested -= ToggleSound; hud.SettingsRequested -= OpenSettings;
-            hud.VibrationRequested -= devices.ToggleVibration; hud.TiltRequested -= devices.ToggleTilt;
+            hud.VibrationRequested -= devices.CycleVibrationLevel; hud.TiltRequested -= devices.ToggleTilt;
             world.EncounterFeedback -= OnEncounter;
         }
     }
