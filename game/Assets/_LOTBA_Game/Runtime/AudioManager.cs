@@ -2,12 +2,13 @@ using UnityEngine;
 
 namespace Lotba.Game
 {
-    /// <summary>Owns short generated feedback clips and releases them with the scene.</summary>
+    /// <summary>Plays gameplay sound effects and applies the shared mute setting.</summary>
     [RequireComponent(typeof(AudioSource))]
-    public sealed class AudioFeedback : MonoBehaviour
+    public sealed class AudioManager : MonoBehaviour
     {
         private AudioSource source;
-        private AudioClip pickup;
+        [SerializeField] private AudioClip gemPickup;
+        [SerializeField, Range(0f, 1f)] private float gemPickupVolume = .7f;
         private AudioClip impact;
         public bool Muted { get; private set; }
 
@@ -15,8 +16,6 @@ namespace Lotba.Game
         {
             source = GetComponent<AudioSource>();
             source.playOnAwake = false;
-            source.volume = .15f;
-            pickup = CreateTone("Coin pickup", 660f, .08f);
             impact = CreateTone("Loss feedback", 130f, .16f);
         }
 
@@ -31,10 +30,8 @@ namespace Lotba.Game
         public void Play(bool impactFeedback)
         {
             if (Muted) return;
-            if (!impactFeedback)
-                source.PlayOneShot(pickup);
-            else
-                source.PlayOneShot(impact);
+            if (impactFeedback) source.PlayOneShot(impact, .15f);
+            else if (gemPickup != null) source.PlayOneShot(gemPickup, gemPickupVolume);
         }
 
         public void Stop() => source.Stop();
@@ -55,7 +52,6 @@ namespace Lotba.Game
 
         private void OnDestroy()
         {
-            if (pickup != null) Destroy(pickup);
             if (impact != null) Destroy(impact);
         }
     }

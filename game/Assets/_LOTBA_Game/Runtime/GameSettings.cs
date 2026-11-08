@@ -11,8 +11,13 @@ namespace Lotba.Game
         [SerializeField, Min(1f)] private float maximumSpeed = 28f;
         [SerializeField, Min(1f)] private float accelerationTime = 35f;
         [SerializeField, Range(.07f, .25f)] private float laneChangeTime = .11f;
-        [SerializeField, Range(.65f, 2f)] private float initialPatternInterval = 1.3f;
-        [SerializeField, Range(.65f, 2f)] private float finalPatternInterval = .85f;
+        [Header("Track patterns (metres)")]
+        [SerializeField, Min(1f)] private float initialPatternSpacing = 28f;
+        [SerializeField, Min(1f)] private float finalPatternSpacing = 26f;
+        [SerializeField, Min(1f)] private float patternRampDistance = 1100f;
+        [SerializeField, Min(.1f)] private float initialGemSpacing = 2.25f;
+        [SerializeField, Min(.1f)] private float finalGemSpacing = 3.5f;
+        [SerializeField, Min(0f)] private float patternClearance = 8f;
         [SerializeField, Min(2f)] private float previewTime = 3.3f;
         [SerializeField] private int seed = 2710;
         [Header("Camera follow")]
@@ -34,8 +39,13 @@ namespace Lotba.Game
         public float MaximumSpeed => Mathf.Max(initialSpeed, maximumSpeed);
         public float AccelerationTime => accelerationTime;
         public float LaneChangeTime => laneChangeTime;
-        public float InitialPatternInterval => initialPatternInterval;
-        public float FinalPatternInterval => finalPatternInterval;
+        public float PatternSpacingAt(float distance) =>
+            Mathf.Max(1f, Mathf.Lerp(initialPatternSpacing, finalPatternSpacing, distance / Mathf.Max(1f, patternRampDistance)));
+
+        public float GemSpacingAt(float distance) =>
+            Mathf.Max(.1f, Mathf.Lerp(initialGemSpacing, finalGemSpacing, distance / Mathf.Max(1f, patternRampDistance)));
+
+        public float PatternClearance => Mathf.Max(0f, patternClearance);
         public float PreviewTime => previewTime;
         public int Seed => seed;
     }

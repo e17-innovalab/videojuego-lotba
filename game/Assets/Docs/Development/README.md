@@ -52,7 +52,7 @@ El código principal usa el namespace `Lotba.Game`, con assemblies separadas par
 | `RoadStreamer` | Reciclado de módulos y mezcla ambiental según distancia |
 | `ArtPreviewController` | Revisión visual en el Editor, con el mismo mundo y sin menú |
 | `DeviceFeedbackAndInput` | Detección de capacidades y vibración |
-| `AudioFeedback` | Feedback sonoro |
+| `AudioManager` | Feedback sonoro |
 | `PortraitViewport` | Encuadre vertical y zona segura |
 
 La lógica de sesión y la presentación se mantienen separadas. Monedas, obstáculos y módulos utilizan pools; los perfiles de mapas y obstáculos definen el contenido por referencias serializadas. Ver sus contratos antes de reemplazar arte o cambiar huellas jugables.
@@ -89,7 +89,7 @@ Las claves de preferencias locales son identificadores persistentes y no deben c
 | Botón o panel | `Game UI.prefab` para autoría; `GameHud` para referencias y eventos serializados |
 | Patrón de monedas o detección de un obstáculo | `RunnerWorld`; mantener el contrato de `ObstacleDefinition` |
 | Recorrido o selección de zona | Perfiles y proceso de integración de [World.md](World.md) |
-| Feedback o una capacidad de dispositivo | `DeviceFeedbackAndInput`, `AudioFeedback` y el ciclo de pausa/foco de `GameController` |
+| Feedback o una capacidad de dispositivo | `DeviceFeedbackAndInput`, `AudioManager` y el ciclo de pausa/foco de `GameController` |
 | Nombre público | `GameIdentity`; el nombre de la aplicación lo sincroniza `GameIdentitySettings` |
 
 Al agregar UI, completar los enlaces de los campos serializados además de crear el objeto visible. El HUD emite intenciones y el controlador coordina los cambios de estado; evitar reglas de partida dentro de un botón. Al cambiar la simulación, conservar que el estado de sesión no dependa de objetos visuales.

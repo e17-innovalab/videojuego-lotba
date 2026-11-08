@@ -27,7 +27,7 @@ El recorrido se asigna desde el Editor en RoadStreamer; no se elige desde el men
 
 Un choque reinicia la racha y descuenta `min(puntaje, max(50, puntaje / 4))`, usando división entera. También reduce temporalmente la velocidad y activa 1,1 segundos de protección frente a impactos. Cada obstáculo puede cobrar un único impacto.
 
-Las monedas recogidas ascienden y se reducen durante 0,32 segundos antes de volver al pool. El texto flotante muestra `+10` y, cuando corresponde, el cálculo del puntaje multiplicado. Los resultados distinguen valor de monedas, cantidad recogida, puntaje y distancia.
+Las gemas desaparecen al recogerlas y el marcador se actualiza en el HUD. Los resultados distinguen valor de monedas, cantidad recogida, puntaje y distancia.
 
 ## Parámetros de diseño
 
@@ -39,7 +39,10 @@ El asset [GameSettings](../../_LOTBA_Game/Settings/GameSettings.asset) concentra
 | Initial Speed / Maximum Speed | 18 / 28 m/s | Rango de velocidad |
 | Acceleration Time | 35 s | Constante de la curva exponencial de aceleración |
 | Lane Change Time | 0,11 s | Duración del cambio lateral |
-| Initial / Final Pattern Interval | 1,3 / 0,85 s | Intervalo entre patrones |
+| Initial / Final Pattern Spacing | 28 / 26 m | Distancia base entre inicios de patrón |
+| Pattern Ramp Distance | 1100 m | Distancia de ruta en la que cambian gradualmente las separaciones |
+| Initial / Final Gem Spacing | 2,25 / 3,5 m | Distancia entre gemas dentro de las hiladas generadas |
+| Pattern Clearance | 8 m | Margen desde la última gema o el fin de la colisión hasta el próximo patrón |
 | Preview Time | 3,3 s | Anticipación para la aparición de encuentros |
 | Camera Follow Time / Strength | 0,13 s / 0,95 | Amortiguación y seguimiento lateral |
 | First Level Coins / Extra Coins Per Level | 8 / 3 | Exigencia de carga por nivel |

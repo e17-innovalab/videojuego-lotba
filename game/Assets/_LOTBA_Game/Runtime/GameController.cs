@@ -9,7 +9,7 @@ namespace Lotba.Game
         [SerializeField] private GameSettings settings;
         [SerializeField] private RunnerWorld world;
         [SerializeField] private GameHud hud;
-        [SerializeField] private AudioFeedback audioFeedback;
+        [SerializeField] private AudioManager audioFeedback;
         [SerializeField] private DeviceFeedbackAndInput devices;
         private RunSession session;
         private bool startRequested, brakeRequested, jumpRequested, pauseRequested, menuRequested;
@@ -101,7 +101,7 @@ namespace Lotba.Game
             if (Mathf.Abs(delta.x) > Mathf.Abs(delta.y)) RequestLane(delta.x > 0 ? 1 : -1);
             else if (delta.y > 0) jumpRequested = true;
         }
-        private void OnEncounter(long amount, bool impact) { hud.ShowFeedback(amount, impact); audioFeedback.Play(impact); devices.Feedback(impact); }
+        private void OnEncounter(bool impact) { audioFeedback.Play(impact); devices.Feedback(impact); }
         private void RequestStart() => startRequested = true;
         private void RequestBrake() => brakeRequested = true;
         private void RequestPause() { if (!hud.SettingsOpen) pauseRequested = true; }

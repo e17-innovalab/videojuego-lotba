@@ -1181,7 +1181,7 @@ MonoBehaviour:
   - {fileID: 1124116508}
   roadStream: {fileID: 1708434622}
   worldCamera: {fileID: 265114052}
-  coinPrefab: {fileID: 7741776930961523502, guid: eb3da27bfc252724f8c7298cdf7e9cc3, type: 3}
+  coinPrefab: {fileID: 2372746718442866254, guid: 6a5717118b1d8ab4783b577989af8f05, type: 3}
   sparks: {fileID: 1698404320}
   riderShadow: {fileID: 425062163}
 --- !u!4 &1708434621

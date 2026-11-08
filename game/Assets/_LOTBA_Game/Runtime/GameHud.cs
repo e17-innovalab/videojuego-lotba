@@ -12,13 +12,12 @@ namespace Lotba.Game
         [SerializeField] private UnityEngine.UI.Button[] configurationButtons;
         [SerializeField] private UnityEngine.UI.Button closeSettings, soundButton, vibrationButton;
         [SerializeField] private TMPro.TMP_Text soundLabel, vibrationLabel;
-        [SerializeField] private TMPro.TMP_Text score, coins, streak, multiplier, speed, remaining, popup, resultTitle, resultStats;
+        [SerializeField] private TMPro.TMP_Text score, coins, streak, multiplier, speed, remaining, resultTitle, resultStats;
         [SerializeField] private UnityEngine.UI.Image streakFill;
         [SerializeField] private SpeedGauge gauge;
         [SerializeField] private SpeedLines speedLines;
-        private float popupUntil, popupDuration, multiplierPulseUntil;
+        private float multiplierPulseUntil;
         private int previousMultiplier = 1;
-        private Vector2 popupOrigin;
         public bool SettingsOpen { get; private set; }
         public event Action StartRequested, MenuRequested, PauseRequested, BrakeRequested, SoundRequested, SettingsRequested, VibrationRequested;
         private void Awake()
@@ -26,7 +25,6 @@ namespace Lotba.Game
             ApplyIdentity();
             exit.gameObject.SetActive(Application.platform != RuntimePlatform.WebGLPlayer);
             exit.onClick.AddListener(ExitGame);
-            popupOrigin = popup.rectTransform.anchoredPosition;
             start.onClick.AddListener(() => StartRequested?.Invoke()); retry.onClick.AddListener(() => StartRequested?.Invoke());
             pauseMenu.onClick.AddListener(() => MenuRequested?.Invoke());
             menu.onClick.AddListener(() => MenuRequested?.Invoke());
@@ -68,7 +66,7 @@ namespace Lotba.Game
             if (identityFooter != null) identityFooter.text = GameIdentity.FooterLabel;
             if (buildVersion != null) buildVersion.text = $"v{Application.version}";
         }
-        public void ResetView() { popupUntil = multiplierPulseUntil = 0; previousMultiplier = 1; SettingsOpen = false; }
+        public void ResetView() { multiplierPulseUntil = 0; previousMultiplier = 1; SettingsOpen = false; }
         public void OpenSettings() => SettingsOpen = true;
         public bool IsRaceButtonAt(Vector2 screenPoint) =>
             IsButtonAt(pause, screenPoint) || IsButtonAt(brake, screenPoint);
@@ -76,12 +74,6 @@ namespace Lotba.Game
         private static bool IsButtonAt(UnityEngine.UI.Button button, Vector2 screenPoint) =>
             button.isActiveAndEnabled && button.IsInteractable() &&
             RectTransformUtility.RectangleContainsScreenPoint((RectTransform)button.transform, screenPoint);
-        public void ShowFeedback(long amount, bool impact)
-        {
-            popup.text = impact ? (amount == 0 ? "¡OJO!" : $"−{Math.Abs(amount)}") : amount > 10 ? $"+10\n<size=22>×{amount / 10} = {amount} pts</size>" : "+10";
-            popup.color = impact ? new Color(1, .3f, .16f) : new Color(1, .92f, .48f);
-            popupDuration = impact ? .7f : .4f; popupUntil = Time.unscaledTime + popupDuration;
-        }
         public void Render(RunSession session, GameSettings settings, bool muted, DeviceFeedbackAndInput devices)
         {
             bool running = session.State == RunState.Running;
@@ -102,10 +94,6 @@ namespace Lotba.Game
             streakFill.fillAmount = session.StreakProgress;
             speed.text = $"{session.Speed * 3.6f:0}"; remaining.text = $"{session.Remaining:0} s";
             gauge.Value = Mathf.InverseLerp(8, settings.MaximumSpeed, session.Speed);
-            popup.gameObject.SetActive(running && Time.unscaledTime < popupUntil);
-            popup.alpha = Mathf.Clamp01((popupUntil - Time.unscaledTime) / .1f);
-            float progress = popupDuration > 0 ? 1 - Mathf.Clamp01((popupUntil - Time.unscaledTime) / popupDuration) : 0;
-            popup.rectTransform.anchoredPosition = popupOrigin + Vector2.up * (progress * 26);
             if (running) speedLines.Intensity = Mathf.InverseLerp(settings.InitialSpeed * .8f, settings.MaximumSpeed, session.Speed);
             else speedLines.ClearEffect();
             soundLabel.text = muted ? "SONIDO: NO" : "SONIDO: SÍ";

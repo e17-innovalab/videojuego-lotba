@@ -27,7 +27,8 @@ namespace Lotba.Game
         private readonly HashSet<ObstacleDefinition> registeredObstacles = new HashSet<ObstacleDefinition>();
         private GameSettings settings;
         private System.Random random;
-        private float spawnTimer;
+        private const float MinimumPreviewDistance = 58f;
+        private float nextPatternDistance;
         private float laneTime;
         private float laneOrigin;
         private int visualLane = 1;
@@ -46,7 +47,7 @@ namespace Lotba.Game
                     item.View.gameObject.SetActive(item.Active && (item.Kind == ItemKind.Coin ? coins : obstacles));
         }
 #endif
-        public event Action<long, bool> EncounterFeedback;
+        public event Action<bool> EncounterFeedback;
         private enum ItemKind { Coin, Obstacle }
         private sealed class TrackItem
         {
@@ -55,10 +56,6 @@ namespace Lotba.Game
             public ObstacleDefinition Definition;
             public bool ObstacleHit;
             public bool Active;
-            public bool Collecting;
-            public float CollectTime;
-            public Vector3 Scale;
-            public Vector3 PickupOrigin;
         }
         private readonly struct Crossing
         {
@@ -83,7 +80,7 @@ namespace Lotba.Game
         {
             random = new System.Random(settings.Seed);
             foreach (TrackItem item in items) Hide(item);
-            jump.Reset(); spawnTimer = 0; wave = 0; safeLane = visualLane = 1;
+            jump.Reset(); nextPatternDistance = MinimumPreviewDistance; wave = 0; safeLane = visualLane = 1;
             laneOrigin = laneTime = pedalAngle = 0;
             rider.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
             riderShadow.localPosition = new Vector3(0, .025f, 0);
@@ -121,29 +118,12 @@ namespace Lotba.Game
             pedalAngle += travel * 35;
             for (int i = 0; i < pedals.Length; i++) pedals[i].localRotation = Quaternion.Euler(Mathf.Sin((pedalAngle + i * 180) * Mathf.Deg2Rad) * 22, 0, 0);
             roadStream.Advance(session.Distance);
-            spawnTimer -= dt;
-            if (spawnTimer <= 0)
-            {
-                SpawnPattern(session);
-                spawnTimer += Mathf.Lerp(settings.InitialPatternInterval, settings.FinalPatternInterval, Mathf.Clamp01(session.Elapsed / 45f));
-            }
             crossings.Clear();
             foreach (TrackItem item in items)
             {
                 if (!item.Active) continue;
-                if (item.Collecting)
-                {
-                    item.CollectTime += dt;
-                    float t = Mathf.Clamp01(item.CollectTime / .32f);
-                    float ease = 1 - (1 - t) * (1 - t);
-                    item.View.localPosition = item.PickupOrigin + Vector3.up * (ease * 1.65f);
-                    item.View.localScale = item.Scale * (1 - t * t);
-                    if (t >= 1) Hide(item);
-                    continue;
-                }
                 float previousZ = item.View.localPosition.z;
                 item.View.localPosition += Vector3.back * travel;
-                if (item.Kind == ItemKind.Coin) item.View.Rotate(Vector3.up, 145 * dt, Space.World);
                 if (item.Kind == ItemKind.Coin)
                 {
                     if (previousZ >= 0 && item.View.localPosition.z <= 0)
@@ -163,9 +143,8 @@ namespace Lotba.Game
                 bool sameLane = Mathf.Abs(item.View.localPosition.x - crossingX) < .83f;
                 if (sameLane && item.Kind == ItemKind.Coin && JumpArc.CanCollect(crossingHeight, item.View.localPosition.y))
                 {
-                    long reward = session.CollectCoin();
-                    item.Collecting = true; item.CollectTime = 0; item.PickupOrigin = item.View.localPosition;
-                    Emit(false); EncounterFeedback?.Invoke(reward, false);
+                    session.CollectCoin();
+                    EncounterFeedback?.Invoke(false);
                 }
                 else if (item.Kind == ItemKind.Obstacle && !session.IsProtected
 #if UNITY_EDITOR
@@ -174,68 +153,88 @@ namespace Lotba.Game
                 )
                 {
                     item.ObstacleHit = true;
-                    long loss = session.Hit(); Emit(true); EncounterFeedback?.Invoke(-loss, true);
+                    session.Hit(); EmitImpact(); EncounterFeedback?.Invoke(true);
                 }
-                if (item.Kind == ItemKind.Coin && !item.Collecting) Hide(item);
+                if (item.Kind == ItemKind.Coin) Hide(item);
             }
             foreach (TrackItem item in items)
             {
                 float behind = item.Definition != null ? -item.Definition.Length * .5f - 9 : -8;
                 if (item.Active && item.View.localPosition.z < behind) Hide(item);
             }
+            // Speed changes the reveal horizon while the route positions stay fixed.
+            float spawnHorizon = session.Distance + Mathf.Max(MinimumPreviewDistance, session.Speed * settings.PreviewTime);
+            while (nextPatternDistance <= spawnHorizon)
+            {
+                float patternEnd = SpawnPattern(nextPatternDistance, session.Distance);
+                nextPatternDistance = Mathf.Max(nextPatternDistance + settings.PatternSpacingAt(nextPatternDistance),
+                    patternEnd + settings.PatternClearance);
+            }
             float intensity = Mathf.InverseLerp(settings.InitialSpeed, settings.MaximumSpeed, session.Speed);
             Vector3 cameraTarget = cameraOrigin + (reducedMotion ? Vector3.zero : Vector3.right * (x * settings.CameraFollowStrength));
             worldCamera.transform.localPosition = Vector3.SmoothDamp(worldCamera.transform.localPosition, cameraTarget, ref cameraVelocity, settings.CameraFollowTime, Mathf.Infinity, dt);
             SetFieldOfView(reducedMotion ? 60f : Mathf.Lerp(60f, 68f, intensity));
         }
-        private void SpawnPattern(RunSession session)
+        private float SpawnPattern(float distance, float riderDistance)
         {
             safeLane = Mathf.Clamp(safeLane + random.Next(-1, 2), 0, 2);
-            float z = Mathf.Max(58, session.Speed * settings.PreviewTime);
-            float spacing = Mathf.Clamp(session.Speed * .125f, 2.2f, 3.5f);
-            bool gentle = roadStream.Route.NeedsGentlePatterns(session.Distance + z - 6, session.Distance + z + spacing * 3 + 6);
-            bool jumping = !gentle && session.Elapsed > 5 && wave % 4 == 2;
+            float z = distance - riderDistance;
+            float spacing = settings.GemSpacingAt(distance);
+            float patternEnd = distance + spacing * 3;
+            bool gentle = roadStream.Route.NeedsGentlePatterns(distance - 6, patternEnd + 6);
+            bool jumping = !gentle && distance > 155f && wave % 4 == 2;
             for (int i = 0; i < 4; i++)
                 Place(ItemKind.Coin, safeLane, z + i * spacing, jumping ? (i == 0 || i == 3 ? 2.05f : 2.7f) : 1.1f);
-            ObstacleSet obstacleSet = obstacleOverride != null ? obstacleOverride : roadStream.Route.MapAtDistance(session.Distance + z).Obstacles;
-            float maximumLength = gentle || session.Elapsed < 8 ? 4.5f : float.PositiveInfinity;
-            if (jumping) PlaceObstacle(obstacleSet, false, safeLane, z + spacing * 1.5f, maximumLength);
-            if (session.Elapsed > 2)
+            ObstacleSet obstacleSet = obstacleOverride != null ? obstacleOverride : roadStream.Route.MapAtDistance(distance).Obstacles;
+            float maximumLength = gentle || distance < 220f ? 4.5f : float.PositiveInfinity;
+            float obstacleOffset = spacing * 1.5f;
+            float obstacleEnd = distance + obstacleOffset;
+            if (jumping) obstacleEnd += PlaceObstacle(obstacleSet, false, safeLane, z + obstacleOffset, maximumLength);
+            if (distance > 100f)
             {
                 int blockedLane = (safeLane + 1 + random.Next(2)) % 3;
-                PlaceObstacle(obstacleSet, wave % 3 == 0, blockedLane, z + spacing * 1.5f, maximumLength);
-                if (!gentle && !jumping && session.Elapsed > 12 && wave % 3 == 1)
+                obstacleEnd = Mathf.Max(obstacleEnd, distance + obstacleOffset +
+                    PlaceObstacle(obstacleSet, wave % 3 == 0, blockedLane, z + obstacleOffset, maximumLength));
+                if (!gentle && !jumping && distance > 300f && wave % 3 == 1)
                 {
                     int otherLane = 3 - safeLane - blockedLane;
-                    PlaceObstacle(obstacleSet, true, otherLane, z + spacing * 1.5f, maximumLength);
+                    obstacleEnd = Mathf.Max(obstacleEnd, distance + obstacleOffset +
+                        PlaceObstacle(obstacleSet, true, otherLane, z + obstacleOffset, maximumLength));
                 }
             }
             // A jump row blocks at most two lanes; every other row keeps the coin lane clear.
             wave++;
+            return Mathf.Max(patternEnd, obstacleEnd);
         }
         private void AddToPool(GameObject prefab, ItemKind kind, ObstacleDefinition definition = null)
         {
             GameObject instance = Instantiate(prefab, transform); instance.SetActive(false);
             if (definition != null) instance.GetComponent<ObstacleView>().Apply(definition);
-            items.Add(new TrackItem { View = instance.transform, Kind = kind, Definition = definition, Scale = instance.transform.localScale });
+            items.Add(new TrackItem { View = instance.transform, Kind = kind, Definition = definition });
         }
         private void Place(ItemKind kind, int lane, float z, float height, ObstacleDefinition definition = null)
         {
-            // Rotate the free list to avoid always showing the same prefab variation.
-            int start = random.Next(items.Count);
-            for (int offset = 0; offset < items.Count; offset++)
+            TrackItem item = null;
+            foreach (TrackItem candidate in items)
             {
-                TrackItem item = items[(start + offset) % items.Count];
-                if (item.Active || item.Kind != kind || item.Definition != definition) continue;
-                item.Active = true; item.Collecting = item.ObstacleHit = false; item.View.localScale = item.Scale;
-                item.View.SetLocalPositionAndRotation(new Vector3((lane - 1) * LaneSpacing, kind == ItemKind.Coin ? height : 0, z), Quaternion.identity);
-                // Visibility does not change pool ownership or simulation progress.
-                bool visible = true;
-#if UNITY_EDITOR
-                visible = kind == ItemKind.Coin ? previewCoins : previewObstacles;
-#endif
-                item.View.gameObject.SetActive(visible); return;
+                if (candidate.Active || candidate.Kind != kind || candidate.Definition != definition) continue;
+                item = candidate;
+                break;
             }
+            if (item == null)
+            {
+                AddToPool(definition == null ? coinPrefab : definition.Prefab.gameObject, kind, definition);
+                item = items[items.Count - 1];
+            }
+
+            item.Active = true;
+            item.ObstacleHit = false;
+            item.View.SetLocalPositionAndRotation(new Vector3((lane - 1) * LaneSpacing, kind == ItemKind.Coin ? height : 0, z), Quaternion.identity);
+            bool visible = true;
+#if UNITY_EDITOR
+            visible = kind == ItemKind.Coin ? previewCoins : previewObstacles;
+#endif
+            item.View.gameObject.SetActive(visible);
         }
         /// <summary>Override map selection for an event or experiment; pass null to restore map-defined traffic.</summary>
         public void SetObstacleOverride(ObstacleSet replacement)
@@ -253,11 +252,14 @@ namespace Lotba.Game
             if (definition == null || !registeredObstacles.Add(definition)) return;
             for (int i = 0; i < definition.PoolCapacity; i++) AddToPool(definition.Prefab.gameObject, ItemKind.Obstacle, definition);
         }
-        private void PlaceObstacle(ObstacleSet set, bool vehicle, int lane, float z, float maximumLength)
+        private float PlaceObstacle(ObstacleSet set, bool vehicle, int lane, float z, float maximumLength)
         {
-            if (set == null) return;
+            if (set == null) return 0;
             ObstacleDefinition definition = set.Pick(random, vehicle, maximumLength, vehicle && wave % 3 == 0 && float.IsPositiveInfinity(maximumLength));
-            if (definition != null) Place(ItemKind.Obstacle, lane, z + definition.Length * .5f + .6f, 0, definition);
+            if (definition == null) return 0;
+            Place(ItemKind.Obstacle, lane, z + definition.Length * .5f + .6f, 0, definition);
+            // Contact starts at z and ends after the full padded collider passes.
+            return definition.Length + 1.2f;
         }
         private bool TryObstacleContact(TrackItem item, float previousZ, float travel, float oldX, float newX, float elapsed, float dt, out float fraction)
         {
@@ -287,15 +289,21 @@ namespace Lotba.Game
             // The entire vehicle body remains dangerous until its rear passes the rider.
             return true;
         }
-        private void Emit(bool impact)
+        private void EmitImpact()
         {
-#if UNITY_EDITOR
-            if (!impact && !previewCoins) return;
-#endif
-            var emission = new ParticleSystem.EmitParams { position = rider.position + Vector3.up * 1.15f, startColor = impact ? new Color(1, .35f, .15f) : new Color(1, .86f, .25f) };
-            sparks.Emit(emission, impact ? 14 : 7);
+            var emission = new ParticleSystem.EmitParams
+            {
+                position = rider.position + Vector3.up * 1.15f,
+                startColor = new Color(1, .35f, .15f)
+            };
+            sparks.Emit(emission, 14);
         }
-        private static void Hide(TrackItem item) { item.Active = item.Collecting = false; item.View.localScale = item.Scale; item.View.gameObject.SetActive(false); }
+
+        private static void Hide(TrackItem item)
+        {
+            item.Active = false;
+            item.View.gameObject.SetActive(false);
+        }
         private void SetFieldOfView(float reference)
         {
             float scale = Mathf.Max(1, (9f / 16f) / Mathf.Max(.1f, worldCamera.aspect));
