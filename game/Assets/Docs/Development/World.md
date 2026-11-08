@@ -58,4 +58,4 @@ No hay daño al ciclista ni feedback de dispositivo en esta revisión. Sí se us
 
 La escena de revisión conserva su propia composición y referencias a los mismos assets visuales. Si cambia el contrato de RunnerWorld, revisar ambas escenas. No mantener escenas separadas por barrio.
 
-Los placeholders combinados son assets válidos y se conservan como referencia. Los modelos nuevos pueden usar prefabs anidados editables. No hay combinación obligatoria de meshes ni procesamiento automático de optimización en el build; cualquier optimización futura debe conservar las fuentes y justificarse con mediciones en Android.
+Cada módulo referencia un Streetscape con Road_Base anidado. RoadModule enlaza el renderer Surface y aplica Road Material de la zona. Los edificios y el mobiliario se componen de prefabs editables. Art/Meshes reúne geometrías compartidas en uso, entre ellas autos, detalles de calle, vegetación y el monumento del Obelisco.

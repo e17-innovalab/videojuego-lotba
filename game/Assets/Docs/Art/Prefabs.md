@@ -15,7 +15,7 @@ Mover o renombrar archivos desde Project conserva sus referencias. Incluir los `
 
 ## 2. Reemplazar edificios o decoración de un módulo
 
-1. En Project, buscá `Maps/LaBoca/Prefabs/Modules` o `Maps/Obelisco/Prefabs/Modules`.
+1. En Project, buscá `Maps/Zones/LaBoca/Prefabs/Modules` o `Maps/Zones/Obelisco/Prefabs/Modules`.
 2. Abrí un módulo con doble clic. Verificá que estás en Prefab Mode.
 3. Buscá esta estructura:
 
@@ -23,12 +23,14 @@ Mover o renombrar archivos desde Project conserva sus referencias. Incluir los `
    Module
      Entry
      Exit
-     Road
      Art
-       Placeholder visual
+       Streetscape
+         Road
+           Surface
+         Edificios y mobiliario
    ```
 
-4. Conservá el objeto principal, el componente `RoadModule`, `Entry`, `Exit`, `Road` y el contenedor `Art`.
+4. Conservá la raíz, `RoadModule`, `Entry`, `Exit` y `Art`. Si reemplazás todo el Streetscape, incluí Road en el nuevo montaje y reasigná Road Surface a su Surface.
 5. Arrastrá el modelo nuevo desde Project dentro de `Art`. Colocalo y ajustá su tamaño desde ese hijo, sin mover ni escalar el módulo principal.
 6. Quitá el visual que estás reemplazando. Si pertenece a un prefab anidado, abrí ese prefab para editar sus objetos internos; no desempaquetes el módulo completo para resolverlo.
 7. Comprobá las medidas de la tabla siguiente y guardá el prefab.
@@ -61,7 +63,7 @@ Al seleccionar el objeto con `RoadModule`, el gizmo muestra el espacio que debe 
 3. Para un cambio exclusivo, duplicá el material y asignalo al visual correspondiente.
 4. Para cambiar la calzada de una zona, seleccioná su ficha `MapDefinition` y asigná **Road Material**. Ese campo reemplaza el material de la superficie durante la generación.
 
-`Road base.prefab` es compartido: cambiar su geometría afecta los módulos que lo usan. Para variar edificios o vegetación, trabajar dentro de `Art`. Para variar la superficie por barrio, usar **Road Material**.
+`Road_Base.prefab` es compartido: cambiar su geometría afecta los módulos que lo usan. Para variar edificios o vegetación, abrí el Streetscape o sus prefabs anidados. Para encontrar materiales de calle en el selector, buscá `Road_`. Para variar la superficie por barrio, usar **Road Material**.
 
 ## 4. Reemplazar un obstáculo
 

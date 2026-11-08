@@ -4,8 +4,8 @@
 
 ## Agregar un módulo
 
-1. Duplicá un prefab de `Maps/<Zona>/Prefabs/Modules` desde Project.
-2. Conservá RoadModule, Entry, Exit, Road y Art.
+1. Duplicá `Maps/Zones/LaBoca/Prefabs/Modules/Module 0.prefab` o un módulo de la zona desde Project.
+2. Conservá RoadModule, Entry, Exit y Art. Road está dentro de Streetscape. Si reemplazás el montaje completo, incluí Road y asigná su Surface al campo Road Surface del módulo.
 3. Reemplazá o construí los objetos de Art con modelos o prefabs anidados. No hace falta combinar meshes.
 4. Guardá el prefab. Revisá las medidas indicadas en el Inspector de RoadModule.
 5. Abrí el MapDefinition de la zona y agregalo a Modules en el orden deseado.
@@ -15,15 +15,25 @@ Duplicar un módulo mantiene referencias a sus visuales y materiales. Duplicarlo
 
 ## Crear una zona
 
-1. Creá `Maps/<Nombre>/Prefabs/Art` y `Prefabs/Modules`.
+1. Creá `Maps/Zones/<Nombre>/Prefabs/Art` y `Prefabs/Modules`.
 2. Prepará uno o varios módulos estándar de 12 m.
 3. Usá **Create > LOTBA > Maps > Map definition** en la carpeta de la zona.
-4. Completá Display Name, Modules, Road Material, Obstacles, Sky y Fog. Landmark es opcional; es un hito separado que se mantiene visible al frente.
+4. Completá Display Name, Modules, Obstacles, Sky y Fog. En **Road Material** de este archivo MapDefinition, asigná el material que querés para el piso del barrio. Unity lo aplica a Surface durante la partida y en ArtPreview. Buscá `Road_` en el selector de materiales.
 5. Revisá la ayuda y los errores del Inspector.
 6. Creá un RouteDefinition con una sola sección: Map = la zona nueva, Module Count = 0 y Transition desactivado.
 7. Abrí ArtPreview, elegí Route y asigná ese recorrido. Entrá en Play.
 
 No hace falta crear una escena propia, agregar código ni registrar la zona en un menú.
+
+## Agregar o modificar un hito
+
+Un hito es un prefab que sirve de referencia visual al frente del recorrido, como el monumento del Obelisco. Se asigna por zona y se instancia una vez por cada sección que lo usa.
+
+1. Guardá el modelo como prefab en `Maps/Zones/<Zona>/Prefabs/Landmarks`. Usá un pivote en la base y centrá el modelo respecto a ese pivote.
+2. Abrí el archivo **MapDefinition** del barrio y arrastrá el prefab al campo **Landmark**. El ejemplo del juego es `Maps/Zones/Obelisco/Obelisco.asset`, que referencia `Maps/Zones/Obelisco/Prefabs/Landmarks/Obelisco.prefab`.
+3. Ajustá **Landmark Distance** en metros. En Obelisco vale **115 m**. El hito comienza a esa distancia por delante del inicio de su sección. Al acercarte, se mantiene como mínimo a esa distancia frente al ciclista. Revisá que la niebla y el encuadre permitan verlo.
+4. Para modificar su forma, escala o material, abrí el prefab. Para desplazar visualmente el modelo a un costado o en altura, mové un hijo dentro del prefab. El sistema coloca la raíz centrada en X y a nivel del piso.
+5. Guardá y revisá en ArtPreview con **Route** para observar la aproximación desde otra zona. Para quitar el hito, dejá **Landmark** vacío en el MapDefinition.
 
 ## Crear un recorrido
 

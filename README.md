@@ -51,7 +51,7 @@ git lfs pull
 
 Después, abrí la carpeta `game/` desde Unity Hub con la versión indicada en [ProjectVersion.txt](game/ProjectSettings/ProjectVersion.txt).
 
-Si el piso de La Boca aparece blanco, buscá `La Boca cobblestones.png` en Project y comprobá que el Inspector muestra la textura. Si Unity ya estaba abierto cuando la descargaste, seleccioná el PNG y usá **Reimport**.
+Si el piso de La Boca aparece blanco, buscá `Road_Cobblestones_LaBoca.png` en Project y comprobá que el Inspector muestra la textura. Si Unity ya estaba abierto cuando la descargaste, seleccioná el PNG y usá **Reimport**.
 
 ## Tecnología y documentación
 
