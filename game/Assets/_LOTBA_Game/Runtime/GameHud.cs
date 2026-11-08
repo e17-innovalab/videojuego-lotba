@@ -10,8 +10,8 @@ namespace Lotba.Game
         [SerializeField] private GameObject readyPanel, pausePanel, resultPanel, raceHud, controls, settingsPanel;
         [SerializeField] private UnityEngine.UI.Button start, retry, menu, pause, resume, brake, pauseMenu, exit;
         [SerializeField] private UnityEngine.UI.Button[] configurationButtons;
-        [SerializeField] private UnityEngine.UI.Button closeSettings, soundButton, vibrationButton, tiltButton;
-        [SerializeField] private TMPro.TMP_Text soundLabel, vibrationLabel, tiltLabel, settingsNotice;
+        [SerializeField] private UnityEngine.UI.Button closeSettings, soundButton, vibrationButton;
+        [SerializeField] private TMPro.TMP_Text soundLabel, vibrationLabel;
         [SerializeField] private TMPro.TMP_Text score, coins, streak, multiplier, speed, remaining, popup, resultTitle, resultStats;
         [SerializeField] private UnityEngine.UI.Image streakFill;
         [SerializeField] private SpeedGauge gauge;
@@ -20,7 +20,7 @@ namespace Lotba.Game
         private int previousMultiplier = 1;
         private Vector2 popupOrigin;
         public bool SettingsOpen { get; private set; }
-        public event Action StartRequested, MenuRequested, PauseRequested, BrakeRequested, SoundRequested, SettingsRequested, VibrationRequested, TiltRequested;
+        public event Action StartRequested, MenuRequested, PauseRequested, BrakeRequested, SoundRequested, SettingsRequested, VibrationRequested;
         private void Awake()
         {
             ApplyIdentity();
@@ -36,7 +36,6 @@ namespace Lotba.Game
             closeSettings.onClick.AddListener(() => SettingsOpen = false);
             soundButton.onClick.AddListener(() => SoundRequested?.Invoke());
             vibrationButton.onClick.AddListener(() => VibrationRequested?.Invoke());
-            tiltButton.onClick.AddListener(() => TiltRequested?.Invoke());
         }
         private static void ExitGame()
         {
@@ -112,9 +111,6 @@ namespace Lotba.Game
             soundLabel.text = muted ? "SONIDO: NO" : "SONIDO: SÍ";
             vibrationButton.interactable = devices.VibrationAvailable;
             vibrationLabel.text = !devices.VibrationAvailable ? "VIBRACIÓN: NO DISPONIBLE" : "VIBRACIÓN: " + devices.VibrationLevelLabel;
-            tiltButton.interactable = devices.TiltAvailable;
-            tiltLabel.text = !devices.TiltAvailable ? "INCLINACIÓN: NO DISPONIBLE" : devices.TiltEnabled ? "INCLINACIÓN: SÍ" : "INCLINACIÓN: NO";
-            settingsNotice.text = devices.TiltEnabled ? "Al continuar, sostené el teléfono centrado un instante para calibrar la inclinación." : "Los cambios de sonido y vibración se aplican a esta partida.";
             if (session.State == RunState.Finished)
             {
                 resultTitle.text = session.Ending == RunEnding.Brake ? "VOS MARCASTE\nEL FINAL" : "RECORRIDO\nCOMPLETADO";

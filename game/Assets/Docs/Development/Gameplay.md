@@ -6,7 +6,7 @@ El menú permite empezar y abrir Configuración. Antes de empezar se puede elegi
 
 **FRENAR** termina la partida y muestra los resultados. La pausa permite continuar, configurar sonido y dispositivos o volver al inicio. Volver al inicio descarta la partida en curso. Los resultados permiten reintentar o regresar al menú.
 
-El recorrido se asigna desde el Editor en RoadStreamer; no se elige desde el menú. La configuración del jugador contiene sonido, vibración e inclinación según disponibilidad. Las instrucciones de control están en el menú principal.
+El recorrido se asigna desde el Editor en RoadStreamer; no se elige desde el menú. La configuración del jugador contiene sonido y vibración según disponibilidad. Las instrucciones de control están en el menú principal.
 
 | Acción | Teclado | Celular |
 |---|---|---|
@@ -15,7 +15,6 @@ El recorrido se asigna desde el Editor en RoadStreamer; no se elige desde el men
 | Frenar y terminar | Espacio | FRENAR |
 | Pausa | P o Escape | Botón de pausa |
 
-El control por inclinación puede habilitarse en un dispositivo compatible. Los gestos y el teclado tienen prioridad temporal sobre el acelerómetro.
 
 ## Monedas, puntaje y racha
 
@@ -52,19 +51,17 @@ El Inspector del asset es la referencia para el balance activo. La duración de 
 
 La cámara persigue lateralmente al ciclista con amortiguación corta. La apariencia y los encuentros se describen en [Mapas](World.md) y [Obstáculos](Obstacles.md).
 
-## Android, audio y sensores
+## Android, audio y vibración
 
 La interfaz está orientada a pantalla vertical. `PortraitViewport` adapta el encuadre y la zona segura; en pantallas anchas mantiene una presentación vertical.
 
 - **Sonido:** puede activarse o silenciarse desde Configuración.
 - **Vibración:** se solicita por defecto y solo se habilita cuando Android confirma que existe un vibrador. Monedas e impactos usan feedback distinto y limitado en frecuencia.
-- **Acelerómetro:** apagado por defecto. La opción solo se habilita cuando el Input System detecta un sensor compatible en un dispositivo móvil.
-- **Calibración:** al empezar o continuar, sostener el teléfono centrado durante los primeros 0,35 segundos. El control usa filtrado, histéresis y separación entre comandos.
-- **Pausa y pérdida de foco:** se detienen el muestreo del sensor, el audio de feedback y la vibración. El dispositivo se libera al cerrar la escena.
+- **Pausa y pérdida de foco:** se detienen el audio de feedback y la vibración. El dispositivo se libera al cerrar la escena.
 
-`AndroidHapticsPermissions` agrega `android.permission.VIBRATE` al manifest generado. Las opciones de sonido, vibración e inclinación se guardan por separado. Los dispositivos sin hardware compatible conservan los controles disponibles.
+`AndroidHapticsPermissions` agrega `android.permission.VIBRATE` al manifest generado. Las opciones de sonido y vibración se guardan por separado. Los dispositivos sin hardware compatible conservan los controles disponibles.
 
-La integración web usa teclado y gestos; no implementa un puente JavaScript para acelerómetro o vibración del navegador. Sensores, vibración, legibilidad y rendimiento deben revisarse en dispositivos físicos antes de una entrega.
+La integración web usa teclado y gestos. Vibración, legibilidad y rendimiento deben revisarse en dispositivos físicos antes de una entrega.
 
 ## Relación con el alcance educativo
 

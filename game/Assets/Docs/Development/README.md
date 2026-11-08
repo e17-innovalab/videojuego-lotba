@@ -10,7 +10,7 @@ El nombre de la aplicación se sincroniza desde esa definición al cargar los sc
 
 | Guía | Contenido |
 |---|---|
-| [Jugabilidad y configuración](Gameplay.md) | Flujo, controles, puntuación, balance, audio y sensores |
+| [Jugabilidad y configuración](Gameplay.md) | Flujo, controles, puntuación, balance, audio y vibración |
 | [Mundo y recorridos](World.md) | Generación, perfiles, transiciones e integración de nuevas opciones |
 | [Obstáculos](Obstacles.md) | Definiciones, catálogos, colisiones y API |
 
@@ -51,7 +51,7 @@ El código principal usa el namespace `Lotba.Game`, con assemblies separadas par
 | `GameHud` | Presentación de menús, configuración, HUD y resultados |
 | `RoadStreamer` | Reciclado de módulos y mezcla ambiental según distancia |
 | `ArtPreviewController` | Revisión visual en el Editor, con el mismo mundo y sin menú |
-| `DeviceFeedbackAndInput` | Detección de capacidades, vibración y control por inclinación |
+| `DeviceFeedbackAndInput` | Detección de capacidades y vibración |
 | `AudioFeedback` | Feedback sonoro |
 | `PortraitViewport` | Encuadre vertical y zona segura |
 
@@ -89,7 +89,7 @@ Las claves de preferencias locales son identificadores persistentes y no deben c
 | Botón o panel | `Game UI.prefab` para autoría; `GameHud` para referencias y eventos serializados |
 | Patrón de monedas o detección de un obstáculo | `RunnerWorld`; mantener el contrato de `ObstacleDefinition` |
 | Recorrido o selección de zona | Perfiles y proceso de integración de [World.md](World.md) |
-| Feedback, sensores o una capacidad de dispositivo | `DeviceFeedbackAndInput`, `AudioFeedback` y el ciclo de pausa/foco de `GameController` |
+| Feedback o una capacidad de dispositivo | `DeviceFeedbackAndInput`, `AudioFeedback` y el ciclo de pausa/foco de `GameController` |
 | Nombre público | `GameIdentity`; el nombre de la aplicación lo sincroniza `GameIdentitySettings` |
 
 Al agregar UI, completar los enlaces de los campos serializados además de crear el objeto visible. El HUD emite intenciones y el controlador coordina los cambios de estado; evitar reglas de partida dentro de un botón. Al cambiar la simulación, conservar que el estado de sesión no dependa de objetos visuales.

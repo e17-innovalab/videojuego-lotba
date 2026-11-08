@@ -15,7 +15,6 @@ namespace Lotba.Game
         private bool startRequested, brakeRequested, jumpRequested, pauseRequested, menuRequested;
         private int laneRequested;
         private bool muted, trackingSwipe;
-        private float lastManualLane;
         private Vector2 swipeOrigin;
         private void Awake()
         {
@@ -26,7 +25,7 @@ namespace Lotba.Game
             hud.StartRequested += RequestStart; hud.BrakeRequested += RequestBrake;
             hud.PauseRequested += RequestPause; hud.MenuRequested += RequestMenu;
             hud.SoundRequested += ToggleSound; hud.SettingsRequested += OpenSettings;
-            hud.VibrationRequested += devices.CycleVibrationLevel; hud.TiltRequested += devices.ToggleTilt;
+            hud.VibrationRequested += devices.CycleVibrationLevel;
             world.EncounterFeedback += OnEncounter;
             hud.Render(session, settings, muted, devices);
         }
@@ -36,12 +35,6 @@ namespace Lotba.Game
             if (keyboard != null && keyboard.spaceKey.wasPressedThisFrame) RequestBrake();
             if (hud.SettingsOpen) return;
             ReadSwipe();
-            if (session.State == RunState.Running)
-            {
-                int tiltDirection = devices.ReadLaneDirection();
-                if (laneRequested == 0 && Time.unscaledTime - lastManualLane > .35f)
-                    laneRequested = tiltDirection;
-            }
             if (keyboard == null) return;
             if (keyboard.escapeKey.wasPressedThisFrame || keyboard.pKey.wasPressedThisFrame) RequestPause();
             if (keyboard.leftArrowKey.wasPressedThisFrame || keyboard.aKey.wasPressedThisFrame) RequestLane(-1);
@@ -66,8 +59,8 @@ namespace Lotba.Game
             {
                 if (pauseRequested)
                 {
-                    if (session.State == RunState.Paused) { session.Resume(); devices.Calibrate(); }
-                    else { session.Pause(); devices.SetSampling(false); audioFeedback.Stop(); devices.CancelFeedback(); }
+                    if (session.State == RunState.Paused) { session.Resume(); }
+                    else { session.Pause(); audioFeedback.Stop(); devices.CancelFeedback(); }
                 }
                 if (session.State == RunState.Running)
                 {
@@ -82,15 +75,14 @@ namespace Lotba.Game
                     }
                 }
             }
-            if (session.State == RunState.Finished) { audioFeedback.Stop(); devices.SetSampling(false); }
+            if (session.State == RunState.Finished) { audioFeedback.Stop(); }
             startRequested = brakeRequested = jumpRequested = pauseRequested = menuRequested = false; laneRequested = 0;
             hud.Render(session, settings, muted, devices);
         }
         private void ResetRun(bool start)
         {
             session = new RunSession(settings); world.ResetTrack(); hud.ResetView(); audioFeedback.Stop(); devices.CancelFeedback(); trackingSwipe = false;
-            devices.SetSampling(start);
-            if (start) { session.Start(); devices.Calibrate(); }
+            if (start) { session.Start(); }
         }
         private void ReadSwipe()
         {
@@ -114,11 +106,11 @@ namespace Lotba.Game
         private void RequestBrake() => brakeRequested = true;
         private void RequestPause() { if (!hud.SettingsOpen) pauseRequested = true; }
         private void RequestMenu() => menuRequested = true;
-        private void RequestLane(int direction) { laneRequested = direction; lastManualLane = Time.unscaledTime; }
+        private void RequestLane(int direction) => laneRequested = direction;
         private void OpenSettings()
         {
             if (session.State == RunState.Running) session.Pause();
-            hud.OpenSettings(); devices.SetSampling(false); devices.CancelFeedback(); audioFeedback.Stop();
+            hud.OpenSettings(); devices.CancelFeedback(); audioFeedback.Stop();
         }
         private void ToggleSound()
         {
@@ -131,7 +123,7 @@ namespace Lotba.Game
         {
             if (session == null) return;
             session.Pause(); trackingSwipe = false; laneRequested = 0; jumpRequested = false;
-            devices.SetSampling(false); devices.CancelFeedback(); audioFeedback.Stop();
+            devices.CancelFeedback(); audioFeedback.Stop();
         }
         private void OnDestroy()
         {
@@ -139,7 +131,7 @@ namespace Lotba.Game
             hud.StartRequested -= RequestStart; hud.BrakeRequested -= RequestBrake;
             hud.PauseRequested -= RequestPause; hud.MenuRequested -= RequestMenu;
             hud.SoundRequested -= ToggleSound; hud.SettingsRequested -= OpenSettings;
-            hud.VibrationRequested -= devices.CycleVibrationLevel; hud.TiltRequested -= devices.ToggleTilt;
+            hud.VibrationRequested -= devices.CycleVibrationLevel;
             world.EncounterFeedback -= OnEncounter;
         }
     }
