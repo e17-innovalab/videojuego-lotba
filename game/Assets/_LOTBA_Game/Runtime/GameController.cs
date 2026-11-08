@@ -27,6 +27,7 @@ namespace Lotba.Game
             hud.SoundRequested += ToggleSound; hud.SettingsRequested += OpenSettings;
             hud.VibrationRequested += devices.CycleVibrationLevel;
             world.EncounterFeedback += OnEncounter;
+            world.StreakLevelUp += audioFeedback.PlayStreakLevelUp;
             hud.Render(session, settings, muted, devices);
         }
         private void Update()
@@ -138,6 +139,7 @@ namespace Lotba.Game
             hud.SoundRequested -= ToggleSound; hud.SettingsRequested -= OpenSettings;
             hud.VibrationRequested -= devices.CycleVibrationLevel;
             world.EncounterFeedback -= OnEncounter;
+            world.StreakLevelUp -= audioFeedback.PlayStreakLevelUp;
         }
     }
 }

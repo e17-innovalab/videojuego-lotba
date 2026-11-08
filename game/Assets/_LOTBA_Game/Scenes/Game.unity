@@ -1495,6 +1495,8 @@ MonoBehaviour:
   jumpVolume: 0.55
   collision: {fileID: 8300000, guid: 33323433a4ab494db28eafd3690b3c02, type: 3}
   collisionVolume: 0.65
+  streakLevelUp: {fileID: 0}
+  streakLevelUpVolume: 0.7
 --- !u!1001 &3668481757431813589
 PrefabInstance:
   m_ObjectHideFlags: 0

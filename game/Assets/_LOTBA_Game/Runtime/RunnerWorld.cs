@@ -48,6 +48,7 @@ namespace Lotba.Game
         }
 #endif
         public event Action<bool> EncounterFeedback;
+        public event Action StreakLevelUp;
         private enum ItemKind { Coin, Obstacle }
         private sealed class TrackItem
         {
@@ -143,9 +144,11 @@ namespace Lotba.Game
                 bool sameLane = Mathf.Abs(item.View.localPosition.x - crossingX) < .83f;
                 if (sameLane && item.Kind == ItemKind.Coin && JumpArc.CanCollect(crossingHeight, item.View.localPosition.y))
                 {
+                    int previousMultiplier = session.Multiplier;
                     session.CollectCoin();
                     Hide(item);
                     EncounterFeedback?.Invoke(false);
+                    if (session.Multiplier > previousMultiplier) StreakLevelUp?.Invoke();
                 }
                 else if (item.Kind == ItemKind.Obstacle && !session.IsProtected
 #if UNITY_EDITOR

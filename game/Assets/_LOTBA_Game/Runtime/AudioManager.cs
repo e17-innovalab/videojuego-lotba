@@ -15,6 +15,8 @@ namespace Lotba.Game
         [SerializeField, Range(0f, 1f)] private float jumpVolume = .55f;
         [SerializeField] private AudioClip collision;
         [SerializeField, Range(0f, 1f)] private float collisionVolume = .65f;
+        [SerializeField] private AudioClip streakLevelUp;
+        [SerializeField, Range(0f, 1f)] private float streakLevelUpVolume = .7f;
         public bool Muted { get; private set; }
 
         private void Awake()
@@ -35,6 +37,7 @@ namespace Lotba.Game
         public void PlayLaneSlide() => Play(laneSlide, laneSlideVolume);
         public void PlayJump() => Play(jump, jumpVolume);
         public void PlayCollision() => Play(collision, collisionVolume);
+        public void PlayStreakLevelUp() => Play(streakLevelUp, streakLevelUpVolume);
 
         public void Stop() => source.Stop();
 
