@@ -28,6 +28,7 @@ namespace Lotba.Game
             hud.VibrationRequested += devices.CycleVibrationLevel;
             world.EncounterFeedback += OnEncounter;
             world.StreakLevelUp += audioFeedback.PlayStreakLevelUp;
+            world.LetterCollected += OnLetterCollected;
             hud.Render(session, settings, muted, devices);
         }
         private void Update()
@@ -108,6 +109,12 @@ namespace Lotba.Game
             else audioFeedback.PlayGemPickup(airborneNote);
             devices.Feedback(impact);
         }
+        private void OnLetterCollected(string word, bool[] collected, bool complete)
+        {
+            hud.ShowWordProgress(word, collected, complete);
+            audioFeedback.PlayLetterPickup();
+            if (complete) audioFeedback.PlayWordCompleted();
+        }
         private void RequestStart() => startRequested = true;
         private void RequestBrake() => brakeRequested = true;
         private void RequestPause() { if (!hud.SettingsOpen) pauseRequested = true; }
@@ -140,6 +147,7 @@ namespace Lotba.Game
             hud.VibrationRequested -= devices.CycleVibrationLevel;
             world.EncounterFeedback -= OnEncounter;
             world.StreakLevelUp -= audioFeedback.PlayStreakLevelUp;
+            world.LetterCollected -= OnLetterCollected;
         }
     }
 }

@@ -16,6 +16,21 @@ namespace Lotba.Game
         [SerializeField] private GameObject coinPrefab;
         [SerializeField] private ParticleSystem sparks;
         [SerializeField] private Transform riderShadow;
+        [Header("Word collection")]
+        [SerializeField] private bool wordCollectionEnabled;
+        [SerializeField] private string[] collectibleWords = { "CICLISMO", "BUENOS AIRES" };
+        [SerializeField] private MeshFilter letterPrefab;
+        [SerializeField] private GameObject glyphCatalog;
+        [SerializeField, Min(20f)] private float letterInterval = 65f;
+        private readonly Dictionary<char, Mesh> letterMeshes = new Dictionary<char, Mesh>();
+        private readonly Queue<int> pendingLetters = new Queue<int>();
+        private MeshFilter letterPickup;
+        private string activeWord;
+        private bool[] collectedLetters;
+        private int activeLetter = -1;
+        private int nextWord;
+        private float nextLetterDistance;
+        public event Action<string, bool[], bool> LetterCollected;
         private readonly JumpArc jump = new JumpArc();
         private readonly List<TrackItem> items = new List<TrackItem>(256);
         private readonly List<Crossing> crossings = new List<Crossing>(16);
@@ -93,6 +108,7 @@ namespace Lotba.Game
             random = new System.Random(settings.Seed);
             foreach (TrackItem item in items) Hide(item);
             jump.Reset(); nextPatternDistance = MinimumPreviewDistance; wave = 0; safeLane = visualLane = 1;
+            ResetLetters();
             laneOrigin = laneTime = pedalAngle = 0;
             rider.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
             riderShadow.localPosition = new Vector3(0, .025f, 0);
@@ -180,6 +196,7 @@ namespace Lotba.Game
             }
             // Speed changes the reveal horizon while the route positions stay fixed.
             float spawnHorizon = session.Distance + Mathf.Max(MinimumPreviewDistance, session.Speed * settings.PreviewTime);
+            AdvanceLetter(travel, oldX, x, session, dt);
             while (nextPatternDistance <= spawnHorizon)
             {
                 float patternEnd = SpawnPattern(nextPatternDistance, session.Distance);
@@ -221,7 +238,97 @@ namespace Lotba.Game
             }
             // A jump row blocks at most two lanes; every other row keeps the coin lane clear.
             wave++;
-            return Mathf.Max(patternEnd, obstacleEnd);
+            float end = Mathf.Max(patternEnd, obstacleEnd);
+            if (!gentle && !jumping && TryPlaceLetter(end + 2f, riderDistance))
+                end += 2f;
+            return end;
+        }
+
+        private void ResetLetters()
+        {
+            if (letterPickup != null) letterPickup.gameObject.SetActive(false);
+            activeLetter = -1;
+            activeWord = null;
+            pendingLetters.Clear();
+            nextLetterDistance = 100f;
+        }
+
+        private bool PrepareWord()
+        {
+            if (letterPrefab == null || glyphCatalog == null || collectibleWords == null) return false;
+            if (letterMeshes.Count == 0)
+                foreach (MeshFilter glyph in glyphCatalog.GetComponentsInChildren<MeshFilter>(true))
+                {
+                    string name = glyph.name;
+                    if (!name.StartsWith("Glyph_", StringComparison.Ordinal) || glyph.sharedMesh == null) continue;
+                    string key = name.Substring(6);
+                    char character = key.Length == 1 ? key[0] : key switch
+                    {
+                        "A_Acute" => 'Á', "E_Acute" => 'É', "I_Acute" => 'Í', "O_Acute" => 'Ó',
+                        "U_Acute" => 'Ú', "Enye" => 'Ñ', _ => '\0'
+                    };
+                    if (character != '\0') letterMeshes[character] = glyph.sharedMesh;
+                }
+
+            for (int attempt = 0; attempt < collectibleWords.Length; attempt++)
+            {
+                int index = nextWord % collectibleWords.Length;
+                nextWord = index + 1;
+                string word = collectibleWords[index]?.Trim().Normalize().ToUpperInvariant();
+                if (string.IsNullOrEmpty(word)) continue;
+                if (Array.Exists(word.ToCharArray(), c => c != ' ' && !letterMeshes.ContainsKey(c)))
+                {
+                    Debug.LogWarning($"Word collection skipped '{word}' because a glyph mesh is missing.", this);
+                    continue;
+                }
+                activeWord = word;
+                collectedLetters = new bool[word.Length];
+                for (int i = 0; i < word.Length; i++)
+                    if (word[i] != ' ') pendingLetters.Enqueue(i);
+                return true;
+            }
+            return false;
+        }
+
+        private bool TryPlaceLetter(float distance, float riderDistance)
+        {
+            if (!wordCollectionEnabled || activeLetter >= 0 || distance < nextLetterDistance ||
+                roadStream.Route.NeedsGentlePatterns(distance - 2f, distance + 2f)) return false;
+            if (activeWord == null && !PrepareWord())
+            {
+                nextLetterDistance = float.PositiveInfinity;
+                return false;
+            }
+            if (pendingLetters.Count == 0) return false;
+            if (letterPickup == null) letterPickup = Instantiate(letterPrefab, transform);
+            activeLetter = pendingLetters.Dequeue();
+            letterPickup.sharedMesh = letterMeshes[activeWord[activeLetter]];
+            letterPickup.transform.localPosition = new Vector3((safeLane - 1) * LaneSpacing, 1.1f, distance - riderDistance);
+            letterPickup.gameObject.SetActive(true);
+            nextLetterDistance = distance + Mathf.Max(20f, letterInterval);
+            return true;
+        }
+
+        private void AdvanceLetter(float travel, float oldX, float x, RunSession session, float dt)
+        {
+            if (activeLetter < 0) return;
+            Vector3 position = letterPickup.transform.localPosition;
+            letterPickup.transform.localPosition = position + Vector3.back * travel;
+            if (wordCollectionEnabled && position.z - travel >= 0f) return;
+
+            int index = activeLetter;
+            activeLetter = -1;
+            letterPickup.gameObject.SetActive(false);
+            float fraction = travel > 0f ? Mathf.Clamp01(position.z / travel) : 0f;
+            float height = jump.HeightAt(session.Elapsed - dt + dt * fraction);
+            if (!wordCollectionEnabled || Mathf.Abs(position.x - Mathf.Lerp(oldX, x, fraction)) >= .83f ||
+                !JumpArc.CanCollect(height, position.y))
+            {
+                pendingLetters.Enqueue(index);
+                return;
+            }
+            collectedLetters[index] = true;
+            LetterCollected?.Invoke(activeWord, collectedLetters, pendingLetters.Count == 0);
         }
         private void AddToPool(GameObject prefab, ItemKind kind, ObstacleDefinition definition = null)
         {

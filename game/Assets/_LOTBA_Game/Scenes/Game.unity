@@ -1184,6 +1184,13 @@ MonoBehaviour:
   coinPrefab: {fileID: 2372746718442866254, guid: 6a5717118b1d8ab4783b577989af8f05, type: 3}
   sparks: {fileID: 1698404320}
   riderShadow: {fileID: 425062163}
+  wordCollectionEnabled: 1
+  collectibleWords:
+  - CICLISMO
+  - BUENOS AIRES
+  letterPrefab: {fileID: 3480687990925362290, guid: 123923dc992f7c34dbffb687426df15e, type: 3}
+  glyphCatalog: {fileID: 3454446243284527672, guid: 5dc50c5f4277a4a40ba06de424a27e7c, type: 3}
+  letterInterval: 65
 --- !u!4 &1708434621
 Transform:
   m_ObjectHideFlags: 0

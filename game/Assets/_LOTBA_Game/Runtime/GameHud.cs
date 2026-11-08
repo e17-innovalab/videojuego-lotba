@@ -16,6 +16,10 @@ namespace Lotba.Game
         [SerializeField] private UnityEngine.UI.Image streakFill;
         [SerializeField] private SpeedGauge gauge;
         [SerializeField] private SpeedLines speedLines;
+        [SerializeField] private Sprite wordBannerSprite;
+        private RectTransform wordBanner;
+        private TMPro.TextMeshProUGUI wordLabel;
+        private float wordBannerStarted, wordBannerUntil;
         private float multiplierPulseUntil;
         private int previousMultiplier = 1;
         public bool SettingsOpen { get; private set; }
@@ -66,7 +70,67 @@ namespace Lotba.Game
             if (identityFooter != null) identityFooter.text = GameIdentity.FooterLabel;
             if (buildVersion != null) buildVersion.text = $"v{Application.version}";
         }
-        public void ResetView() { multiplierPulseUntil = 0; previousMultiplier = 1; SettingsOpen = false; }
+        public void ResetView()
+        {
+            multiplierPulseUntil = 0; previousMultiplier = 1; SettingsOpen = false;
+            wordBannerUntil = 0;
+            if (wordBanner != null) wordBanner.gameObject.SetActive(false);
+        }
+
+        public void ShowWordProgress(string word, bool[] collected, bool complete)
+        {
+            if (wordBanner == null)
+            {
+                var panel = new GameObject("Word progress", typeof(RectTransform), typeof(UnityEngine.UI.Image));
+                wordBanner = (RectTransform)panel.transform;
+                wordBanner.SetParent(raceHud.transform, false);
+                wordBanner.anchorMin = new Vector2(.15f, 1f);
+                wordBanner.anchorMax = new Vector2(.85f, 1f);
+                wordBanner.sizeDelta = new Vector2(0f, 66f);
+                var background = panel.GetComponent<UnityEngine.UI.Image>();
+                background.sprite = wordBannerSprite;
+                background.type = UnityEngine.UI.Image.Type.Sliced;
+                background.color = new Color(.07f, .35f, .58f, .98f);
+                background.raycastTarget = false;
+
+                var label = new GameObject("Letters", typeof(RectTransform), typeof(TMPro.TextMeshProUGUI));
+                wordLabel = label.GetComponent<TMPro.TextMeshProUGUI>();
+                wordLabel.rectTransform.SetParent(wordBanner, false);
+                wordLabel.rectTransform.anchorMin = Vector2.zero;
+                wordLabel.rectTransform.anchorMax = Vector2.one;
+                wordLabel.rectTransform.offsetMin = new Vector2(14f, 4f);
+                wordLabel.rectTransform.offsetMax = new Vector2(-14f, -4f);
+                wordLabel.font = coins.font;
+                wordLabel.fontStyle = TMPro.FontStyles.Bold;
+                wordLabel.alignment = TMPro.TextAlignmentOptions.Center;
+                wordLabel.enableAutoSizing = true;
+                wordLabel.fontSizeMin = 12f;
+                wordLabel.fontSizeMax = 38f;
+                wordLabel.overflowMode = TMPro.TextOverflowModes.Ellipsis;
+                wordLabel.raycastTarget = false;
+            }
+            var text = new System.Text.StringBuilder();
+            for (int i = 0; i < word.Length; i++)
+            {
+                if (collected[i]) text.Append("<color=#FFD14C>").Append(word[i]).Append("</color>");
+                else text.Append(word[i]);
+            }
+            wordLabel.text = text.ToString();
+            if (!wordBanner.gameObject.activeSelf || Time.unscaledTime >= wordBannerUntil)
+                wordBannerStarted = Time.unscaledTime;
+            wordBannerUntil = Time.unscaledTime + (complete ? 3f : 1.6f);
+        }
+
+        private void RenderWordBanner(bool running)
+        {
+            if (wordBanner == null) return;
+            float now = Time.unscaledTime;
+            bool visible = running && now < wordBannerUntil;
+            wordBanner.gameObject.SetActive(visible);
+            if (!visible) return;
+            float slide = Mathf.Min((now - wordBannerStarted) / .22f, (wordBannerUntil - now) / .22f);
+            wordBanner.anchoredPosition = Vector2.up * Mathf.SmoothStep(42f, -126f, slide);
+        }
         public void OpenSettings() => SettingsOpen = true;
         public bool IsRaceButtonAt(Vector2 screenPoint) =>
             IsButtonAt(pause, screenPoint) || IsButtonAt(brake, screenPoint);
@@ -84,6 +148,7 @@ namespace Lotba.Game
             settingsPanel.SetActive(SettingsOpen);
             resultPanel.SetActive(session.State == RunState.Finished);
             raceHud.SetActive(active); controls.SetActive(active);
+            RenderWordBanner(running);
             pause.interactable = !SettingsOpen;
             score.text = session.Score.ToString(); coins.text = session.CoinValue.ToString();
             streak.text = $"RACHA {session.Streak}"; multiplier.text = $"×{session.Multiplier}";

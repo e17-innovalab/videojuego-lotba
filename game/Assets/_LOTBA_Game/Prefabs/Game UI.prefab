@@ -154,6 +154,7 @@ MonoBehaviour:
   streakFill: {fileID: 156877781006735358}
   gauge: {fileID: 133336336003567528}
   speedLines: {fileID: 571598359593331013}
+  wordBannerSprite: {fileID: 21300000, guid: 0fc71ce91d96f824cb1c401f32ca3aff, type: 3}
 --- !u!114 &5867934522243931686
 MonoBehaviour:
   m_ObjectHideFlags: 0

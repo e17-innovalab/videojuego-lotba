@@ -20,6 +20,11 @@ namespace Lotba.Game
         [SerializeField, Range(0f, 1f)] private float collisionVolume = .65f;
         [SerializeField] private AudioClip streakLevelUp;
         [SerializeField, Range(0f, 1f)] private float streakLevelUpVolume = .7f;
+        [Header("Word collection")]
+        [SerializeField] private AudioClip letterPickup;
+        [SerializeField, Range(0f, 1f)] private float letterPickupVolume = .7f;
+        [SerializeField] private AudioClip wordCompleted;
+        [SerializeField, Range(0f, 1f)] private float wordCompletedVolume = .7f;
         public bool Muted { get; private set; }
 
         private void Awake()
@@ -60,6 +65,8 @@ namespace Lotba.Game
         public void PlayJump() => Play(jump, jumpVolume);
         public void PlayCollision() => Play(collision, collisionVolume);
         public void PlayStreakLevelUp() => Play(streakLevelUp, streakLevelUpVolume);
+        public void PlayLetterPickup() => Play(letterPickup, letterPickupVolume);
+        public void PlayWordCompleted() => Play(wordCompleted, wordCompletedVolume);
 
         public void Stop()
         {
