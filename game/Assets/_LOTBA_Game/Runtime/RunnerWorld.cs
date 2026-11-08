@@ -72,6 +72,16 @@ namespace Lotba.Game
             cameraOrigin = worldCamera.transform.localPosition;
             cameraRotation = worldCamera.transform.localRotation;
             roadStream.Initialize();
+            var sparkMain = sparks.main;
+            sparkMain.simulationSpace = ParticleSystemSimulationSpace.World;
+            sparkMain.gravityModifier = 0f;
+            var sparkFade = sparks.colorOverLifetime;
+            sparkFade.enabled = true;
+            var fade = new Gradient();
+            fade.SetKeys(
+                new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+                new[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(0f, 1f) });
+            sparkFade.color = new ParticleSystem.MinMaxGradient(fade);
             wheelOrigins = new Quaternion[wheels.Length];
             for (int i = 0; i < wheels.Length; i++) wheelOrigins[i] = wheels[i].localRotation;
             for (int i = 0; i < 72; i++) AddToPool(coinPrefab, ItemKind.Coin);
@@ -146,6 +156,8 @@ namespace Lotba.Game
                 {
                     int previousMultiplier = session.Multiplier;
                     session.CollectCoin();
+                    if (item.View.gameObject.activeInHierarchy)
+                        EmitGemFlash(transform.TransformPoint(new Vector3(item.View.localPosition.x, item.View.localPosition.y, 0)));
                     Hide(item);
                     EncounterFeedback?.Invoke(false);
                     if (session.Multiplier > previousMultiplier) StreakLevelUp?.Invoke();
@@ -292,14 +304,38 @@ namespace Lotba.Game
             // The entire vehicle body remains dangerous until its rear passes the rider.
             return true;
         }
-        private void EmitImpact()
+        private void EmitGemFlash(Vector3 position)
         {
-            var emission = new ParticleSystem.EmitParams
+            // The bright centre fades first, leaving a few cyan glints around the pickup.
+            EmitSpark(position, Vector3.zero, new Color(.82f, .97f, 1f), 1f, .14f);
+            EmitSparkRing(position, new Color(.45f, .85f, 1f), 8, .25f, .26f);
+        }
+
+        private void EmitImpact() =>
+            EmitSparkRing(rider.position + Vector3.up * 1.15f, new Color(1f, .35f, .15f), 14, .27f, .28f);
+
+        private void EmitSparkRing(Vector3 position, Color color, int count, float size, float lifetime)
+        {
+            Transform cameraTransform = worldCamera.transform;
+            for (int i = 0; i < count; i++)
             {
-                position = rider.position + Vector3.up * 1.15f,
-                startColor = new Color(1, .35f, .15f)
-            };
-            sparks.Emit(emission, 14);
+                float angle = (i + .5f) * (2f * Mathf.PI / count);
+                Vector3 direction = cameraTransform.right * Mathf.Cos(angle) + cameraTransform.up * Mathf.Sin(angle);
+                EmitSpark(position + direction * .12f, direction * 2.8f, color, size, lifetime);
+            }
+        }
+
+        private void EmitSpark(Vector3 position, Vector3 velocity, Color color, float size, float lifetime)
+        {
+            if (!sparks.isPlaying) sparks.Play(false);
+            sparks.Emit(new ParticleSystem.EmitParams
+            {
+                position = position,
+                velocity = velocity,
+                startColor = color,
+                startSize = size,
+                startLifetime = lifetime
+            }, 1);
         }
 
         private static void Hide(TrackItem item)
