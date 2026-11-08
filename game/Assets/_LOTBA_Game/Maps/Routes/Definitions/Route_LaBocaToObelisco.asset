@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Lotba.Game::Lotba.Game.RouteDefinition
   sections:
   - map: {fileID: 11400000, guid: d5659d2fa0913f848a5d52f88d8950d9, type: 2}
-    moduleCount: 10
+    moduleCount: 30
     transition: 0
   - map: {fileID: 11400000, guid: b406a0f639b92264193a9224673410d6, type: 2}
     moduleCount: 16

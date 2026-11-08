@@ -158,9 +158,9 @@ MonoBehaviour:
   route: {fileID: 11400000, guid: 8693e7b5e1b5ba64fa5e35ebff81a649, type: 2}
   module: {fileID: 8444432085023419656, guid: a3ea240dcfd0d0f41bd41afc56e88919, type: 3}
   speed: 22
-  showRider: 0
-  showCoins: 0
-  showObstacles: 0
+  showRider: 1
+  showCoins: 1
+  showObstacles: 1
   settings: {fileID: 11400000, guid: 3dd862a5bb6d2bf499b3cc3fdc8dd9c8, type: 2}
   world: {fileID: 1708434620}
   roadStream: {fileID: 1708434622}
