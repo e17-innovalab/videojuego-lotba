@@ -126,8 +126,8 @@ namespace Lotba.Game
                 item.View.localPosition += Vector3.back * travel;
                 if (item.Kind == ItemKind.Coin)
                 {
-                    if (previousZ >= 0 && item.View.localPosition.z <= 0)
-                        crossings.Add(new Crossing(item, travel > 0 ? Mathf.Clamp01(previousZ / travel) : 1));
+                    if (previousZ >= 0 && item.View.localPosition.z < 0)
+                        crossings.Add(new Crossing(item, Mathf.Clamp01(previousZ / travel)));
                 }
                 else if (!item.ObstacleHit && TryObstacleContact(item, previousZ, travel, oldX, x, session.Elapsed, dt, out float fraction))
                     crossings.Add(new Crossing(item, fraction));
@@ -144,6 +144,7 @@ namespace Lotba.Game
                 if (sameLane && item.Kind == ItemKind.Coin && JumpArc.CanCollect(crossingHeight, item.View.localPosition.y))
                 {
                     session.CollectCoin();
+                    Hide(item);
                     EncounterFeedback?.Invoke(false);
                 }
                 else if (item.Kind == ItemKind.Obstacle && !session.IsProtected
@@ -155,7 +156,6 @@ namespace Lotba.Game
                     item.ObstacleHit = true;
                     session.Hit(); EmitImpact(); EncounterFeedback?.Invoke(true);
                 }
-                if (item.Kind == ItemKind.Coin) Hide(item);
             }
             foreach (TrackItem item in items)
             {
