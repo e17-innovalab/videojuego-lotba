@@ -1,6 +1,7 @@
 using System.Text;
 using UnityEditor;
 using UnityEditor.UIElements;
+using UnityEditor.Search;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -86,6 +87,76 @@ namespace Lotba.Game.Editor
         }
     }
 
+    [CustomPropertyDrawer(typeof(RoadModule))]
+    internal sealed class RoadModulePicker : PropertyDrawer
+    {
+        public override VisualElement CreatePropertyGUI(SerializedProperty property)
+        {
+            var data = property.serializedObject;
+            string path = property.propertyPath;
+            var row = new VisualElement();
+            row.style.flexDirection = FlexDirection.Row;
+
+            var field = new UnityEditor.UIElements.ObjectField(property.displayName)
+            {
+                objectType = typeof(GameObject),
+                allowSceneObjects = false
+            };
+            field.style.flexGrow = 1;
+            field.AddToClassList(BaseField<GameObject>.alignedFieldUssClassName);
+            var nativeSelector = field.Q(className: "unity-object-field__selector");
+            if (nativeSelector != null) nativeSelector.style.display = DisplayStyle.None;
+            row.Add(field);
+
+            void Refresh()
+            {
+                var current = data.FindProperty(path)?.objectReferenceValue as RoadModule;
+                field.SetValueWithoutNotify(current != null ? current.gameObject : null);
+            }
+
+            void Assign(RoadModule module)
+            {
+                var current = data.FindProperty(path);
+                if (current == null) return;
+                current.objectReferenceValue = module;
+                data.ApplyModifiedProperties();
+                Refresh();
+            }
+
+            field.RegisterValueChangedCallback(change =>
+            {
+                var module = FindModule(change.newValue as GameObject);
+                if (change.newValue == null || module != null) Assign(module);
+                else Refresh();
+            });
+
+            row.Add(new Button(() =>
+            {
+                var context = SearchService.CreateContext("asset", "t:prefab");
+                SearchService.ShowPicker(context,
+                    (item, canceled) =>
+                    {
+                        if (!canceled && item != null && FindModule(item.ToObject(typeof(GameObject)) as GameObject) is RoadModule module)
+                            Assign(module);
+                    },
+                    null,
+                    item => FindModule(item.ToObject(typeof(GameObject)) as GameObject) != null,
+                    null, "Select Road Module", 32, 520, 420, SearchFlags.None);
+            }) { text = "…", tooltip = "Select a prefab with RoadModule on its root" });
+
+            row.TrackSerializedObjectValue(data, _ => Refresh());
+            Refresh();
+            return row;
+        }
+
+        private static RoadModule FindModule(GameObject prefab)
+        {
+            if (prefab == null || !PrefabUtility.IsPartOfPrefabAsset(prefab) ||
+                !AssetDatabase.IsMainAsset(prefab)) return null;
+            return prefab.GetComponent<RoadModule>();
+        }
+    }
+
     [CustomEditor(typeof(ArtPreviewController))]
     public sealed class ArtPreviewInspector : UnityEditor.Editor
     {
@@ -97,32 +168,8 @@ namespace Lotba.Game.Editor
             var mode = new PropertyField(serializedObject.FindProperty("mode")); root.Add(mode);
             var zone = new PropertyField(serializedObject.FindProperty("zone"), "Module Environment"); root.Add(zone);
             var route = new PropertyField(serializedObject.FindProperty("route")); root.Add(route);
-            var moduleProperty = serializedObject.FindProperty("module");
-            var module = new ObjectField("Module")
-            {
-                objectType = typeof(GameObject),
-                allowSceneObjects = false
-            };
-            module.AddToClassList(BaseField<GameObject>.alignedFieldUssClassName);
+            var module = new PropertyField(serializedObject.FindProperty("module"), "Module");
             root.Add(module);
-            var moduleError = new HelpBox("Select a prefab with RoadModule on its root.", HelpBoxMessageType.Warning);
-            moduleError.style.display = DisplayStyle.None;
-            root.Add(moduleError);
-            void RefreshModule() => module.SetValueWithoutNotify((moduleProperty.objectReferenceValue as RoadModule)?.gameObject);
-            module.RegisterValueChangedCallback(change =>
-            {
-                var prefab = change.newValue as GameObject;
-                var component = prefab != null ? prefab.GetComponent<RoadModule>() : null;
-                bool valid = prefab == null || (component != null && PrefabUtility.IsPartOfPrefabAsset(prefab));
-                moduleError.style.display = valid ? DisplayStyle.None : DisplayStyle.Flex;
-                if (!valid)
-                {
-                    RefreshModule();
-                    return;
-                }
-                moduleProperty.objectReferenceValue = component;
-                serializedObject.ApplyModifiedProperties();
-            });
             foreach (string name in new[] { "speed", "showRider", "showCoins", "showObstacles" })
                 root.Add(new PropertyField(serializedObject.FindProperty(name)));
             var references = new Foldout { text = "Referencias internas", value = false };
@@ -135,8 +182,6 @@ namespace Lotba.Game.Editor
                 zone.style.display = preview.Mode == ArtPreviewMode.Route ? DisplayStyle.None : DisplayStyle.Flex;
                 route.style.display = preview.Mode == ArtPreviewMode.Route ? DisplayStyle.Flex : DisplayStyle.None;
                 module.style.display = preview.Mode == ArtPreviewMode.Module ? DisplayStyle.Flex : DisplayStyle.None;
-                if (preview.Mode != ArtPreviewMode.Module) moduleError.style.display = DisplayStyle.None;
-                RefreshModule();
             }
             root.TrackSerializedObjectValue(serializedObject, _ => Refresh()); Refresh();
             AuthoringInspector.AddValidation(root, serializedObject, () => preview.ValidationError);

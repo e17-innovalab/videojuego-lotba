@@ -153,14 +153,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9471e4270e854174dbc77f05184dc61f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Lotba.Game::Lotba.Game.ArtPreviewController
-  mode: 2
-  zone: {fileID: 11400000, guid: d5659d2fa0913f848a5d52f88d8950d9, type: 2}
+  mode: 1
+  zone: {fileID: 11400000, guid: 69af62632a6e1ce4cadd13cb40f11607, type: 2}
   route: {fileID: 11400000, guid: 8693e7b5e1b5ba64fa5e35ebff81a649, type: 2}
-  module: {fileID: 8444432085023419656, guid: c5a6e8e728fb25342bcd870eaf0292b8, type: 3}
+  module: {fileID: 8444432085023419656, guid: a3ea240dcfd0d0f41bd41afc56e88919, type: 3}
   speed: 22
   showRider: 0
-  showCoins: 1
-  showObstacles: 1
+  showCoins: 0
+  showObstacles: 0
   settings: {fileID: 11400000, guid: 3dd862a5bb6d2bf499b3cc3fdc8dd9c8, type: 2}
   world: {fileID: 1708434620}
   roadStream: {fileID: 1708434622}
