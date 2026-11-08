@@ -1486,7 +1486,15 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3866afb2c0626764288957689c6ab67b, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Lotba.Game::Lotba.Game.AudioFeedback
+  m_EditorClassIdentifier: Lotba.Game::Lotba.Game.AudioManager
+  gemPickup: {fileID: 8300000, guid: a607203e69af12545a5938bc24c82ec5, type: 3}
+  gemPickupVolume: 0.7
+  laneSlide: {fileID: 8300000, guid: c19d252b13a441639128c8cc951aeceb, type: 3}
+  laneSlideVolume: 0.55
+  jump: {fileID: 8300000, guid: fde361c1df95480c8ba8b6e3c4051aa5, type: 3}
+  jumpVolume: 0.55
+  collision: {fileID: 8300000, guid: 33323433a4ab494db28eafd3690b3c02, type: 3}
+  collisionVolume: 0.65
 --- !u!1001 &3668481757431813589
 PrefabInstance:
   m_ObjectHideFlags: 0

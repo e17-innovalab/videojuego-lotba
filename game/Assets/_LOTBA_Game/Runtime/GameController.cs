@@ -64,8 +64,8 @@ namespace Lotba.Game
                 }
                 if (session.State == RunState.Running)
                 {
-                    if (laneRequested != 0) session.Move(laneRequested);
-                    if (jumpRequested) world.TryJump(session.Elapsed);
+                    if (laneRequested != 0 && session.Move(laneRequested)) audioFeedback.PlayLaneSlide();
+                    if (jumpRequested && world.TryJump(session.Elapsed)) audioFeedback.PlayJump();
                     float budget = Mathf.Min(Time.unscaledDeltaTime, .15f);
                     while (budget > 0 && session.State == RunState.Running)
                     {
@@ -101,7 +101,12 @@ namespace Lotba.Game
             if (Mathf.Abs(delta.x) > Mathf.Abs(delta.y)) RequestLane(delta.x > 0 ? 1 : -1);
             else if (delta.y > 0) jumpRequested = true;
         }
-        private void OnEncounter(bool impact) { audioFeedback.Play(impact); devices.Feedback(impact); }
+        private void OnEncounter(bool impact)
+        {
+            if (impact) audioFeedback.PlayCollision();
+            else audioFeedback.PlayGemPickup();
+            devices.Feedback(impact);
+        }
         private void RequestStart() => startRequested = true;
         private void RequestBrake() => brakeRequested = true;
         private void RequestPause() { if (!hud.SettingsOpen) pauseRequested = true; }

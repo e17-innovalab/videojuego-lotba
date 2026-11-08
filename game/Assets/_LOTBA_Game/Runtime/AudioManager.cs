@@ -9,14 +9,18 @@ namespace Lotba.Game
         private AudioSource source;
         [SerializeField] private AudioClip gemPickup;
         [SerializeField, Range(0f, 1f)] private float gemPickupVolume = .7f;
-        private AudioClip impact;
+        [SerializeField] private AudioClip laneSlide;
+        [SerializeField, Range(0f, 1f)] private float laneSlideVolume = .55f;
+        [SerializeField] private AudioClip jump;
+        [SerializeField, Range(0f, 1f)] private float jumpVolume = .55f;
+        [SerializeField] private AudioClip collision;
+        [SerializeField, Range(0f, 1f)] private float collisionVolume = .65f;
         public bool Muted { get; private set; }
 
         private void Awake()
         {
             source = GetComponent<AudioSource>();
             source.playOnAwake = false;
-            impact = CreateTone("Loss feedback", 130f, .16f);
         }
 
         public void SetMuted(bool muted)
@@ -27,32 +31,16 @@ namespace Lotba.Game
             if (muted) source.Stop();
         }
 
-        public void Play(bool impactFeedback)
-        {
-            if (Muted) return;
-            if (impactFeedback) source.PlayOneShot(impact, .15f);
-            else if (gemPickup != null) source.PlayOneShot(gemPickup, gemPickupVolume);
-        }
+        public void PlayGemPickup() => Play(gemPickup, gemPickupVolume);
+        public void PlayLaneSlide() => Play(laneSlide, laneSlideVolume);
+        public void PlayJump() => Play(jump, jumpVolume);
+        public void PlayCollision() => Play(collision, collisionVolume);
 
         public void Stop() => source.Stop();
 
-        private static AudioClip CreateTone(string name, float frequency, float duration)
+        private void Play(AudioClip clip, float volume)
         {
-            const int sampleRate = 22050;
-            float[] samples = new float[Mathf.CeilToInt(duration * sampleRate)];
-            for (int i = 0; i < samples.Length; i++)
-            {
-                float envelope = Mathf.Sin(Mathf.PI * i / (samples.Length - 1));
-                samples[i] = Mathf.Sin(2f * Mathf.PI * frequency * i / sampleRate) * envelope;
-            }
-            AudioClip clip = AudioClip.Create(name, samples.Length, 1, sampleRate, false);
-            clip.SetData(samples, 0);
-            return clip;
-        }
-
-        private void OnDestroy()
-        {
-            if (impact != null) Destroy(impact);
+            if (!Muted && clip != null) source.PlayOneShot(clip, volume);
         }
     }
 }
