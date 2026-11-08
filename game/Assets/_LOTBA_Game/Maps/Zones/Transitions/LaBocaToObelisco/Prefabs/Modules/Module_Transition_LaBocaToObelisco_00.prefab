@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &1120154641582517966
+--- !u!1 &3324629269852543972
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,7 +8,7 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 3479138164259430385}
+  - component: {fileID: 7300739171265420819}
   m_Layer: 0
   m_Name: Art
   m_TagString: Untagged
@@ -16,23 +16,23 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &3479138164259430385
+--- !u!4 &7300739171265420819
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1120154641582517966}
+  m_GameObject: {fileID: 3324629269852543972}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 2907722653595118457}
-  m_Father: {fileID: 925753409256116597}
+  - {fileID: 305597625161095976}
+  m_Father: {fileID: 5699185928590273545}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &6995963697081973695
+--- !u!1 &5558594372157870824
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -40,58 +40,7 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 925753409256116597}
-  - component: {fileID: 8082989234701583067}
-  m_Layer: 0
-  m_Name: Module 1
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &925753409256116597
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6995963697081973695}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 6399545234322060963}
-  - {fileID: 6242184643368370117}
-  - {fileID: 3479138164259430385}
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &8082989234701583067
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6995963697081973695}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3f8826bfc28bb5446afc16038ffff0d8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Lotba.Game::Lotba.Game.RoadModule
-  artRoot: {fileID: 3479138164259430385}
-  roadSurface: {fileID: 8804590918424545277}
-  entry: {fileID: 6399545234322060963}
-  exit: {fileID: 6242184643368370117}
---- !u!1 &7123601972106109335
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 6399545234322060963}
+  - component: {fileID: 7362104019505311573}
   m_Layer: 0
   m_Name: Entry
   m_TagString: Untagged
@@ -99,22 +48,22 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &6399545234322060963
+--- !u!4 &7362104019505311573
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7123601972106109335}
+  m_GameObject: {fileID: 5558594372157870824}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 925753409256116597}
+  m_Father: {fileID: 5699185928590273545}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &9071191952200465334
+--- !u!1 &8042877143679739631
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -122,7 +71,7 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 6242184643368370117}
+  - component: {fileID: 910191016529137518}
   m_Layer: 0
   m_Name: Exit
   m_TagString: Untagged
@@ -130,85 +79,136 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &6242184643368370117
+--- !u!4 &910191016529137518
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9071191952200465334}
+  m_GameObject: {fileID: 8042877143679739631}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 12}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 925753409256116597}
+  m_Father: {fileID: 5699185928590273545}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1001 &5978253749736354697
+--- !u!1 &9177938210150104857
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5699185928590273545}
+  - component: {fileID: 388211181428097089}
+  m_Layer: 0
+  m_Name: Module_Transition_LaBocaToObelisco_00
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5699185928590273545
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9177938210150104857}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 7362104019505311573}
+  - {fileID: 910191016529137518}
+  - {fileID: 7300739171265420819}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &388211181428097089
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9177938210150104857}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f8826bfc28bb5446afc16038ffff0d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Lotba.Game::Lotba.Game.RoadModule
+  artRoot: {fileID: 7300739171265420819}
+  roadSurface: {fileID: 5250496652624371392}
+  entry: {fileID: 7362104019505311573}
+  exit: {fileID: 910191016529137518}
+--- !u!1001 &2112295941553786402
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3
-    m_TransformParent: {fileID: 3479138164259430385}
+    m_TransformParent: {fileID: 7300739171265420819}
     m_Modifications:
-    - target: {fileID: 6023388328351438863, guid: 1d5694e17cd6ef34cb67e064bf65ba22, type: 3}
-      propertyPath: m_Name
-      value: Streetscape_Transition_Park_Street
-      objectReference: {fileID: 0}
-    - target: {fileID: 8839801106848159984, guid: 1d5694e17cd6ef34cb67e064bf65ba22, type: 3}
+    - target: {fileID: 1832352192665621770, guid: 2c2a2f9bc010ee0419144cf9364bedd2, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 8839801106848159984, guid: 1d5694e17cd6ef34cb67e064bf65ba22, type: 3}
+    - target: {fileID: 1832352192665621770, guid: 2c2a2f9bc010ee0419144cf9364bedd2, type: 3}
       propertyPath: m_LocalPosition.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 8839801106848159984, guid: 1d5694e17cd6ef34cb67e064bf65ba22, type: 3}
+    - target: {fileID: 1832352192665621770, guid: 2c2a2f9bc010ee0419144cf9364bedd2, type: 3}
       propertyPath: m_LocalPosition.z
       value: 6
       objectReference: {fileID: 0}
-    - target: {fileID: 8839801106848159984, guid: 1d5694e17cd6ef34cb67e064bf65ba22, type: 3}
+    - target: {fileID: 1832352192665621770, guid: 2c2a2f9bc010ee0419144cf9364bedd2, type: 3}
       propertyPath: m_LocalRotation.w
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 8839801106848159984, guid: 1d5694e17cd6ef34cb67e064bf65ba22, type: 3}
+    - target: {fileID: 1832352192665621770, guid: 2c2a2f9bc010ee0419144cf9364bedd2, type: 3}
       propertyPath: m_LocalRotation.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 8839801106848159984, guid: 1d5694e17cd6ef34cb67e064bf65ba22, type: 3}
+    - target: {fileID: 1832352192665621770, guid: 2c2a2f9bc010ee0419144cf9364bedd2, type: 3}
       propertyPath: m_LocalRotation.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 8839801106848159984, guid: 1d5694e17cd6ef34cb67e064bf65ba22, type: 3}
+    - target: {fileID: 1832352192665621770, guid: 2c2a2f9bc010ee0419144cf9364bedd2, type: 3}
       propertyPath: m_LocalRotation.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 8839801106848159984, guid: 1d5694e17cd6ef34cb67e064bf65ba22, type: 3}
+    - target: {fileID: 1832352192665621770, guid: 2c2a2f9bc010ee0419144cf9364bedd2, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 8839801106848159984, guid: 1d5694e17cd6ef34cb67e064bf65ba22, type: 3}
+    - target: {fileID: 1832352192665621770, guid: 2c2a2f9bc010ee0419144cf9364bedd2, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 8839801106848159984, guid: 1d5694e17cd6ef34cb67e064bf65ba22, type: 3}
+    - target: {fileID: 1832352192665621770, guid: 2c2a2f9bc010ee0419144cf9364bedd2, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7844555580843371067, guid: 2c2a2f9bc010ee0419144cf9364bedd2, type: 3}
+      propertyPath: m_Name
+      value: Streetscape_Transition_Exit_LaBoca
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 1d5694e17cd6ef34cb67e064bf65ba22, type: 3}
---- !u!4 &2907722653595118457 stripped
+  m_SourcePrefab: {fileID: 100100000, guid: 2c2a2f9bc010ee0419144cf9364bedd2, type: 3}
+--- !u!4 &305597625161095976 stripped
 Transform:
-  m_CorrespondingSourceObject: {fileID: 8839801106848159984, guid: 1d5694e17cd6ef34cb67e064bf65ba22, type: 3}
-  m_PrefabInstance: {fileID: 5978253749736354697}
+  m_CorrespondingSourceObject: {fileID: 1832352192665621770, guid: 2c2a2f9bc010ee0419144cf9364bedd2, type: 3}
+  m_PrefabInstance: {fileID: 2112295941553786402}
   m_PrefabAsset: {fileID: 0}
---- !u!23 &8804590918424545277 stripped
+--- !u!23 &5250496652624371392 stripped
 MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 2938377578383012980, guid: 1d5694e17cd6ef34cb67e064bf65ba22, type: 3}
-  m_PrefabInstance: {fileID: 5978253749736354697}
+  m_CorrespondingSourceObject: {fileID: 6164833142308704482, guid: 2c2a2f9bc010ee0419144cf9364bedd2, type: 3}
+  m_PrefabInstance: {fileID: 2112295941553786402}
   m_PrefabAsset: {fileID: 0}

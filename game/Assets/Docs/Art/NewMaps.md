@@ -4,7 +4,7 @@
 
 ## Agregar un módulo
 
-1. Duplicá `Maps/Zones/LaBoca/Prefabs/Modules/Module 0.prefab` o un módulo de la zona desde Project.
+1. Duplicá `Maps/Zones/LaBoca/Prefabs/Modules/Module_LaBoca_00.prefab` o un módulo de la zona desde Project.
 2. Conservá RoadModule, Entry, Exit y Art. Road está dentro de Streetscape. Si reemplazás el montaje completo, incluí Road y asigná su Surface al campo Road Surface del módulo.
 3. Reemplazá o construí los objetos de Art con modelos o prefabs anidados. No hace falta combinar meshes.
 4. Guardá el prefab. Revisá las medidas indicadas en el Inspector de RoadModule.
@@ -30,7 +30,7 @@ No hace falta crear una escena propia, agregar código ni registrar la zona en u
 Un hito es un prefab que sirve de referencia visual al frente del recorrido, como el monumento del Obelisco. Se asigna por zona y se instancia una vez por cada sección que lo usa.
 
 1. Guardá el modelo como prefab en `Maps/Zones/<Zona>/Prefabs/Landmarks`. Usá un pivote en la base y centrá el modelo respecto a ese pivote.
-2. Abrí el archivo **MapDefinition** del barrio y arrastrá el prefab al campo **Landmark**. El ejemplo del juego es `Maps/Zones/Obelisco/Obelisco.asset`, que referencia `Maps/Zones/Obelisco/Prefabs/Landmarks/Obelisco.prefab`.
+2. Abrí el archivo **MapDefinition** del barrio y arrastrá el prefab al campo **Landmark**. El ejemplo del juego es `Maps/Zones/Obelisco/Zone_Obelisco.asset`, que referencia `Maps/Zones/Obelisco/Prefabs/Landmarks/Landmark_Obelisco.prefab`.
 3. Ajustá **Landmark Distance** en metros. En Obelisco vale **115 m**. El hito comienza a esa distancia por delante del inicio de su sección. Al acercarte, se mantiene como mínimo a esa distancia frente al ciclista. Revisá que la niebla y el encuadre permitan verlo.
 4. Para modificar su forma, escala o material, abrí el prefab. Para desplazar visualmente el modelo a un costado o en altura, mové un hijo dentro del prefab. El sistema coloca la raíz centrada en X y a nivel del piso.
 5. Guardá y revisá en ArtPreview con **Route** para observar la aproximación desde otra zona. Para quitar el hito, dejá **Landmark** vacío en el MapDefinition.

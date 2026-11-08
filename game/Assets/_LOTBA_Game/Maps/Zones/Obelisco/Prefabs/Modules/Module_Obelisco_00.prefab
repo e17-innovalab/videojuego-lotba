@@ -42,7 +42,7 @@ GameObject:
   - component: {fileID: 3771510890366273065}
   - component: {fileID: 1758627702088989497}
   m_Layer: 0
-  m_Name: Module 0
+  m_Name: Module_Obelisco_00
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

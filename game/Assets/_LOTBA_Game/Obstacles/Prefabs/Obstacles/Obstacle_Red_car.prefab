@@ -43,7 +43,7 @@ GameObject:
   - component: {fileID: 8307521495843423909}
   - component: {fileID: 3386479740651978450}
   m_Layer: 0
-  m_Name: Red car
+  m_Name: Obstacle_Red_car
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

@@ -24,11 +24,11 @@ Module sirve para ver el borde final contra el inicial. Para comprobar vecinos d
 
 ### Revisar un solo barrio
 
-En Route, asigná uno de los recorridos individuales de `Maps/Routes/Definitions`: **LaBoca** u **Obelisco**. Cada uno tiene una sola sección con Module Count = 0; repite el barrio indefinidamente y no necesita transición.
+En Route, asigná uno de los recorridos individuales de `Maps/Routes/Definitions`: **Route_LaBoca** o **Route_Obelisco**. Cada uno tiene una sola sección con Module Count = 0; repite el barrio indefinidamente y no necesita transición.
 
 Para una zona nueva, creá un RouteDefinition con una sección, asigná su MapDefinition, dejá Module Count = 0 y Transition desactivado. Asigná ese recorrido a la prueba. Ver [Crear recorridos](NewMaps.md).
 
-**LaBocaToObelisco** permite revisar varios barrios y el enlace entre ellos.
+**Route_LaBocaToObelisco** permite revisar varios barrios y el enlace entre ellos.
 
 **Speed** usa metros por segundo: 22 m/s equivalen a 79,2 km/h. Se puede ajustar durante Play. Show Rider, Show Coins y Show Obstacles se pueden cambiar durante Play, incluso con la reproducción pausada. Afectan también a los objetos presentes; los elementos ocultos siguen simulándose y reciclando sus instancias. Permiten limpiar la imagen para estudiar fachadas o revisar la escala con tráfico. Detener y volver a entrar en Play después de cambiar el modo o las referencias de contenido.
 

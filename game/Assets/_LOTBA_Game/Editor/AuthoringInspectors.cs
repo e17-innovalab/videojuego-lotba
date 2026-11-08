@@ -97,7 +97,32 @@ namespace Lotba.Game.Editor
             var mode = new PropertyField(serializedObject.FindProperty("mode")); root.Add(mode);
             var zone = new PropertyField(serializedObject.FindProperty("zone"), "Module Environment"); root.Add(zone);
             var route = new PropertyField(serializedObject.FindProperty("route")); root.Add(route);
-            var module = new PropertyField(serializedObject.FindProperty("module")); root.Add(module);
+            var moduleProperty = serializedObject.FindProperty("module");
+            var module = new ObjectField("Module")
+            {
+                objectType = typeof(GameObject),
+                allowSceneObjects = false
+            };
+            module.AddToClassList(BaseField<GameObject>.alignedFieldUssClassName);
+            root.Add(module);
+            var moduleError = new HelpBox("Select a prefab with RoadModule on its root.", HelpBoxMessageType.Warning);
+            moduleError.style.display = DisplayStyle.None;
+            root.Add(moduleError);
+            void RefreshModule() => module.SetValueWithoutNotify((moduleProperty.objectReferenceValue as RoadModule)?.gameObject);
+            module.RegisterValueChangedCallback(change =>
+            {
+                var prefab = change.newValue as GameObject;
+                var component = prefab != null ? prefab.GetComponent<RoadModule>() : null;
+                bool valid = prefab == null || (component != null && PrefabUtility.IsPartOfPrefabAsset(prefab));
+                moduleError.style.display = valid ? DisplayStyle.None : DisplayStyle.Flex;
+                if (!valid)
+                {
+                    RefreshModule();
+                    return;
+                }
+                moduleProperty.objectReferenceValue = component;
+                serializedObject.ApplyModifiedProperties();
+            });
             foreach (string name in new[] { "speed", "showRider", "showCoins", "showObstacles" })
                 root.Add(new PropertyField(serializedObject.FindProperty(name)));
             var references = new Foldout { text = "Referencias internas", value = false };
@@ -110,6 +135,8 @@ namespace Lotba.Game.Editor
                 zone.style.display = preview.Mode == ArtPreviewMode.Route ? DisplayStyle.None : DisplayStyle.Flex;
                 route.style.display = preview.Mode == ArtPreviewMode.Route ? DisplayStyle.Flex : DisplayStyle.None;
                 module.style.display = preview.Mode == ArtPreviewMode.Module ? DisplayStyle.Flex : DisplayStyle.None;
+                if (preview.Mode != ArtPreviewMode.Module) moduleError.style.display = DisplayStyle.None;
+                RefreshModule();
             }
             root.TrackSerializedObjectValue(serializedObject, _ => Refresh()); Refresh();
             AuthoringInspector.AddValidation(root, serializedObject, () => preview.ValidationError);

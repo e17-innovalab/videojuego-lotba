@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6e050c9f85bc118419c3d58449819ff6, type: 3}
-  m_Name: Obelisco
+  m_Name: Route_Obelisco
   m_EditorClassIdentifier: Lotba.Game::Lotba.Game.RouteDefinition
   sections:
   - map: {fileID: 11400000, guid: 69af62632a6e1ce4cadd13cb40f11607, type: 2}

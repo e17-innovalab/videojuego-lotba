@@ -6,10 +6,10 @@ Esta guía permite trabajar en el arte del juego sin tener que entender sus scri
 
 Vas a cambiar una cuadra de La Boca y verla en movimiento. Trabajá en el duplicado para conservar el módulo que usa el juego.
 
-1. En **Project**, abrí `Assets/_LOTBA_Game/Maps/Zones/LaBoca/Prefabs/Modules`. Seleccioná `Module 0.prefab`, duplicalo con **Ctrl+D** y nombrá la copia `Module_Practica`.
+1. En **Project**, abrí `Assets/_LOTBA_Game/Maps/Zones/LaBoca/Prefabs/Modules`. Seleccioná `Module_LaBoca_00.prefab`, duplicalo con **Ctrl+D** y nombrá la copia `Module_Practica`.
 2. Abrí la copia con doble clic. En **Hierarchy**, expandí **Art**. Agregá un prefab visual propio o un cubo de prueba directamente bajo **Art**, junto a el montaje **Streetscape**. Si usás un cubo, ponelo en la posición local **(5.7, 1, 6)** para verlo sobre la vereda. Conservá la raíz, **Entry**, **Exit** y **Art**. La calle del módulo está en **Art → montaje visual → Road**.
 3. Guardá el prefab y salí de **Prefab Mode**. Abrí **LOTBA > Open art preview** y seleccioná **Art preview - configure here** en **Hierarchy**.
-4. En el **Inspector**, elegí **Mode = Module**, arrastrá `Module_Practica` a **Module** y asigná `Maps/Zones/LaBoca/LaBoca.asset` a **Module Environment**.
+4. En el **Inspector**, elegí **Mode = Module**, arrastrá `Module_Practica` a **Module** y asigná `Maps/Zones/LaBoca/Zone_LaBoca.asset` a **Module Environment**.
 5. Entrá en **Play**. Deberías ver el nuevo objeto en la misma posición de cada tramo, con la superficie de La Boca. Podés desactivar **Show Obstacles** y **Show Coins** para mirar la cuadra con más claridad.
 
 Si ves la cuadra original, comprobá que **Module** apunta a la copia y que guardaste el cambio bajo **Art**. Para ajustar la posición, salí de Play y editá el prefab. Consultá la [guía de prefabs](Prefabs.md) y la [guía de ArtPreview](Preview.md) para seguir trabajando.
@@ -40,7 +40,9 @@ Una **escena de Unity** contiene los objetos que hacen funcionar el juego. No es
 
 ## Dónde trabajar
 
-En La Boca, los prefabs `Streetscape_01` a `Streetscape_04` agrupan edificios y mobiliario bajo **Art**. La Boca, Obelisco y la transición usan el mismo esquema. Cada **Streetscape** incluye **Road** como prefab anidado. El **RoadModule** referencia su **Surface**. Si sustituís el montaje completo, reasigná **Road Surface** a la superficie nueva. Para cambiar el piso de un barrio, asigná **Road Material** en su ficha de zona. Para dar un color propio a una pieza, asignale un material duplicado desde el Inspector.
+En el selector, buscá por prefijo. **Module_** agrupa tramos jugables, **Streetscape_** montajes visuales, **Zone_** fichas de barrio, **Route_** recorridos, **ObstacleSet_** catálogos, **Obstacle_** prefabs jugables y **Landmark_** hitos. Los módulos y montajes incluyen el nombre de la zona.
+
+En La Boca, los prefabs `Streetscape_LaBoca_01` a `Streetscape_LaBoca_05` agrupan edificios y mobiliario bajo **Art**. La Boca, Obelisco y la transición usan el mismo esquema. Cada **Streetscape** incluye **Road** como prefab anidado. El **RoadModule** referencia su **Surface**. Si sustituís el montaje completo, reasigná **Road Surface** a la superficie nueva. Para cambiar el piso de un barrio, asigná **Road Material** en su ficha de zona. Para dar un color propio a una pieza, asignale un material duplicado desde el Inspector.
 
 Las rutas siguientes están dentro de `Assets/_LOTBA_Game/`.
 

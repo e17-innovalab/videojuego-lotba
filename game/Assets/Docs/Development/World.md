@@ -6,7 +6,7 @@
 
 `Scenes/Game.unity` contiene el juego completo. En `Game world`, el componente `RoadStreamer` tiene el campo **Route**: esa referencia define el recorrido de todas las partidas. No hay elección de zonas en el menú ni carga de otra escena al empezar, reintentar o cambiar de barrio.
 
-El recorrido predeterminado es `Maps/Routes/Definitions/LaBocaToObelisco.asset`: La Boca durante 30 módulos (360 m), transición durante 16 (192 m) y Obelisco infinito. La sesión puede terminar por tiempo o frenado antes de recorrerlo entero.
+El recorrido predeterminado es `Maps/Routes/Definitions/Route_LaBocaToObelisco.asset`: La Boca durante 30 módulos (360 m), transición durante 16 (192 m) y Obelisco infinito. La sesión puede terminar por tiempo o frenado antes de recorrerlo entero.
 
 Para cambiarlo: abrir Game, seleccionar Game world, asignar otro RouteDefinition y guardar la escena. No hace falta regenerar nada ni añadir escenas al build. La lista del build contiene solamente Game; ArtPreview es una herramienta local del Editor.
 
