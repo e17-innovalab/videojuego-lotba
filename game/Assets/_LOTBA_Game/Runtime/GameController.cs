@@ -102,10 +102,10 @@ namespace Lotba.Game
             if (Mathf.Abs(delta.x) > Mathf.Abs(delta.y)) RequestLane(delta.x > 0 ? 1 : -1);
             else if (delta.y > 0) jumpRequested = true;
         }
-        private void OnEncounter(bool impact)
+        private void OnEncounter(bool impact, int airborneNote)
         {
             if (impact) audioFeedback.PlayCollision();
-            else audioFeedback.PlayGemPickup();
+            else audioFeedback.PlayGemPickup(airborneNote);
             devices.Feedback(impact);
         }
         private void RequestStart() => startRequested = true;

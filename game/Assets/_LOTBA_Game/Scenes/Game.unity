@@ -1489,13 +1489,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Lotba.Game::Lotba.Game.AudioManager
   gemPickup: {fileID: 8300000, guid: a607203e69af12545a5938bc24c82ec5, type: 3}
   gemPickupVolume: 0.7
-  laneSlide: {fileID: 8300000, guid: c19d252b13a441639128c8cc951aeceb, type: 3}
+  airborneGemSemitones: {x: 0, y: 4, z: 7, w: 12}
+  laneSlide: {fileID: 8300000, guid: f4196d39b2cdcf94f8aac81145b1eece, type: 3}
   laneSlideVolume: 0.55
   jump: {fileID: 8300000, guid: fde361c1df95480c8ba8b6e3c4051aa5, type: 3}
   jumpVolume: 0.55
-  collision: {fileID: 8300000, guid: 33323433a4ab494db28eafd3690b3c02, type: 3}
+  collision: {fileID: 8300000, guid: 83fd7a7ad2d3b694284927877924a0e5, type: 3}
   collisionVolume: 0.65
-  streakLevelUp: {fileID: 0}
+  streakLevelUp: {fileID: 8300000, guid: 6cf45a9821f50834bb1d2f946ada2719, type: 3}
   streakLevelUpVolume: 0.7
 --- !u!1001 &3668481757431813589
 PrefabInstance:
@@ -1635,6 +1636,14 @@ PrefabInstance:
       propertyPath: m_TextStyleHashCode
       value: -1183493901
       objectReference: {fileID: 0}
+    - target: {fileID: 1062056654791103194, guid: f0b10b17edb6a2948a61becb1af1e219, type: 3}
+      propertyPath: m_fontColor32.rgba
+      value: 4294114041
+      objectReference: {fileID: 0}
+    - target: {fileID: 1062056654791103194, guid: f0b10b17edb6a2948a61becb1af1e219, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
     - target: {fileID: 3230606957417917901, guid: f0b10b17edb6a2948a61becb1af1e219, type: 3}
       propertyPath: m_Pivot.x
       value: 0
@@ -1728,6 +1737,14 @@ PrefabInstance:
       value: 4294114041
       objectReference: {fileID: 0}
     - target: {fileID: 3843262112591517653, guid: f0b10b17edb6a2948a61becb1af1e219, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
+    - target: {fileID: 4228891774475473495, guid: f0b10b17edb6a2948a61becb1af1e219, type: 3}
+      propertyPath: m_fontColor32.rgba
+      value: 4294114041
+      objectReference: {fileID: 0}
+    - target: {fileID: 4228891774475473495, guid: f0b10b17edb6a2948a61becb1af1e219, type: 3}
       propertyPath: m_TextStyleHashCode
       value: -1183493901
       objectReference: {fileID: 0}

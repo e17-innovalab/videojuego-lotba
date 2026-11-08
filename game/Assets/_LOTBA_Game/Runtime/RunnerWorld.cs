@@ -47,7 +47,7 @@ namespace Lotba.Game
                     item.View.gameObject.SetActive(item.Active && (item.Kind == ItemKind.Coin ? coins : obstacles));
         }
 #endif
-        public event Action<bool> EncounterFeedback;
+        public event Action<bool, int> EncounterFeedback;
         public event Action StreakLevelUp;
         private enum ItemKind { Coin, Obstacle }
         private sealed class TrackItem
@@ -55,6 +55,7 @@ namespace Lotba.Game
             public Transform View;
             public ItemKind Kind;
             public ObstacleDefinition Definition;
+            public int AirborneNote;
             public bool ObstacleHit;
             public bool Active;
         }
@@ -159,7 +160,7 @@ namespace Lotba.Game
                     if (item.View.gameObject.activeInHierarchy)
                         EmitGemFlash(transform.TransformPoint(new Vector3(item.View.localPosition.x, item.View.localPosition.y, 0)));
                     Hide(item);
-                    EncounterFeedback?.Invoke(false);
+                    EncounterFeedback?.Invoke(false, item.AirborneNote);
                     if (session.Multiplier > previousMultiplier) StreakLevelUp?.Invoke();
                 }
                 else if (item.Kind == ItemKind.Obstacle && !session.IsProtected
@@ -169,7 +170,7 @@ namespace Lotba.Game
                 )
                 {
                     item.ObstacleHit = true;
-                    session.Hit(); EmitImpact(); EncounterFeedback?.Invoke(true);
+                    session.Hit(); EmitImpact(); EncounterFeedback?.Invoke(true, -1);
                 }
             }
             foreach (TrackItem item in items)
@@ -199,7 +200,8 @@ namespace Lotba.Game
             bool gentle = roadStream.Route.NeedsGentlePatterns(distance - 6, patternEnd + 6);
             bool jumping = !gentle && distance > 155f && wave % 4 == 2;
             for (int i = 0; i < 4; i++)
-                Place(ItemKind.Coin, safeLane, z + i * spacing, jumping ? (i == 0 || i == 3 ? 2.05f : 2.7f) : 1.1f);
+                Place(ItemKind.Coin, safeLane, z + i * spacing, jumping ? (i == 0 || i == 3 ? 2.05f : 2.7f) : 1.1f,
+                    airborneNote: jumping ? i : -1);
             ObstacleSet obstacleSet = obstacleOverride != null ? obstacleOverride : roadStream.Route.MapAtDistance(distance).Obstacles;
             float maximumLength = gentle || distance < 220f ? 4.5f : float.PositiveInfinity;
             float obstacleOffset = spacing * 1.5f;
@@ -227,7 +229,7 @@ namespace Lotba.Game
             if (definition != null) instance.GetComponent<ObstacleView>().Apply(definition);
             items.Add(new TrackItem { View = instance.transform, Kind = kind, Definition = definition });
         }
-        private void Place(ItemKind kind, int lane, float z, float height, ObstacleDefinition definition = null)
+        private void Place(ItemKind kind, int lane, float z, float height, ObstacleDefinition definition = null, int airborneNote = -1)
         {
             TrackItem item = null;
             foreach (TrackItem candidate in items)
@@ -244,6 +246,7 @@ namespace Lotba.Game
 
             item.Active = true;
             item.ObstacleHit = false;
+            item.AirborneNote = airborneNote;
             item.View.SetLocalPositionAndRotation(new Vector3((lane - 1) * LaneSpacing, kind == ItemKind.Coin ? height : 0, z), Quaternion.identity);
             bool visible = true;
 #if UNITY_EDITOR
