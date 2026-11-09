@@ -22,8 +22,10 @@ namespace Lotba.Game
         [SerializeField] private MeshFilter letterPrefab;
         [SerializeField] private GameObject glyphCatalog;
         [SerializeField, Min(20f)] private float letterInterval = 65f;
+        [SerializeField, Min(0f)] private float letterClearance = 12f;
         private readonly Dictionary<char, Mesh> letterMeshes = new Dictionary<char, Mesh>();
         private readonly Queue<int> pendingLetters = new Queue<int>();
+        private readonly System.Random letterRandom = new System.Random();
         private MeshFilter letterPickup;
         private string activeWord;
         private bool[] collectedLetters;
@@ -44,6 +46,7 @@ namespace Lotba.Game
         private System.Random random;
         private const float MinimumPreviewDistance = 58f;
         private float nextPatternDistance;
+        private float lastPatternEnd;
         private float laneTime;
         private float laneOrigin;
         private int visualLane = 1;
@@ -108,6 +111,7 @@ namespace Lotba.Game
             random = new System.Random(settings.Seed);
             foreach (TrackItem item in items) Hide(item);
             jump.Reset(); nextPatternDistance = MinimumPreviewDistance; wave = 0; safeLane = visualLane = 1;
+            lastPatternEnd = 19f; // End of the opening gem row.
             ResetLetters();
             laneOrigin = laneTime = pedalAngle = 0;
             rider.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
@@ -197,11 +201,21 @@ namespace Lotba.Game
             // Speed changes the reveal horizon while the route positions stay fixed.
             float spawnHorizon = session.Distance + Mathf.Max(MinimumPreviewDistance, session.Speed * settings.PreviewTime);
             AdvanceLetter(travel, oldX, x, session, dt);
-            while (nextPatternDistance <= spawnHorizon)
+            float clearance = Mathf.Max(0f, letterClearance);
+            while (true)
             {
-                float patternEnd = SpawnPattern(nextPatternDistance, session.Distance);
+                float letterDistance = Mathf.Max(nextLetterDistance, lastPatternEnd + clearance);
+                if (nextLetterDistance <= nextPatternDistance && CanPlaceLetter(letterDistance, clearance))
+                {
+                    if (letterDistance > spawnHorizon) break;
+                    if (TryPlaceLetter(letterDistance, session.Distance))
+                        nextPatternDistance = Mathf.Max(nextPatternDistance, letterDistance + clearance);
+                }
+                if (nextPatternDistance > spawnHorizon) break;
+
+                lastPatternEnd = SpawnPattern(nextPatternDistance, session.Distance);
                 nextPatternDistance = Mathf.Max(nextPatternDistance + settings.PatternSpacingAt(nextPatternDistance),
-                    patternEnd + settings.PatternClearance);
+                    lastPatternEnd + settings.PatternClearance);
             }
             float intensity = Mathf.InverseLerp(settings.InitialSpeed, settings.MaximumSpeed, session.Speed);
             Vector3 cameraTarget = cameraOrigin + (reducedMotion ? Vector3.zero : Vector3.right * (x * settings.CameraFollowStrength));
@@ -238,10 +252,7 @@ namespace Lotba.Game
             }
             // A jump row blocks at most two lanes; every other row keeps the coin lane clear.
             wave++;
-            float end = Mathf.Max(patternEnd, obstacleEnd);
-            if (!gentle && !jumping && TryPlaceLetter(end + 2f, riderDistance))
-                end += 2f;
-            return end;
+            return Mathf.Max(patternEnd, obstacleEnd);
         }
 
         private void ResetLetters()
@@ -283,17 +294,26 @@ namespace Lotba.Game
                 }
                 activeWord = word;
                 collectedLetters = new bool[word.Length];
+                var positions = new List<int>(word.Length);
                 for (int i = 0; i < word.Length; i++)
-                    if (word[i] != ' ') pendingLetters.Enqueue(i);
+                    if (word[i] != ' ') positions.Add(i);
+                for (int i = positions.Count - 1; i > 0; i--)
+                {
+                    int j = letterRandom.Next(i + 1);
+                    (positions[i], positions[j]) = (positions[j], positions[i]);
+                }
+                foreach (int position in positions) pendingLetters.Enqueue(position);
                 return true;
             }
             return false;
         }
 
+        private bool CanPlaceLetter(float distance, float clearance) =>
+            wordCollectionEnabled && activeLetter < 0 && (activeWord == null || pendingLetters.Count > 0) &&
+            !roadStream.Route.NeedsGentlePatterns(distance - clearance, distance + clearance);
+
         private bool TryPlaceLetter(float distance, float riderDistance)
         {
-            if (!wordCollectionEnabled || activeLetter >= 0 || distance < nextLetterDistance ||
-                roadStream.Route.NeedsGentlePatterns(distance - 2f, distance + 2f)) return false;
             if (activeWord == null && !PrepareWord())
             {
                 nextLetterDistance = float.PositiveInfinity;
@@ -303,7 +323,9 @@ namespace Lotba.Game
             if (letterPickup == null) letterPickup = Instantiate(letterPrefab, transform);
             activeLetter = pendingLetters.Dequeue();
             letterPickup.sharedMesh = letterMeshes[activeWord[activeLetter]];
-            letterPickup.transform.localPosition = new Vector3((safeLane - 1) * LaneSpacing, 1.1f, distance - riderDistance);
+            // The reserved gap clears all lanes, so choose a lane other than the previous gem row.
+            int letterLane = (safeLane + letterRandom.Next(1, 3)) % 3;
+            letterPickup.transform.localPosition = new Vector3((letterLane - 1) * LaneSpacing, 1.1f, distance - riderDistance);
             letterPickup.gameObject.SetActive(true);
             nextLetterDistance = distance + Mathf.Max(20f, letterInterval);
             return true;

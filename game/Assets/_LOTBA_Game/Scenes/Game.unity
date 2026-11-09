@@ -1186,11 +1186,13 @@ MonoBehaviour:
   riderShadow: {fileID: 425062163}
   wordCollectionEnabled: 1
   collectibleWords:
-  - CICLISMO
+  - HABLAR ES GANAR
   - BUENOS AIRES
+  - ARGENTINA
   letterPrefab: {fileID: 3480687990925362290, guid: 123923dc992f7c34dbffb687426df15e, type: 3}
   glyphCatalog: {fileID: 3454446243284527672, guid: 5dc50c5f4277a4a40ba06de424a27e7c, type: 3}
   letterInterval: 65
+  letterClearance: 12
 --- !u!4 &1708434621
 Transform:
   m_ObjectHideFlags: 0
@@ -1505,6 +1507,10 @@ MonoBehaviour:
   collisionVolume: 0.65
   streakLevelUp: {fileID: 8300000, guid: 6cf45a9821f50834bb1d2f946ada2719, type: 3}
   streakLevelUpVolume: 0.7
+  letterPickup: {fileID: 8300000, guid: 44c73e4cb291d744f8b68d4a2bd43d07, type: 3}
+  letterPickupVolume: 0.7
+  wordCompleted: {fileID: 8300000, guid: 929dd465c1aa9f54994b3eed09b1409c, type: 3}
+  wordCompletedVolume: 0.7
 --- !u!1001 &3668481757431813589
 PrefabInstance:
   m_ObjectHideFlags: 0
