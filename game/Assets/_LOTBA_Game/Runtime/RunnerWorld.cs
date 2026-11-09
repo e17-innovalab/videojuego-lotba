@@ -19,8 +19,8 @@ namespace Lotba.Game
         [Header("Word collection")]
         [SerializeField] private bool wordCollectionEnabled;
         [SerializeField] private string[] collectibleWords = { "CICLISMO", "BUENOS AIRES" };
-        [SerializeField] private MeshFilter letterPrefab;
-        [SerializeField] private GameObject glyphCatalog;
+        [SerializeField] private TMPro.TMP_FontAsset letterFont;
+        [SerializeField] private Material letterOutlineMaterial;
         [SerializeField, Min(20f)] private float letterInterval = 65f;
         [SerializeField, Min(0f)] private float letterClearance = 12f;
         [SerializeField, Min(0f)] private float letterHoverHeight = .18f;
@@ -28,10 +28,10 @@ namespace Lotba.Game
         [SerializeField, Range(0f, 15f)] private float letterTilt = 6f;
         private const float LetterPickupHeight = 1.1f;
         private float letterHoverTime;
-        private readonly Dictionary<char, Mesh> letterMeshes = new Dictionary<char, Mesh>();
         private readonly Queue<int> pendingLetters = new Queue<int>();
         private readonly System.Random letterRandom = new System.Random();
-        private MeshFilter letterPickup;
+        private TMPro.TextMeshPro letterPickup;
+        private TMPro.TMP_FontAsset LetterFont => letterFont != null ? letterFont : TMPro.TMP_Settings.defaultFontAsset;
         private string activeWord;
         private bool[] collectedLetters;
         private int activeLetter = -1;
@@ -271,20 +271,8 @@ namespace Lotba.Game
 
         private bool PrepareWord()
         {
-            if (letterPrefab == null || glyphCatalog == null || collectibleWords == null) return false;
-            if (letterMeshes.Count == 0)
-                foreach (MeshFilter glyph in glyphCatalog.GetComponentsInChildren<MeshFilter>(true))
-                {
-                    string name = glyph.name;
-                    if (!name.StartsWith("Glyph_", StringComparison.Ordinal) || glyph.sharedMesh == null) continue;
-                    string key = name.Substring(6);
-                    char character = key.Length == 1 ? key[0] : key switch
-                    {
-                        "A_Acute" => 'Á', "E_Acute" => 'É', "I_Acute" => 'Í', "O_Acute" => 'Ó',
-                        "U_Acute" => 'Ú', "Enye" => 'Ñ', _ => '\0'
-                    };
-                    if (character != '\0') letterMeshes[character] = glyph.sharedMesh;
-                }
+            var font = LetterFont;
+            if (font == null || collectibleWords == null) return false;
 
             for (int attempt = 0; attempt < collectibleWords.Length; attempt++)
             {
@@ -292,9 +280,9 @@ namespace Lotba.Game
                 nextWord = index + 1;
                 string word = collectibleWords[index]?.Trim().Normalize().ToUpperInvariant();
                 if (string.IsNullOrEmpty(word)) continue;
-                if (Array.Exists(word.ToCharArray(), c => c != ' ' && !letterMeshes.ContainsKey(c)))
+                if (Array.Exists(word.ToCharArray(), c => c != ' ' && !font.HasCharacter(c)))
                 {
-                    Debug.LogWarning($"Word collection skipped '{word}' because a glyph mesh is missing.", this);
+                    Debug.LogWarning($"Word collection skipped '{word}' because the font is missing a character.", this);
                     continue;
                 }
                 activeWord = word;
@@ -325,20 +313,57 @@ namespace Lotba.Game
                 return false;
             }
             if (pendingLetters.Count == 0) return false;
-            if (letterPickup == null) letterPickup = Instantiate(letterPrefab, transform);
+
             activeLetter = pendingLetters.Dequeue();
-            letterPickup.sharedMesh = letterMeshes[activeWord[activeLetter]];
+            SetLetterText(activeWord[activeLetter]);
             // The reserved gap clears all lanes, so choose a lane other than the previous gem row.
             int letterLane = (safeLane + letterRandom.Next(1, 3)) % 3;
             letterHoverTime = 0f;
             letterPickup.transform.SetLocalPositionAndRotation(
                 new Vector3((letterLane - 1) * LaneSpacing, LetterPickupHeight, distance - riderDistance),
-                letterPrefab.transform.localRotation);
+                Quaternion.identity);
             letterPickup.gameObject.SetActive(true);
             nextLetterDistance = distance + Mathf.Max(20f, letterInterval);
             return true;
         }
 
+        private void SetLetterText(char character)
+        {
+            bool createText = letterPickup == null;
+            if (createText)
+            {
+                var visual = new GameObject("Letter pickup", typeof(TMPro.TextMeshPro));
+                visual.transform.SetParent(transform, false);
+                letterPickup = visual.GetComponent<TMPro.TextMeshPro>();
+                letterPickup.fontSize = 20f;
+                letterPickup.fontStyle = TMPro.FontStyles.Bold;
+                letterPickup.alignment = TMPro.TextAlignmentOptions.Center;
+                letterPickup.rectTransform.sizeDelta = new Vector2(4f, 4f);
+                letterPickup.extraPadding = true;
+                letterPickup.enableVertexGradient = true;
+                Color top = new Color32(255, 226, 89, 255);
+                Color bottom = new Color32(255, 169, 52, 255);
+                letterPickup.colorGradient = new TMPro.VertexGradient(top, top, bottom, bottom);
+            }
+
+            var font = LetterFont;
+            if (createText || letterPickup.font != font)
+            {
+                letterPickup.font = font;
+                if (letterOutlineMaterial != null && letterOutlineMaterial.mainTexture == font.atlasTexture)
+                    letterPickup.fontSharedMaterial = letterOutlineMaterial;
+                else
+                {
+                    letterPickup.outlineColor = Color.black;
+                    letterPickup.outlineWidth = .3f;
+                    Material material = letterPickup.fontMaterial;
+                    material.SetFloat("_FaceDilate", .3f);
+                    material.EnableKeyword("OUTLINE_ON");
+                    letterPickup.UpdateMeshPadding();
+                }
+            }
+            letterPickup.text = character.ToString();
+        }
         private void AdvanceLetter(float travel, float oldX, float x, RunSession session, float dt)
         {
             if (activeLetter < 0) return;
@@ -354,7 +379,7 @@ namespace Lotba.Game
                     - Mathf.SmoothStep(0f, 1f, (phase - .5f) * 4f);
                 letterPickup.transform.SetLocalPositionAndRotation(
                     new Vector3(position.x, LetterPickupHeight + hover * letterHoverHeight, nextZ),
-                    Quaternion.AngleAxis(tilt * letterTilt, Vector3.forward) * letterPrefab.transform.localRotation);
+                    Quaternion.AngleAxis(tilt * letterTilt, Vector3.forward));
                 return;
             }
 

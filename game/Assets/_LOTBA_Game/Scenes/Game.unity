@@ -1189,10 +1189,13 @@ MonoBehaviour:
   - HABLAR ES GANAR
   - BUENOS AIRES
   - ARGENTINA
-  letterPrefab: {fileID: 3480687990925362290, guid: 123923dc992f7c34dbffb687426df15e, type: 3}
-  glyphCatalog: {fileID: 3454446243284527672, guid: 5dc50c5f4277a4a40ba06de424a27e7c, type: 3}
+  letterFont: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  letterOutlineMaterial: {fileID: 2100000, guid: 0db38f534b6a4a88a952fa7d0c5f3aab, type: 2}
   letterInterval: 65
   letterClearance: 12
+  letterHoverHeight: 0.18
+  letterHoverCycle: 2.8
+  letterTilt: 6
 --- !u!4 &1708434621
 Transform:
   m_ObjectHideFlags: 0
