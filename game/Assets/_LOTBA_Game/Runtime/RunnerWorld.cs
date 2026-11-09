@@ -23,6 +23,11 @@ namespace Lotba.Game
         [SerializeField] private GameObject glyphCatalog;
         [SerializeField, Min(20f)] private float letterInterval = 65f;
         [SerializeField, Min(0f)] private float letterClearance = 12f;
+        [SerializeField, Min(0f)] private float letterHoverHeight = .18f;
+        [SerializeField, Min(.1f)] private float letterHoverCycle = 2.8f;
+        [SerializeField, Range(0f, 15f)] private float letterTilt = 6f;
+        private const float LetterPickupHeight = 1.1f;
+        private float letterHoverTime;
         private readonly Dictionary<char, Mesh> letterMeshes = new Dictionary<char, Mesh>();
         private readonly Queue<int> pendingLetters = new Queue<int>();
         private readonly System.Random letterRandom = new System.Random();
@@ -325,7 +330,10 @@ namespace Lotba.Game
             letterPickup.sharedMesh = letterMeshes[activeWord[activeLetter]];
             // The reserved gap clears all lanes, so choose a lane other than the previous gem row.
             int letterLane = (safeLane + letterRandom.Next(1, 3)) % 3;
-            letterPickup.transform.localPosition = new Vector3((letterLane - 1) * LaneSpacing, 1.1f, distance - riderDistance);
+            letterHoverTime = 0f;
+            letterPickup.transform.SetLocalPositionAndRotation(
+                new Vector3((letterLane - 1) * LaneSpacing, LetterPickupHeight, distance - riderDistance),
+                letterPrefab.transform.localRotation);
             letterPickup.gameObject.SetActive(true);
             nextLetterDistance = distance + Mathf.Max(20f, letterInterval);
             return true;
@@ -335,8 +343,20 @@ namespace Lotba.Game
         {
             if (activeLetter < 0) return;
             Vector3 position = letterPickup.transform.localPosition;
-            letterPickup.transform.localPosition = position + Vector3.back * travel;
-            if (wordCollectionEnabled && position.z - travel >= 0f) return;
+            float nextZ = position.z - travel;
+            if (wordCollectionEnabled && nextZ >= 0f)
+            {
+                float cycle = Mathf.Max(.1f, letterHoverCycle);
+                letterHoverTime = Mathf.Repeat(letterHoverTime + dt, cycle);
+                float phase = letterHoverTime / cycle;
+                float hover = .5f - .5f * Mathf.Cos(4f * Mathf.PI * phase);
+                float tilt = Mathf.SmoothStep(0f, 1f, phase * 4f)
+                    - Mathf.SmoothStep(0f, 1f, (phase - .5f) * 4f);
+                letterPickup.transform.SetLocalPositionAndRotation(
+                    new Vector3(position.x, LetterPickupHeight + hover * letterHoverHeight, nextZ),
+                    Quaternion.AngleAxis(tilt * letterTilt, Vector3.forward) * letterPrefab.transform.localRotation);
+                return;
+            }
 
             int index = activeLetter;
             activeLetter = -1;
@@ -344,7 +364,7 @@ namespace Lotba.Game
             float fraction = travel > 0f ? Mathf.Clamp01(position.z / travel) : 0f;
             float height = jump.HeightAt(session.Elapsed - dt + dt * fraction);
             if (!wordCollectionEnabled || Mathf.Abs(position.x - Mathf.Lerp(oldX, x, fraction)) >= .83f ||
-                !JumpArc.CanCollect(height, position.y))
+                !JumpArc.CanCollect(height, LetterPickupHeight))
             {
                 pendingLetters.Enqueue(index);
                 return;
