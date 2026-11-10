@@ -9,10 +9,10 @@ namespace Lotba.Game
         private float elapsed;
         private float opacity;
 
-        public void Render(GameSettings configuration, RunSession session)
+        public void Render(GameSettings configuration, RunSession session, bool showBoostLines)
         {
             settings = configuration;
-            bool visible = session.State == RunState.Running && session.BoostActive &&
+            bool visible = showBoostLines && session.State == RunState.Running && session.BoostActive &&
                 settings.BoostLineCount > 0 && settings.BoostLineColor.a > 0f;
             if (gameObject.activeSelf != visible) gameObject.SetActive(visible);
             if (!visible) return;

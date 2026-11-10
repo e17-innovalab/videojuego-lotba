@@ -22,6 +22,7 @@ namespace Lotba.Game
         private readonly int[] qualityLevels = new int[QualityNames.Length];
         private int qualityChoice = -1;
         private bool IsHighQuality => qualityChoice >= 0 && QualityNames[qualityChoice] == "High";
+        private bool UseBoostCamera => qualityChoice > 0;
         private Vector2 swipeOrigin;
         private void Awake()
         {
@@ -30,7 +31,7 @@ namespace Lotba.Game
             InitializeQuality();
             audioFeedback.SetMuted(muted); devices.Initialize();
             world.Initialize(settings); world.ResetTrack(); session = new RunSession(settings, world.Route);
-            world.InitializeTurboAura();
+            if (IsHighQuality) world.InitializeTurboAura();
             world.ConfigureDepthBend(IsHighQuality);
             hud.StartRequested += RequestStart; hud.BrakeRequested += RequestBrake;
             hud.PauseRequested += RequestPause; hud.MenuRequested += RequestMenu;
@@ -42,7 +43,7 @@ namespace Lotba.Game
             world.ImpactFeedback += OnImpact;
             world.StreakLevelUp += audioFeedback.PlayStreakLevelUp;
             world.LetterCollected += OnLetterCollected;
-            hud.Render(session, settings, muted, devices);
+            hud.Render(session, settings, muted, devices, IsHighQuality);
         }
         private void Update()
         {
@@ -70,7 +71,7 @@ namespace Lotba.Game
                 ResetRun(false);
                 speedChoiceRequested = null;
                 startRequested = brakeRequested = jumpRequested = pauseRequested = menuRequested = false; laneRequested = 0;
-                hud.Render(session, settings, muted, devices);
+                hud.Render(session, settings, muted, devices, IsHighQuality);
                 return;
             }
             if (startRequested && (session.State == RunState.Ready || session.State == RunState.Finished))
@@ -85,7 +86,12 @@ namespace Lotba.Game
                     if (session.State == RunState.Paused) { session.Resume(); }
                     else { session.Pause(); audioFeedback.Stop(); devices.CancelFeedback(); }
                 }
-                if (speedChoiceRequested.HasValue) session.ChooseSpeed(speedChoiceRequested.Value);
+                if (speedChoiceRequested.HasValue)
+                {
+                    int previousBoosts = session.VoluntaryBoosts;
+                    session.ChooseSpeed(speedChoiceRequested.Value);
+                    if (session.VoluntaryBoosts > previousBoosts) audioFeedback.PlayBoostStart();
+                }
                 if (session.State == RunState.Running && !session.OfferPending)
                 {
                     if (laneRequested != 0 && session.Move(laneRequested)) audioFeedback.PlayLaneSlide();
@@ -98,7 +104,8 @@ namespace Lotba.Game
                     while (budget > 0 && session.State == RunState.Running && !session.OfferPending)
                     {
                         float step = Mathf.Min(.02f, budget); session.Tick(step);
-                        if (session.State == RunState.Running) world.Advance(session, step, false);
+                        if (session.State == RunState.Running)
+                            world.Advance(session, step, false, UseBoostCamera, IsHighQuality);
                         budget -= step;
                     }
                 }
@@ -111,7 +118,7 @@ namespace Lotba.Game
             }
             speedChoiceRequested = null;
             startRequested = brakeRequested = jumpRequested = pauseRequested = menuRequested = false; laneRequested = 0;
-            hud.Render(session, settings, muted, devices);
+            hud.Render(session, settings, muted, devices, IsHighQuality);
         }
         private void ResetRun(bool start)
         {
@@ -142,7 +149,7 @@ namespace Lotba.Game
         }
         private void OnImpact(long loss, bool lostStreak)
         {
-            audioFeedback.PlayCollision();
+            audioFeedback.PlayCollision(session.BoostActive);
             devices.Feedback(true);
             hud.ShowImpact(loss, lostStreak);
         }
@@ -200,6 +207,11 @@ namespace Lotba.Game
         private void ApplyQuality(int choice)
         {
             qualityChoice = choice;
+            if (session != null)
+            {
+                if (IsHighQuality) world.InitializeTurboAura();
+                else world.ClearTurboAura();
+            }
             if (choice >= 0 && QualitySettings.GetQualityLevel() != qualityLevels[choice])
                 QualitySettings.SetQualityLevel(qualityLevels[choice], true);
             hud.SetQuality(choice >= 0 ? QualityLabels[choice] : "NO DISPONIBLE",

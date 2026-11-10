@@ -1496,6 +1496,10 @@ MonoBehaviour:
   jumpVolume: 0.55
   collision: {fileID: 8300000, guid: 83fd7a7ad2d3b694284927877924a0e5, type: 3}
   collisionVolume: 0.65
+  boostStart: {fileID: 8300000, guid: f4196d39b2cdcf94f8aac81145b1eece, type: 3}
+  boostStartVolume: 0.7
+  boostCollision: {fileID: 8300000, guid: 83fd7a7ad2d3b694284927877924a0e5, type: 3}
+  boostCollisionVolume: 0.8
   streakLevelUp: {fileID: 8300000, guid: 6cf45a9821f50834bb1d2f946ada2719, type: 3}
   streakLevelUpVolume: 0.7
   letterPickup: {fileID: 8300000, guid: 44c73e4cb291d744f8b68d4a2bd43d07, type: 3}

@@ -228,7 +228,7 @@ namespace Lotba.Game
         private static bool IsButtonAt(UnityEngine.UI.Button button, Vector2 screenPoint) =>
             button.isActiveAndEnabled && button.IsInteractable() &&
             RectTransformUtility.RectangleContainsScreenPoint((RectTransform)button.transform, screenPoint);
-        public void Render(RunSession session, GameSettings settings, bool muted, DeviceFeedbackAndInput devices)
+        public void Render(RunSession session, GameSettings settings, bool muted, DeviceFeedbackAndInput devices, bool showBoostLines)
         {
             bool running = session.State == RunState.Running;
             bool active = running || session.State == RunState.Paused;
@@ -239,7 +239,7 @@ namespace Lotba.Game
             telemetryPanel?.SetReport(session.State == RunState.Finished ? session.Telemetry : null);
             resultPanel.SetActive(session.State == RunState.Finished && !TelemetryOpen);
             raceHud.SetActive(active); controls.SetActive(active);
-            if (boostSpeedLines != null) boostSpeedLines.Render(settings, session);
+            if (boostSpeedLines != null) boostSpeedLines.Render(settings, session, showBoostLines);
             if (impactLabel != null)
                 impactLabel.gameObject.SetActive(running && Time.unscaledTime < impactUntil);
             RenderWordBanner(running);

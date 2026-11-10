@@ -18,6 +18,12 @@ namespace Lotba.Game
         [SerializeField, Range(0f, 1f)] private float jumpVolume = .55f;
         [SerializeField] private AudioClip collision;
         [SerializeField, Range(0f, 1f)] private float collisionVolume = .65f;
+        [Header("Boost")]
+        [SerializeField] private AudioClip boostStart;
+        [SerializeField, Range(0f, 1f)] private float boostStartVolume = .7f;
+        [SerializeField] private AudioClip boostCollision;
+        [SerializeField, Range(0f, 1f)] private float boostCollisionVolume = .8f;
+        [Header("Streak")]
         [SerializeField] private AudioClip streakLevelUp;
         [SerializeField, Range(0f, 1f)] private float streakLevelUpVolume = .7f;
         [Header("Word collection")]
@@ -63,7 +69,12 @@ namespace Lotba.Game
         }
         public void PlayLaneSlide() => Play(laneSlide, laneSlideVolume);
         public void PlayJump() => Play(jump, jumpVolume);
-        public void PlayCollision() => Play(collision, collisionVolume);
+        public void PlayBoostStart() => Play(boostStart, boostStartVolume);
+        public void PlayCollision(bool duringBoost)
+        {
+            if (duringBoost && boostCollision != null) Play(boostCollision, boostCollisionVolume);
+            else Play(collision, collisionVolume);
+        }
         public void PlayStreakLevelUp() => Play(streakLevelUp, streakLevelUpVolume);
         public void PlayLetterPickup() => Play(letterPickup, letterPickupVolume);
         public void PlayWordCompleted() => Play(wordCompleted, wordCompletedVolume);

@@ -179,9 +179,10 @@ namespace Lotba.Game
         public void ClearTurboAura() => turboAura?.Clear();
 
         public bool TryJump(float time) => jump.TryStart(time);
-        public void Advance(RunSession session, float dt, bool reducedMotion)
+        public void Advance(RunSession session, float dt, bool reducedMotion, bool boostCamera = false, bool boostAura = false)
         {
-            turboAura?.Advance(session.BoostActive, reducedMotion, dt, settings);
+            if (boostAura) turboAura?.Advance(session.BoostActive, reducedMotion, dt, settings);
+            else turboAura?.Clear();
             riderDistance = session.Distance;
             float oldX = rider.localPosition.x;
             if (session.Lane != visualLane)
@@ -304,7 +305,7 @@ namespace Lotba.Game
             float blinkPhase = 1.1f * (1.25f * protection + .75f * protection * protection);
             SetRiderImpactHidden(!reducedMotion && session.IsProtected && Mathf.Repeat(blinkPhase, 1f) < .28f);
             float boostTarget = session.BoostActive && !reducedMotion ? 1f : 0f;
-            boostCameraBlend = reducedMotion ? 0f :
+            boostCameraBlend = reducedMotion || !boostCamera ? 0f :
                 Mathf.Lerp(boostCameraBlend, boostTarget, 1f - Mathf.Exp(-settings.BoostCameraBlendRate * dt));
             Vector3 cameraTarget = cameraOrigin + (reducedMotion ? Vector3.zero : Vector3.right * (x * settings.CameraFollowStrength));
             cameraTarget += Vector3.back * (settings.BoostCameraPullback * boostCameraBlend);
