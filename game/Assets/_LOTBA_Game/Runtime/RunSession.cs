@@ -9,6 +9,9 @@ namespace Lotba.Game
     public sealed class RunSession
     {
         private readonly GameSettings settings;
+        private readonly RouteDefinition telemetryRoute;
+        private int telemetrySection;
+        public RunTelemetry Telemetry { get; private set; }
         private float impactDrag;
         private float protectedUntil;
         private float streakEnergy;
@@ -31,12 +34,20 @@ namespace Lotba.Game
         public float Remaining => Math.Max(0f, settings.Duration - Elapsed);
         public bool IsProtected => Elapsed < protectedUntil;
 
-        public RunSession(GameSettings settings)
+        public RunSession(GameSettings settings, RouteDefinition telemetryRoute = null)
         {
             this.settings = settings ?? throw new ArgumentNullException(nameof(settings));
+            this.telemetryRoute = telemetryRoute;
             Speed = PeakSpeed = settings.InitialSpeed;
         }
-        public void Start() { if (State == RunState.Ready) State = RunState.Running; }
+        public void Start()
+        {
+            if (State != RunState.Ready) return;
+            State = RunState.Running;
+            if (telemetryRoute == null) return;
+            Telemetry = new RunTelemetry { route = telemetryRoute.name, seed = settings.Seed, durationSeconds = settings.Duration };
+            Record("run_started");
+        }
 #if UNITY_EDITOR
         /// <summary>Artist preview advances without a time limit or progression curve.</summary>
         public void TickPreview(float dt, float speed)
@@ -57,10 +68,26 @@ namespace Lotba.Game
             Speed = settings.InitialSpeed + (settings.MaximumSpeed - settings.InitialSpeed) * progression - impactDrag;
             PeakSpeed = Math.Max(PeakSpeed, Speed);
             Distance += Speed * step;
+            if (Telemetry != null)
+            {
+                int section = telemetryRoute.SectionAt(Distance, out _);
+                if (section != telemetrySection)
+                {
+                    telemetrySection = section;
+                    Record("zone_entered");
+                }
+            }
             if (Streak > 0)
             {
+                float previousProgress = streakEnergy;
                 streakEnergy = Math.Max(0, streakEnergy - settings.StreakDrainPerSecond * step);
-                if (streakEnergy <= 0) ResetStreak();
+                if (streakEnergy <= 0)
+                {
+                    int previousStreak = Streak, previousMultiplier = Multiplier;
+                    ResetStreak();
+                    Record("streak_lost", "decay", previousStreak: previousStreak,
+                        previousMultiplier: previousMultiplier, previousProgress: previousProgress);
+                }
             }
             if (Remaining <= 0f) Finish(RunEnding.TimeLimit);
         }
@@ -69,11 +96,15 @@ namespace Lotba.Game
             if (State != RunState.Running) return false;
             int lane = Math.Max(0, Math.Min(2, Lane + Math.Sign(direction)));
             if (Lane == lane) return false;
-            Lane = lane; return true;
+            Lane = lane;
+            Record("lane_changed");
+            return true;
         }
-        public long CollectCoin()
+        public long CollectCoin(int airborneNote = -1)
         {
             if (State != RunState.Running) return 0;
+            int previousStreak = Streak, previousMultiplier = Multiplier;
+            float previousProgress = streakEnergy;
             long reward = 10L * Multiplier;
             Score += reward; Coins++; Streak++;
             BestStreak = Math.Max(BestStreak, Streak);
@@ -86,23 +117,82 @@ namespace Lotba.Game
                 // Leave a reserve after levelling up; an empty bar must always mean a lost streak.
                 streakEnergy = Math.Min(1, settings.LevelUpReserve + streakEnergy - 1);
             }
+            Record("gem_collected", airborneNote >= 0 ? "air" : "ground", reward, previousStreak, previousMultiplier, previousProgress);
+            if (Multiplier > previousMultiplier)
+                Record("streak_level_up", previousStreak: previousStreak,
+                    previousMultiplier: previousMultiplier, previousProgress: previousProgress);
             return reward;
         }
-        public long Hit()
+        public long Hit(string obstacleId = null)
         {
             if (State != RunState.Running || IsProtected) return 0;
+            int previousStreak = Streak, previousMultiplier = Multiplier;
+            float previousProgress = streakEnergy;
             long loss = Math.Min(Score, Math.Max(50L, Score / 4));
             Score -= loss; ResetStreak(); Collisions++;
             impactDrag = 3f; protectedUntil = Elapsed + 1.1f;
+            Record("obstacle_hit", obstacleId, -loss, previousStreak, previousMultiplier, previousProgress);
+            if (previousStreak > 0)
+                Record("streak_lost", "collision", previousStreak: previousStreak,
+                    previousMultiplier: previousMultiplier, previousProgress: previousProgress);
             return loss;
         }
         private void ResetStreak() { Streak = 0; streakEnergy = 0; Multiplier = 1; }
-        public void Pause() { if (State == RunState.Running) State = RunState.Paused; }
-        public void Resume() { if (State == RunState.Paused) State = RunState.Running; }
+        public void Pause()
+        {
+            if (State != RunState.Running) return;
+            State = RunState.Paused;
+            Record("run_paused");
+        }
+        public void Resume()
+        {
+            if (State != RunState.Paused) return;
+            State = RunState.Running;
+            Record("run_resumed");
+        }
         public void Brake()
         {
             if (State == RunState.Running || State == RunState.Paused) Finish(RunEnding.Brake);
         }
-        private void Finish(RunEnding ending) { Ending = ending; State = RunState.Finished; Speed = 0f; }
+        private void Finish(RunEnding ending)
+        {
+            Ending = ending;
+            State = RunState.Finished;
+            if (Telemetry != null)
+            {
+                string reason = ending == RunEnding.Brake ? "brake" : "time_limit";
+                Record("run_finished", reason);
+                Telemetry.summary = new RunTelemetrySummary
+                {
+                    ending = reason, timeSeconds = Elapsed, distanceMetres = Distance, peakSpeedKmh = PeakSpeed * 3.6f,
+                    score = Score, gems = Coins, collisions = Collisions, bestStreak = BestStreak, bestMultiplier = BestMultiplier
+                };
+            }
+            Speed = 0f;
+        }
+
+        public void RecordJump() => Record("jump");
+
+        public void RecordLetter(string word, int index, bool complete)
+        {
+            if (Telemetry == null) return;
+            Record("letter_collected", $"{word[index]} · {word} · {index + 1}");
+            if (complete) Record("word_completed", word);
+        }
+
+        private void Record(string type, string detail = null, long delta = 0,
+            int? previousStreak = null, int? previousMultiplier = null, float? previousProgress = null)
+        {
+            if (Telemetry == null) return;
+            Telemetry.events.Add(new RunTelemetryEvent
+            {
+                sequence = Telemetry.events.Count + 1, type = type, detail = detail,
+                zone = telemetryRoute.Sections[telemetrySection].Map.DisplayName,
+                timeSeconds = Elapsed, distanceMetres = Distance, speedKmh = Speed * 3.6f,
+                lane = Lane, score = Score, scoreDelta = delta, streak = Streak, multiplier = Multiplier,
+                streakProgress = streakEnergy, streakBefore = previousStreak ?? Streak,
+                multiplierBefore = previousMultiplier ?? Multiplier, streakProgressBefore = previousProgress ?? streakEnergy
+            });
+        }
     }
 }

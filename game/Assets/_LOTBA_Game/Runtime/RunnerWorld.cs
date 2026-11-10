@@ -102,6 +102,7 @@ namespace Lotba.Game
             depthBendStrength = enabled ? strength : 0f;
         }
         public event Action<bool, int> EncounterFeedback;
+        public RouteDefinition Route => roadStream.Route;
         public event Action StreakLevelUp;
         private enum ItemKind { Coin, Obstacle }
         private sealed class TrackItem
@@ -207,7 +208,7 @@ namespace Lotba.Game
                 if (sameLane && item.Kind == ItemKind.Coin && JumpArc.CanCollect(crossingHeight, item.View.localPosition.y))
                 {
                     int previousMultiplier = session.Multiplier;
-                    session.CollectCoin();
+                    session.CollectCoin(item.AirborneNote);
                     if (item.View.gameObject.activeInHierarchy)
                         EmitPickupFlash(transform.TransformPoint(new Vector3(item.LaneX, item.View.localPosition.y, 0)), settings.GemFlash);
                     Hide(item);
@@ -221,7 +222,7 @@ namespace Lotba.Game
                 )
                 {
                     item.ObstacleHit = true;
-                    session.Hit(); EncounterFeedback?.Invoke(true, -1);
+                    session.Hit(item.Definition.Id); EncounterFeedback?.Invoke(true, -1);
                 }
             }
             foreach (TrackItem item in items)
@@ -430,6 +431,7 @@ namespace Lotba.Game
                 return;
             }
             collectedLetters[index] = true;
+            session.RecordLetter(activeWord, index, pendingLetters.Count == 0);
             EmitPickupFlash(transform.TransformPoint(new Vector3(letterLaneX, position.y, 0f)), settings.LetterFlash);
             LetterCollected?.Invoke(activeWord, collectedLetters, pendingLetters.Count == 0);
         }

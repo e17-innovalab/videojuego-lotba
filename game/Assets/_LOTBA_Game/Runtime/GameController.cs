@@ -28,7 +28,7 @@ namespace Lotba.Game
             muted = PlayerPrefs.GetInt("Lotba.CityRush.Muted", 0) != 0;
             InitializeQuality();
             audioFeedback.SetMuted(muted); devices.Initialize();
-            world.Initialize(settings); world.ResetTrack(); session = new RunSession(settings);
+            world.Initialize(settings); world.ResetTrack(); session = new RunSession(settings, world.Route);
             world.ConfigureDepthBend(IsHighQuality);
             hud.StartRequested += RequestStart; hud.BrakeRequested += RequestBrake;
             hud.PauseRequested += RequestPause; hud.MenuRequested += RequestMenu;
@@ -43,6 +43,11 @@ namespace Lotba.Game
         private void Update()
         {
             Keyboard keyboard = Keyboard.current;
+            if (hud.TelemetryOpen)
+            {
+                if (keyboard != null && keyboard.escapeKey.wasPressedThisFrame) hud.CloseTelemetry();
+                return;
+            }
             if (keyboard != null && keyboard.spaceKey.wasPressedThisFrame) RequestBrake();
             if (hud.SettingsOpen) return;
             ReadSwipe();
@@ -77,7 +82,11 @@ namespace Lotba.Game
                 if (session.State == RunState.Running)
                 {
                     if (laneRequested != 0 && session.Move(laneRequested)) audioFeedback.PlayLaneSlide();
-                    if (jumpRequested && world.TryJump(session.Elapsed)) audioFeedback.PlayJump();
+                    if (jumpRequested && world.TryJump(session.Elapsed))
+                    {
+                        session.RecordJump();
+                        audioFeedback.PlayJump();
+                    }
                     float budget = Mathf.Min(Time.unscaledDeltaTime, .15f);
                     while (budget > 0 && session.State == RunState.Running)
                     {
@@ -93,7 +102,7 @@ namespace Lotba.Game
         }
         private void ResetRun(bool start)
         {
-            session = new RunSession(settings); world.ResetTrack(); hud.ResetView(); audioFeedback.Stop(); devices.CancelFeedback(); trackingSwipe = false;
+            session = new RunSession(settings, world.Route); world.ResetTrack(); hud.ResetView(); audioFeedback.Stop(); devices.CancelFeedback(); trackingSwipe = false;
             if (start) { session.Start(); }
         }
         private void ReadSwipe()

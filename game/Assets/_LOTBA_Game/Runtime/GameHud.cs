@@ -25,11 +25,15 @@ namespace Lotba.Game
         private float multiplierPulseUntil;
         private int previousMultiplier = 1;
         public bool SettingsOpen { get; private set; }
+        private RunTelemetryPanel telemetryPanel;
+        public bool TelemetryOpen => telemetryPanel != null && telemetryPanel.IsOpen;
+        public void CloseTelemetry() => telemetryPanel?.Close();
         public event Action StartRequested, MenuRequested, PauseRequested, BrakeRequested, SoundRequested, SettingsRequested, VibrationRequested;
         public event Action QualityRequested;
         private void Awake()
         {
             ApplyIdentity();
+            telemetryPanel = new RunTelemetryPanel(resultPanel, resultStats, menu);
             exit.gameObject.SetActive(Application.platform != RuntimePlatform.WebGLPlayer);
             exit.onClick.AddListener(ExitGame);
             start.onClick.AddListener(() => StartRequested?.Invoke()); retry.onClick.AddListener(() => StartRequested?.Invoke());
@@ -77,6 +81,7 @@ namespace Lotba.Game
         public void ResetView()
         {
             multiplierPulseUntil = 0; previousMultiplier = 1; SettingsOpen = false;
+            telemetryPanel?.SetReport(null);
             wordBannerUntil = 0;
             if (wordBanner != null) wordBanner.gameObject.SetActive(false);
         }
@@ -155,7 +160,8 @@ namespace Lotba.Game
             readyPanel.SetActive(session.State == RunState.Ready && !SettingsOpen);
             pausePanel.SetActive(session.State == RunState.Paused && !SettingsOpen);
             settingsPanel.SetActive(SettingsOpen);
-            resultPanel.SetActive(session.State == RunState.Finished);
+            telemetryPanel?.SetReport(session.State == RunState.Finished ? session.Telemetry : null);
+            resultPanel.SetActive(session.State == RunState.Finished && !TelemetryOpen);
             raceHud.SetActive(active); controls.SetActive(active);
             RenderWordBanner(running);
             pause.interactable = !SettingsOpen;
