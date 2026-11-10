@@ -28,4 +28,7 @@ temp*
 Thumbs.db
 
 .agents/
+/AGENTS.md
+/.codex/agents/
+/docs/
 *.idea/

@@ -48,16 +48,16 @@ namespace Lotba.Game
         }
         public void Feedback(bool impact)
         {
-            if (!VibrationEnabled || Time.unscaledTime < nextVibration) return;
+            if (!VibrationEnabled || (!impact && Time.unscaledTime < nextVibration)) return;
             nextVibration = Time.unscaledTime + (impact ? .18f : .12f);
 #if UNITY_ANDROID && !UNITY_EDITOR
             try
             {
-                long duration = (impact ? 35L : 12L) + (vibrationLevel - 1) * 8L;
+                long duration = impact ? 85L + (vibrationLevel - 1) * 10L : 8L + (vibrationLevel - 1) * 3L;
                 if (androidSdk >= 26)
                 {
                     int amplitude = vibrator.Call<bool>("hasAmplitudeControl")
-                        ? 120 + (vibrationLevel - 1) * 55 + (impact ? 20 : 0)
+                        ? (impact ? 175 + (vibrationLevel - 1) * 40 : 65 + (vibrationLevel - 1) * 35)
                         : -1;
                     using (var effects = new AndroidJavaClass("android.os.VibrationEffect"))
                     using (var effect = effects.CallStatic<AndroidJavaObject>("createOneShot", duration, amplitude))

@@ -63,6 +63,9 @@ namespace Lotba.Game
         private Vector3 cameraOrigin;
         private Quaternion cameraRotation;
         private Vector3 cameraVelocity;
+        private float referenceFieldOfView;
+        private Renderer[] riderRenderers;
+        private bool riderHiddenByImpact;
         private ObstacleSet obstacleOverride;
         private readonly HashSet<ObstacleDefinition> registeredObstacles = new HashSet<ObstacleDefinition>();
         private GameSettings settings;
@@ -101,7 +104,8 @@ namespace Lotba.Game
             refreshDepthBend = depthBendStrength != 0f || enabled;
             depthBendStrength = enabled ? strength : 0f;
         }
-        public event Action<bool, int> EncounterFeedback;
+        public event Action<int> GemFeedback;
+        public event Action<long, bool> ImpactFeedback;
         public RouteDefinition Route => roadStream.Route;
         public event Action StreakLevelUp;
         private enum ItemKind { Gem, Obstacle }
@@ -113,6 +117,7 @@ namespace Lotba.Game
             public ObstacleDefinition Definition;
             public int AirborneNote;
             public bool ObstacleHit;
+            public float? ImpactTime;
             public bool Active;
         }
         private readonly struct Crossing
@@ -130,6 +135,7 @@ namespace Lotba.Game
                 Debug.LogWarning("GameSettings has no Gem Flash Sprite assigned.", this);
             cameraOrigin = worldCamera.transform.localPosition;
             cameraRotation = worldCamera.transform.localRotation;
+            riderRenderers = rider.GetComponentsInChildren<Renderer>(true);
             roadStream.Initialize(settings.DepthBendShader);
             wheelOrigins = new Quaternion[wheels.Length];
             for (int i = 0; i < wheels.Length; i++) wheelOrigins[i] = wheels[i].localRotation;
@@ -139,6 +145,7 @@ namespace Lotba.Game
         public void ResetTrack()
         {
             riderDistance = 0f;
+            SetRiderImpactHidden(false);
             random = new System.Random(settings.Seed);
             foreach (TrackItem item in items) Hide(item);
             jump.Reset(); nextPatternDistance = FirstPatternDistance; wave = 0; safeLane = visualLane = 1;
@@ -188,6 +195,15 @@ namespace Lotba.Game
                 if (!item.Active) continue;
                 float previousZ = item.View.localPosition.z;
                 item.View.localPosition += Vector3.back * travel;
+                if (item.ImpactTime.HasValue && item.Definition.Jumpable)
+                {
+                    float progress = Mathf.Clamp01((session.Elapsed - item.ImpactTime.Value) / .4f);
+                    float direction = item.LaneX < 0 ? -1f : 1f;
+                    Vector3 position = item.View.localPosition;
+                    position.x = item.LaneX + direction * 1.8f * progress;
+                    position.y = 2.4f * progress * (1f - progress);
+                    item.View.SetLocalPositionAndRotation(position, Quaternion.Euler(0f, 0f, -direction * 150f * progress));
+                }
                 if (item.Kind == ItemKind.Gem)
                 {
                     if (previousZ >= 0 && item.View.localPosition.z < 0)
@@ -212,17 +228,24 @@ namespace Lotba.Game
                     if (item.View.gameObject.activeInHierarchy)
                         EmitPickupFlash(transform.TransformPoint(new Vector3(item.LaneX, item.View.localPosition.y, 0)), settings.GemFlash);
                     Hide(item);
-                    EncounterFeedback?.Invoke(false, item.AirborneNote);
+                    GemFeedback?.Invoke(item.AirborneNote);
                     if (session.Multiplier > previousMultiplier) StreakLevelUp?.Invoke();
                 }
-                else if (item.Kind == ItemKind.Obstacle && !session.IsProtected
+                else if (item.Kind == ItemKind.Obstacle
 #if UNITY_EDITOR
                     && !previewInvulnerable
 #endif
                 )
                 {
                     item.ObstacleHit = true;
-                    session.Hit(item.Definition.Id); EncounterFeedback?.Invoke(true, -1);
+                    // Vehicles stay clear of the camera after contact. Small obstacles tumble aside.
+                    if (!item.Definition.Jumpable)
+                        Hide(item);
+                    if (session.IsProtected) continue;
+                    item.ImpactTime = session.Elapsed;
+                    bool lostStreak = session.Streak > 0;
+                    long loss = session.Hit(item.Definition.Id);
+                    ImpactFeedback?.Invoke(loss, lostStreak);
                 }
             }
             foreach (TrackItem item in items)
@@ -252,10 +275,26 @@ namespace Lotba.Game
                 nextPatternDistance = Mathf.Max(nextPatternDistance + settings.PatternSpacingAt(nextPatternDistance),
                     lastPatternEnd + settings.PatternClearance);
             }
-            float intensity = Mathf.InverseLerp(settings.InitialSpeed, settings.MaximumSpeed, session.Speed);
+            float protection = session.ProtectionProgress;
+            // The blink rate rises from 1.25 to 2.75 cycles per second.
+            float blinkPhase = 1.1f * (1.25f * protection + .75f * protection * protection);
+            SetRiderImpactHidden(!reducedMotion && session.IsProtected && Mathf.Repeat(blinkPhase, 1f) < .28f);
             Vector3 cameraTarget = cameraOrigin + (reducedMotion ? Vector3.zero : Vector3.right * (x * settings.CameraFollowStrength));
             worldCamera.transform.localPosition = Vector3.SmoothDamp(worldCamera.transform.localPosition, cameraTarget, ref cameraVelocity, settings.CameraFollowTime, Mathf.Infinity, dt);
-            SetFieldOfView(reducedMotion ? 60f : Mathf.Lerp(60f, 68f, intensity));
+            if (session.IsProtected && !reducedMotion) return;
+            float intensity = Mathf.InverseLerp(settings.InitialSpeed, settings.MaximumSpeed, session.Speed);
+            float targetFieldOfView = reducedMotion ? 60f : Mathf.Lerp(60f, 68f, intensity);
+            SetFieldOfView(Mathf.Lerp(referenceFieldOfView, targetFieldOfView, 1f - Mathf.Exp(-10f * dt)));
+        }
+
+        public void ClearImpactBlink() => SetRiderImpactHidden(false);
+
+        private void SetRiderImpactHidden(bool hidden)
+        {
+            if (riderHiddenByImpact == hidden) return;
+            riderHiddenByImpact = hidden;
+            foreach (Renderer visual in riderRenderers)
+                visual.forceRenderingOff = hidden;
         }
         private float SpawnPattern(float distance, float riderDistance)
         {
@@ -537,6 +576,7 @@ namespace Lotba.Game
 
             item.Active = true;
             item.ObstacleHit = false;
+            item.ImpactTime = null;
             item.AirborneNote = airborneNote;
             item.LaneX = (lane - 1) * LaneSpacing;
             item.View.SetLocalPositionAndRotation(new Vector3(item.LaneX, kind == ItemKind.Gem ? height : 0, z), Quaternion.identity);
@@ -685,6 +725,7 @@ namespace Lotba.Game
         }
         private void SetFieldOfView(float reference)
         {
+            referenceFieldOfView = reference;
             float scale = Mathf.Max(1, (9f / 16f) / Mathf.Max(.1f, worldCamera.aspect));
             worldCamera.fieldOfView = 2 * Mathf.Atan(Mathf.Tan(reference * Mathf.Deg2Rad * .5f) * scale) * Mathf.Rad2Deg;
         }

@@ -35,7 +35,8 @@ namespace Lotba.Game
             hud.SoundRequested += ToggleSound; hud.SettingsRequested += OpenSettings;
             hud.VibrationRequested += devices.CycleVibrationLevel;
             hud.QualityRequested += CycleQuality;
-            world.EncounterFeedback += OnEncounter;
+            world.GemFeedback += OnGem;
+            world.ImpactFeedback += OnImpact;
             world.StreakLevelUp += audioFeedback.PlayStreakLevelUp;
             world.LetterCollected += OnLetterCollected;
             hud.Render(session, settings, muted, devices);
@@ -96,7 +97,7 @@ namespace Lotba.Game
                     }
                 }
             }
-            if (session.State == RunState.Finished) { audioFeedback.Stop(); }
+            if (session.State == RunState.Finished) { audioFeedback.Stop(); world.ClearImpactBlink(); }
             startRequested = brakeRequested = jumpRequested = pauseRequested = menuRequested = false; laneRequested = 0;
             hud.Render(session, settings, muted, devices);
         }
@@ -122,11 +123,16 @@ namespace Lotba.Game
             if (Mathf.Abs(delta.x) > Mathf.Abs(delta.y)) RequestLane(delta.x > 0 ? 1 : -1);
             else if (delta.y > 0) jumpRequested = true;
         }
-        private void OnEncounter(bool impact, int airborneNote)
+        private void OnGem(int airborneNote)
         {
-            if (impact) audioFeedback.PlayCollision();
-            else audioFeedback.PlayGemPickup(airborneNote);
-            devices.Feedback(impact);
+            audioFeedback.PlayGemPickup(airborneNote);
+            devices.Feedback(false);
+        }
+        private void OnImpact(long loss, bool lostStreak)
+        {
+            audioFeedback.PlayCollision();
+            devices.Feedback(true);
+            hud.ShowImpact(loss, lostStreak);
         }
         private void OnLetterCollected(string word, bool[] collected, bool complete)
         {
@@ -199,7 +205,8 @@ namespace Lotba.Game
             hud.SoundRequested -= ToggleSound; hud.SettingsRequested -= OpenSettings;
             hud.VibrationRequested -= devices.CycleVibrationLevel;
             hud.QualityRequested -= CycleQuality;
-            world.EncounterFeedback -= OnEncounter;
+            world.GemFeedback -= OnGem;
+            world.ImpactFeedback -= OnImpact;
             world.StreakLevelUp -= audioFeedback.PlayStreakLevelUp;
             world.LetterCollected -= OnLetterCollected;
         }

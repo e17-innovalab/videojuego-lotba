@@ -22,6 +22,8 @@ namespace Lotba.Game
         private Vector2 wordBannerVisiblePosition;
         private float wordBannerStarted, wordBannerUntil;
         private float multiplierPulseUntil;
+        private TMPro.TextMeshProUGUI impactLabel;
+        private float impactUntil;
         private int previousMultiplier = 1;
         public bool SettingsOpen { get; private set; }
         private RunTelemetryPanel telemetryPanel;
@@ -34,6 +36,19 @@ namespace Lotba.Game
             ApplyIdentity();
             wordBannerVisiblePosition = wordBanner.anchoredPosition;
             wordBanner.gameObject.SetActive(false);
+            var impactObject = new GameObject("Impact feedback", typeof(RectTransform), typeof(TMPro.TextMeshProUGUI));
+            var impactRect = (RectTransform)impactObject.transform;
+            impactRect.SetParent(raceHud.transform, false);
+            impactRect.anchorMin = impactRect.anchorMax = new Vector2(.5f, .72f);
+            impactRect.sizeDelta = new Vector2(320f, 60f);
+            impactLabel = impactObject.GetComponent<TMPro.TextMeshProUGUI>();
+            impactLabel.font = score.font;
+            impactLabel.fontSize = 24f;
+            impactLabel.fontStyle = TMPro.FontStyles.Bold;
+            impactLabel.alignment = TMPro.TextAlignmentOptions.Center;
+            impactLabel.color = new Color32(255, 223, 145, 255);
+            impactLabel.raycastTarget = false;
+            impactObject.SetActive(false);
             telemetryPanel = new RunTelemetryPanel(resultPanel, resultStats, menu);
             exit.gameObject.SetActive(Application.platform != RuntimePlatform.WebGLPlayer);
             exit.onClick.AddListener(ExitGame);
@@ -82,9 +97,17 @@ namespace Lotba.Game
         public void ResetView()
         {
             multiplierPulseUntil = 0; previousMultiplier = 1; SettingsOpen = false;
+            impactUntil = 0f;
             telemetryPanel?.SetReport(null);
             wordBannerUntil = 0;
             if (wordBanner != null) wordBanner.gameObject.SetActive(false);
+        }
+
+        public void ShowImpact(long loss, bool lostStreak)
+        {
+            impactLabel.text = loss > 0 ? $"−{loss} puntos" : "Choque";
+            if (lostStreak) impactLabel.text += "\nRacha perdida";
+            impactUntil = Time.unscaledTime + 1.15f;
         }
 
         public void ShowWordProgress(string word, bool[] collected, bool complete)
@@ -136,6 +159,8 @@ namespace Lotba.Game
             telemetryPanel?.SetReport(session.State == RunState.Finished ? session.Telemetry : null);
             resultPanel.SetActive(session.State == RunState.Finished && !TelemetryOpen);
             raceHud.SetActive(active); controls.SetActive(active);
+            if (impactLabel != null)
+                impactLabel.gameObject.SetActive(running && Time.unscaledTime < impactUntil);
             RenderWordBanner(running);
             pause.interactable = !SettingsOpen;
             score.text = session.Score.ToString(); gems.text = session.GemBasePoints.ToString();

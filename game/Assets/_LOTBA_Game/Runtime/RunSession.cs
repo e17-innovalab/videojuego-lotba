@@ -12,7 +12,10 @@ namespace Lotba.Game
         private readonly RouteDefinition telemetryRoute;
         private int telemetrySection;
         public RunTelemetry Telemetry { get; private set; }
-        private float impactDrag;
+        private const float ImpactRecoverySeconds = 2.5f;
+        private const float ImpactSpeedLoss = 9f;
+        private const float ImpactProtectionSeconds = 1.1f;
+        private float impactTime = float.NegativeInfinity;
         private float protectedUntil;
         private float streakEnergy;
         public RunState State { get; private set; }
@@ -33,6 +36,9 @@ namespace Lotba.Game
         public float StreakProgress => streakEnergy;
         public float Remaining => Math.Max(0f, settings.Duration - Elapsed);
         public bool IsProtected => Elapsed < protectedUntil;
+        public float ProtectionProgress => IsProtected
+            ? Math.Max(0f, 1f - (protectedUntil - Elapsed) / ImpactProtectionSeconds)
+            : 1f;
 
         public RunSession(GameSettings settings, RouteDefinition telemetryRoute = null)
         {
@@ -63,9 +69,11 @@ namespace Lotba.Game
             if (State != RunState.Running) return;
             float step = Math.Min(dt, Remaining);
             Elapsed += step;
-            impactDrag = Math.Max(0f, impactDrag - step * 3f);
             float progression = 1f - (float)Math.Exp(-Elapsed / settings.AccelerationTime);
-            Speed = settings.InitialSpeed + (settings.MaximumSpeed - settings.InitialSpeed) * progression - impactDrag;
+            float baseSpeed = settings.InitialSpeed + (settings.MaximumSpeed - settings.InitialSpeed) * progression;
+            float sinceImpact = Elapsed - impactTime;
+            float recovery = Math.Min(1f, sinceImpact / ImpactRecoverySeconds);
+            Speed = Math.Max(0f, baseSpeed - ImpactSpeedLoss * (1f - recovery));
             PeakSpeed = Math.Max(PeakSpeed, Speed);
             Distance += Speed * step;
             if (Telemetry != null)
@@ -130,7 +138,7 @@ namespace Lotba.Game
             float previousProgress = streakEnergy;
             long loss = Math.Min(Score, Math.Max(50L, Score / 4));
             Score -= loss; ResetStreak(); Collisions++;
-            impactDrag = 3f; protectedUntil = Elapsed + 1.1f;
+            impactTime = Elapsed; protectedUntil = Elapsed + ImpactProtectionSeconds;
             Record("obstacle_hit", obstacleId, -loss, previousStreak, previousMultiplier, previousProgress);
             if (previousStreak > 0)
                 Record("streak_lost", "collision", previousStreak: previousStreak,
