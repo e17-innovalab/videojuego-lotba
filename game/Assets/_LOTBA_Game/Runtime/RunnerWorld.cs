@@ -63,6 +63,8 @@ namespace Lotba.Game
         private Vector3 cameraOrigin;
         private Quaternion cameraRotation;
         private Vector3 cameraVelocity;
+        private float boostCameraBlend;
+        private TurboAuraController turboAura;
         private float referenceFieldOfView;
         private Renderer[] riderRenderers;
         private bool riderHiddenByImpact;
@@ -144,6 +146,7 @@ namespace Lotba.Game
         }
         public void ResetTrack()
         {
+            turboAura?.Clear();
             riderDistance = 0f;
             SetRiderImpactHidden(false);
             random = new System.Random(settings.Seed);
@@ -158,14 +161,27 @@ namespace Lotba.Game
             for (int i = 0; i < wheels.Length; i++) wheels[i].localRotation = wheelOrigins[i];
             foreach (Transform pedal in pedals) pedal.localRotation = Quaternion.identity;
             cameraVelocity = Vector3.zero;
+            boostCameraBlend = 0f;
             worldCamera.transform.SetLocalPositionAndRotation(cameraOrigin, cameraRotation);
             if (gemFlash != null) gemFlash.enabled = false;
             for (int i = 0; i < 4; i++) Place(ItemKind.Gem, 1, 10 + i * 3, 1.1f);
             SetFieldOfView(60f);
         }
+        public void InitializeTurboAura()
+        {
+            if (turboAura != null || settings.TurboAuraShader == null || settings.TurboAuraTexture == null) return;
+            var aura = new GameObject("Turbo aura");
+            aura.transform.SetParent(rider, false);
+            turboAura = aura.AddComponent<TurboAuraController>();
+            turboAura.Initialize(settings.TurboAuraShader, settings.TurboAuraTexture);
+        }
+
+        public void ClearTurboAura() => turboAura?.Clear();
+
         public bool TryJump(float time) => jump.TryStart(time);
         public void Advance(RunSession session, float dt, bool reducedMotion)
         {
+            turboAura?.Advance(session.BoostActive, reducedMotion, dt, settings);
             riderDistance = session.Distance;
             float oldX = rider.localPosition.x;
             if (session.Lane != visualLane)
@@ -271,19 +287,33 @@ namespace Lotba.Game
                 }
                 if (nextPatternDistance > spawnHorizon) break;
 
+                if (session.Telemetry != null && session.OfferDistance == 0f &&
+                    nextPatternDistance >= RunSession.OfferMilestoneMetres)
+                {
+                    session.ScheduleSpeedOffer(nextPatternDistance + 4f);
+                    nextPatternDistance += 16f;
+                    continue;
+                }
                 lastPatternEnd = SpawnPattern(nextPatternDistance, session.Distance);
                 nextPatternDistance = Mathf.Max(nextPatternDistance + settings.PatternSpacingAt(nextPatternDistance),
                     lastPatternEnd + settings.PatternClearance);
             }
+            session.ShowSpeedOffer();
             float protection = session.ProtectionProgress;
             // The blink rate rises from 1.25 to 2.75 cycles per second.
             float blinkPhase = 1.1f * (1.25f * protection + .75f * protection * protection);
             SetRiderImpactHidden(!reducedMotion && session.IsProtected && Mathf.Repeat(blinkPhase, 1f) < .28f);
+            float boostTarget = session.BoostActive && !reducedMotion ? 1f : 0f;
+            boostCameraBlend = reducedMotion ? 0f :
+                Mathf.Lerp(boostCameraBlend, boostTarget, 1f - Mathf.Exp(-settings.BoostCameraBlendRate * dt));
             Vector3 cameraTarget = cameraOrigin + (reducedMotion ? Vector3.zero : Vector3.right * (x * settings.CameraFollowStrength));
+            cameraTarget += Vector3.back * (settings.BoostCameraPullback * boostCameraBlend);
             worldCamera.transform.localPosition = Vector3.SmoothDamp(worldCamera.transform.localPosition, cameraTarget, ref cameraVelocity, settings.CameraFollowTime, Mathf.Infinity, dt);
             if (session.IsProtected && !reducedMotion) return;
-            float intensity = Mathf.InverseLerp(settings.InitialSpeed, settings.MaximumSpeed, session.Speed);
-            float targetFieldOfView = reducedMotion ? 60f : Mathf.Lerp(60f, 68f, intensity);
+            float pace = session.Speed - (session.BoostActive ? RunSession.BoostSpeed : 0f);
+            float intensity = Mathf.InverseLerp(settings.InitialSpeed, settings.MaximumSpeed, pace);
+            float targetFieldOfView = reducedMotion ? 60f : Mathf.Lerp(60f, 68f, intensity) +
+                settings.BoostCameraFieldOfView * boostCameraBlend;
             SetFieldOfView(Mathf.Lerp(referenceFieldOfView, targetFieldOfView, 1f - Mathf.Exp(-10f * dt)));
         }
 

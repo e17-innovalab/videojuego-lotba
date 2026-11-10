@@ -24,6 +24,11 @@ namespace Lotba.Game
         private float multiplierPulseUntil;
         private TMPro.TextMeshProUGUI impactLabel;
         private float impactUntil;
+        private RectTransform speedOffer;
+        private BoostSpeedLines boostSpeedLines;
+        private RectTransform milestoneBar;
+        private RectTransform milestoneFill;
+        private TMPro.TextMeshProUGUI milestoneLabel;
         private int previousMultiplier = 1;
         public bool SettingsOpen { get; private set; }
         private RunTelemetryPanel telemetryPanel;
@@ -31,6 +36,7 @@ namespace Lotba.Game
         public void CloseTelemetry() => telemetryPanel?.Close();
         public event Action StartRequested, MenuRequested, PauseRequested, BrakeRequested, SoundRequested, SettingsRequested, VibrationRequested;
         public event Action QualityRequested;
+        public event Action<bool> SpeedChosen;
         private void Awake()
         {
             ApplyIdentity();
@@ -49,6 +55,17 @@ namespace Lotba.Game
             impactLabel.color = new Color32(255, 223, 145, 255);
             impactLabel.raycastTarget = false;
             impactObject.SetActive(false);
+            var linesObject = new GameObject("Boost speed lines", typeof(RectTransform), typeof(CanvasRenderer), typeof(BoostSpeedLines));
+            var linesRect = (RectTransform)linesObject.transform;
+            linesRect.SetParent(raceHud.transform, false);
+            linesRect.SetAsFirstSibling();
+            linesRect.anchorMin = Vector2.zero;
+            linesRect.anchorMax = Vector2.one;
+            linesRect.offsetMin = linesRect.offsetMax = Vector2.zero;
+            boostSpeedLines = linesObject.GetComponent<BoostSpeedLines>();
+            boostSpeedLines.raycastTarget = false;
+            linesObject.SetActive(false);
+            CreateSpeedOffer();
             telemetryPanel = new RunTelemetryPanel(resultPanel, resultStats, menu);
             exit.gameObject.SetActive(Application.platform != RuntimePlatform.WebGLPlayer);
             exit.onClick.AddListener(ExitGame);
@@ -62,6 +79,69 @@ namespace Lotba.Game
             soundButton.onClick.AddListener(() => SoundRequested?.Invoke());
             vibrationButton.onClick.AddListener(() => VibrationRequested?.Invoke());
             qualityButton.onClick.AddListener(() => QualityRequested?.Invoke());
+        }
+
+        private void CreateSpeedOffer()
+        {
+            RectTransform Region(string name, Transform parent, Vector2 min, Vector2 max)
+            {
+                var region = (RectTransform)new GameObject(name, typeof(RectTransform)).transform;
+                region.SetParent(parent, false);
+                region.anchorMin = min;
+                region.anchorMax = max;
+                region.offsetMin = region.offsetMax = Vector2.zero;
+                return region;
+            }
+
+            TMPro.TextMeshProUGUI Label(string name, Transform parent, Vector2 min, Vector2 max, string text, float size)
+            {
+                var label = Region(name, parent, min, max).gameObject.AddComponent<TMPro.TextMeshProUGUI>();
+                label.font = score.font;
+                label.text = text;
+                label.fontSize = size;
+                label.enableAutoSizing = true;
+                label.fontSizeMin = 11f;
+                label.fontSizeMax = size;
+                label.alignment = TMPro.TextAlignmentOptions.Center;
+                label.raycastTarget = false;
+                return label;
+            }
+
+            UnityEngine.UI.Image Background(RectTransform region, Color color)
+            {
+                var image = region.gameObject.AddComponent<UnityEngine.UI.Image>();
+                image.color = color;
+                image.raycastTarget = false;
+                return image;
+            }
+
+            void Card(string name, Vector2 min, Vector2 max, Color color, string description, bool accelerate)
+            {
+                RectTransform card = Region(name, speedOffer, min, max);
+                var image = Background(card, color);
+                image.raycastTarget = true;
+                var button = card.gameObject.AddComponent<UnityEngine.UI.Button>();
+                button.targetGraphic = image;
+                button.onClick.AddListener(() => SpeedChosen?.Invoke(accelerate));
+                Label("Título", card, new Vector2(.05f, .58f), new Vector2(.95f, .94f), name, 23f).fontStyle = TMPro.FontStyles.Bold;
+                Label("Detalle", card, new Vector2(.07f, .08f), new Vector2(.93f, .57f), description, 17f);
+            }
+
+            milestoneBar = Region("Hito de velocidad", raceHud.transform, new Vector2(.22f, .74f), new Vector2(.78f, .8f));
+            Background(milestoneBar, new Color32(17, 29, 43, 235));
+            milestoneFill = Region("Progreso", milestoneBar, new Vector2(.04f, .12f), new Vector2(.96f, .25f));
+            Background(milestoneFill, new Color32(107, 221, 195, 255));
+            milestoneLabel = Label("Estado del hito", milestoneBar, new Vector2(.03f, .27f), new Vector2(.97f, .97f), "", 17f);
+
+            speedOffer = Region("Tarjetas de velocidad", raceHud.transform, new Vector2(.04f, .35f), new Vector2(.96f, .66f));
+            Background(speedOffer, new Color32(16, 27, 39, 245));
+            Label("Encabezado", speedOffer, new Vector2(.04f, .73f), new Vector2(.96f, .98f), "Elegí tu ritmo", 27f);
+            Card("Mantener ritmo", new Vector2(.04f, .08f), new Vector2(.48f, .71f),
+                new Color32(47, 71, 95, 255), "Velocidad y gemas habituales", false);
+            Card("Acelerar", new Vector2(.52f, .08f), new Vector2(.96f, .71f),
+                new Color32(121, 61, 36, 255), $"{RunSession.BoostSeconds:0} s · Gemas ×2\nMenos tiempo para esquivar", true);
+            milestoneBar.gameObject.SetActive(false);
+            speedOffer.gameObject.SetActive(false);
         }
         private static void ExitGame()
         {
@@ -159,10 +239,19 @@ namespace Lotba.Game
             telemetryPanel?.SetReport(session.State == RunState.Finished ? session.Telemetry : null);
             resultPanel.SetActive(session.State == RunState.Finished && !TelemetryOpen);
             raceHud.SetActive(active); controls.SetActive(active);
+            if (boostSpeedLines != null) boostSpeedLines.Render(settings, session);
             if (impactLabel != null)
                 impactLabel.gameObject.SetActive(running && Time.unscaledTime < impactUntil);
             RenderWordBanner(running);
-            pause.interactable = !SettingsOpen;
+            pause.interactable = !SettingsOpen && !session.OfferPending;
+            if (speedOffer != null)
+            {
+                speedOffer.gameObject.SetActive(running && session.OfferPending);
+                milestoneBar.gameObject.SetActive(running && !session.OfferPending && (!session.OfferResolved || session.BoostActive));
+                float progress = session.BoostActive ? session.BoostProgress : session.OfferProgress;
+                milestoneFill.anchorMax = new Vector2(Mathf.Lerp(.04f, .96f, progress), .25f);
+                milestoneLabel.text = session.BoostActive ? "IMPULSO · GEMAS ×2" : "PRÓXIMA DECISIÓN · DISTANCIA";
+            }
             score.text = session.Score.ToString(); gems.text = session.GemBasePoints.ToString();
             streak.text = $"RACHA {session.Streak}"; multiplier.text = $"×{session.Multiplier}";
             if (session.Multiplier > previousMultiplier) multiplierPulseUntil = Time.unscaledTime + .3f;
@@ -170,15 +259,18 @@ namespace Lotba.Game
             float pulse = running ? Mathf.Clamp01((multiplierPulseUntil - Time.unscaledTime) / .3f) : 0;
             multiplier.transform.parent.localScale = Vector3.one * (1 + Mathf.Sin(pulse * Mathf.PI) * .18f);
             streakFill.fillAmount = session.StreakProgress;
-            remaining.text = $"{session.Remaining:0} s";
-            gauge.SetSpeed(session.Speed, settings.MaximumSpeed);
+            int remainingSeconds = Mathf.CeilToInt(session.Remaining);
+            remaining.text = $"{remainingSeconds / 60}:{remainingSeconds % 60:00}";
+            gauge.SetSpeed(session.Speed, settings.InitialSpeed, settings.MaximumSpeed);
             soundLabel.text = muted ? "SONIDO: NO" : "SONIDO: SÍ";
             vibrationButton.interactable = devices.VibrationAvailable;
             vibrationLabel.text = !devices.VibrationAvailable ? "VIBRACIÓN: NO DISPONIBLE" : "VIBRACIÓN: " + devices.VibrationLevelLabel;
             if (session.State == RunState.Finished)
             {
                 resultTitle.text = session.Ending == RunEnding.Brake ? "VOS MARCASTE\nEL FINAL" : "RECORRIDO\nCOMPLETADO";
-                resultStats.text = $"<size=54><color=#FFD14C>{session.Score}</color></size>\nPUNTOS\n\n{session.Gems} gemas · {session.GemBasePoints} pts base\n{session.Distance:0} m · {session.Elapsed:0} s  ·  {session.PeakSpeed * 3.6f:0} km/h máx.\n\nMejor racha: {session.BestStreak}  ·  ×{session.BestMultiplier}\nChoques: {session.Collisions}";
+                resultStats.text = $"<size=54><color=#FFD14C>{session.Score}</color></size>\nPUNTOS\n\n{session.Gems} gemas · {session.GemBasePoints} pts base\n{session.Distance:0} m · {session.Elapsed:0} s  ·  {SpeedGauge.DisplaySpeed(session.PeakSpeed):0} km/h máx.\n\nMejor racha: {session.BestStreak}  ·  ×{session.BestMultiplier}\nChoques: {session.Collisions}";
+                if (session.VoluntaryBoosts > 0)
+                    resultStats.text += $"\nAceleraciones elegidas: {session.VoluntaryBoosts} · Gemas extra: {session.BonusGems}";
             }
         }
     }

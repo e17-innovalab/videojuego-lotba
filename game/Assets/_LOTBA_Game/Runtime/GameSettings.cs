@@ -6,10 +6,35 @@ namespace Lotba.Game
     [CreateAssetMenu(menuName = "LOTBA/Game settings")]
     public sealed class GameSettings : ScriptableObject
     {
-        [SerializeField, Min(30f)] private float duration = 120f;
+        [SerializeField, Min(30f)] private float duration = 480f;
         [SerializeField, Min(1f)] private float initialSpeed = 18f;
-        [SerializeField, Min(1f)] private float maximumSpeed = 28f;
-        [SerializeField, Min(1f)] private float accelerationTime = 35f;
+        [SerializeField, Min(1f)] private float maximumSpeed = 30f;
+        [SerializeField, Min(1f)] private float accelerationTime = 95f;
+        [Header("Boost effects")]
+        [SerializeField] private Shader turboAuraShader;
+        [SerializeField] private Texture2D turboAuraTexture;
+        [SerializeField, Range(0f, 1f)] private float turboAuraIntensity = .72f;
+        [SerializeField, Min(.01f)] private float turboAuraFadeRate = 4f;
+        [SerializeField, Min(0f)] private float boostCameraPullback = .65f;
+        [SerializeField, Range(0f, 20f)] private float boostCameraFieldOfView = 5f;
+        [SerializeField, Min(.01f)] private float boostCameraBlendRate = 5f;
+        [SerializeField] private Color boostLineColor = new Color(.68f, .88f, 1f, .55f);
+        [SerializeField, Range(0, 32)] private int boostLineCount = 14;
+        [SerializeField, Min(.01f)] private float boostLineSpeed = 2.4f;
+        [SerializeField, Range(.01f, .3f)] private float boostLineLength = .15f;
+        [SerializeField, Min(.1f)] private float boostLineWidth = 2f;
+        public Shader TurboAuraShader => turboAuraShader;
+        public Texture2D TurboAuraTexture => turboAuraTexture;
+        public float TurboAuraIntensity => turboAuraIntensity;
+        public float TurboAuraFadeRate => turboAuraFadeRate;
+        public float BoostCameraPullback => boostCameraPullback;
+        public float BoostCameraFieldOfView => boostCameraFieldOfView;
+        public float BoostCameraBlendRate => boostCameraBlendRate;
+        public Color BoostLineColor => boostLineColor;
+        public int BoostLineCount => boostLineCount;
+        public float BoostLineSpeed => boostLineSpeed;
+        public float BoostLineLength => boostLineLength;
+        public float BoostLineWidth => boostLineWidth;
         [SerializeField, Range(.07f, .25f)] private float laneChangeTime = .11f;
         [Header("Track patterns (metres)")]
         [SerializeField, Min(1f)] private float initialPatternSpacing = 28f;

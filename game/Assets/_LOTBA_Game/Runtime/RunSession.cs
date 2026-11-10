@@ -18,6 +18,19 @@ namespace Lotba.Game
         private float impactTime = float.NegativeInfinity;
         private float protectedUntil;
         private float streakEnergy;
+        public const float OfferMilestoneMetres = 600f;
+        public const float BoostSeconds = 6f;
+        public const float BoostSpeed = 6f;
+        private float boostUntil;
+        private bool offerShown;
+        public bool OfferPending { get; private set; }
+        public bool BoostActive => Elapsed < boostUntil;
+        public float BoostProgress => BoostActive ? (boostUntil - Elapsed) / BoostSeconds : 0f;
+        public int VoluntaryBoosts { get; private set; }
+        public int BonusGems { get; private set; }
+        public float OfferDistance { get; private set; }
+        public float OfferProgress => Math.Min(1f, Distance / Math.Max(OfferMilestoneMetres, OfferDistance));
+        public bool OfferResolved => offerShown && !OfferPending;
         public RunState State { get; private set; }
         public RunEnding Ending { get; private set; }
         public float Elapsed { get; private set; }
@@ -66,14 +79,14 @@ namespace Lotba.Game
 #endif
         public void Tick(float dt)
         {
-            if (State != RunState.Running) return;
+            if (State != RunState.Running || OfferPending) return;
             float step = Math.Min(dt, Remaining);
             Elapsed += step;
             float progression = 1f - (float)Math.Exp(-Elapsed / settings.AccelerationTime);
             float baseSpeed = settings.InitialSpeed + (settings.MaximumSpeed - settings.InitialSpeed) * progression;
             float sinceImpact = Elapsed - impactTime;
             float recovery = Math.Min(1f, sinceImpact / ImpactRecoverySeconds);
-            Speed = Math.Max(0f, baseSpeed - ImpactSpeedLoss * (1f - recovery));
+            Speed = Math.Max(0f, baseSpeed + (BoostActive ? BoostSpeed : 0f) - ImpactSpeedLoss * (1f - recovery));
             PeakSpeed = Math.Max(PeakSpeed, Speed);
             Distance += Speed * step;
             if (Telemetry != null)
@@ -99,6 +112,33 @@ namespace Lotba.Game
             }
             if (Remaining <= 0f) Finish(RunEnding.TimeLimit);
         }
+        public void ScheduleSpeedOffer(float distance)
+        {
+            if (Telemetry != null && OfferDistance == 0f) OfferDistance = distance;
+        }
+
+        public void ShowSpeedOffer()
+        {
+            if (OfferDistance <= 0f || Distance < OfferDistance || State != RunState.Running || offerShown) return;
+            offerShown = OfferPending = true;
+            Record("speed_offer_shown");
+        }
+
+        public void ChooseSpeed(bool accelerate)
+        {
+            if (!OfferPending || State != RunState.Running) return;
+            OfferPending = false;
+            if (!accelerate)
+            {
+                Record("speed_kept");
+                return;
+            }
+
+            boostUntil = Elapsed + BoostSeconds;
+            VoluntaryBoosts++;
+            Record("boost_activated");
+        }
+
         public bool Move(int direction)
         {
             if (State != RunState.Running) return false;
@@ -113,8 +153,9 @@ namespace Lotba.Game
             if (State != RunState.Running) return 0;
             int previousStreak = Streak, previousMultiplier = Multiplier;
             float previousProgress = streakEnergy;
-            long reward = 10L * Multiplier;
-            Score += reward; Gems++; Streak++;
+            int gemCount = BoostActive ? 2 : 1;
+            long reward = 10L * Multiplier * gemCount;
+            Score += reward; Gems += gemCount; BonusGems += gemCount - 1; Streak++;
             BestStreak = Math.Max(BestStreak, Streak);
             float gemsForLevel = settings.FirstLevelGems + settings.ExtraGemsPerLevel * (Multiplier - 1f);
             streakEnergy += 1f / Math.Max(1, gemsForLevel);
@@ -126,6 +167,7 @@ namespace Lotba.Game
                 streakEnergy = Math.Min(1, settings.LevelUpReserve + streakEnergy - 1);
             }
             Record("gem_collected", airborneNote >= 0 ? "air" : "ground", reward, previousStreak, previousMultiplier, previousProgress);
+            if (gemCount > 1) Record("boost_bonus_gem");
             if (Multiplier > previousMultiplier)
                 Record("streak_level_up", previousStreak: previousStreak,
                     previousMultiplier: previousMultiplier, previousProgress: previousProgress);
@@ -166,6 +208,7 @@ namespace Lotba.Game
         {
             Ending = ending;
             State = RunState.Finished;
+            OfferPending = false;
             if (Telemetry != null)
             {
                 string reason = ending == RunEnding.Brake ? "brake" : "time_limit";
@@ -173,7 +216,8 @@ namespace Lotba.Game
                 Telemetry.summary = new RunTelemetrySummary
                 {
                     ending = reason, timeSeconds = Elapsed, distanceMetres = Distance, peakSpeedKmh = PeakSpeed * 3.6f,
-                    score = Score, gems = Gems, collisions = Collisions, bestStreak = BestStreak, bestMultiplier = BestMultiplier
+                    score = Score, gems = Gems, collisions = Collisions, bestStreak = BestStreak, bestMultiplier = BestMultiplier,
+                    voluntaryBoosts = VoluntaryBoosts, bonusGems = BonusGems
                 };
             }
             Speed = 0f;

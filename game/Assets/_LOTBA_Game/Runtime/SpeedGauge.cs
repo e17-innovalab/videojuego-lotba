@@ -11,10 +11,13 @@ namespace Lotba.Game
         [SerializeField] private float minimumNeedleAngle = 180f;
         [SerializeField] private float maximumNeedleAngle;
 
-        public void SetSpeed(float speed, float maximumSpeed)
+        // The arcade simulation runs faster than the speed shown to the rider.
+        public static float DisplaySpeed(float simulationSpeed) => simulationSpeed * 1.5f;
+
+        public void SetSpeed(float speed, float initialSpeed, float maximumSpeed)
         {
-            speedLabel.SetText("{0:0}", speed * 3.6f);
-            float progress = Mathf.InverseLerp(8f, maximumSpeed, speed);
+            speedLabel.SetText("{0:0}", DisplaySpeed(speed));
+            float progress = Mathf.InverseLerp(initialSpeed - 3f, maximumSpeed + RunSession.BoostSpeed, speed);
             activeArc.fillAmount = progress;
             needlePivot.localRotation = Quaternion.Euler(0f, 0f,
                 Mathf.Lerp(minimumNeedleAngle, maximumNeedleAngle, progress));

@@ -14,6 +14,7 @@ namespace Lotba.Game
         private RunSession session;
         private bool startRequested, brakeRequested, jumpRequested, pauseRequested, menuRequested;
         private int laneRequested;
+        private bool? speedChoiceRequested;
         private bool muted, trackingSwipe;
         private const string QualityPreference = "Lotba.CityRush.Quality";
         private static readonly string[] QualityNames = { "Low", "Medium", "High" };
@@ -29,12 +30,14 @@ namespace Lotba.Game
             InitializeQuality();
             audioFeedback.SetMuted(muted); devices.Initialize();
             world.Initialize(settings); world.ResetTrack(); session = new RunSession(settings, world.Route);
+            world.InitializeTurboAura();
             world.ConfigureDepthBend(IsHighQuality);
             hud.StartRequested += RequestStart; hud.BrakeRequested += RequestBrake;
             hud.PauseRequested += RequestPause; hud.MenuRequested += RequestMenu;
             hud.SoundRequested += ToggleSound; hud.SettingsRequested += OpenSettings;
             hud.VibrationRequested += devices.CycleVibrationLevel;
             hud.QualityRequested += CycleQuality;
+            hud.SpeedChosen += ChooseSpeed;
             world.GemFeedback += OnGem;
             world.ImpactFeedback += OnImpact;
             world.StreakLevelUp += audioFeedback.PlayStreakLevelUp;
@@ -50,6 +53,7 @@ namespace Lotba.Game
                 return;
             }
             if (keyboard != null && keyboard.spaceKey.wasPressedThisFrame) RequestBrake();
+            if (session.OfferPending) return;
             if (hud.SettingsOpen) return;
             ReadSwipe();
             if (keyboard == null) return;
@@ -64,6 +68,7 @@ namespace Lotba.Game
             if (menuRequested && (session.State == RunState.Finished || session.State == RunState.Paused))
             {
                 ResetRun(false);
+                speedChoiceRequested = null;
                 startRequested = brakeRequested = jumpRequested = pauseRequested = menuRequested = false; laneRequested = 0;
                 hud.Render(session, settings, muted, devices);
                 return;
@@ -80,7 +85,8 @@ namespace Lotba.Game
                     if (session.State == RunState.Paused) { session.Resume(); }
                     else { session.Pause(); audioFeedback.Stop(); devices.CancelFeedback(); }
                 }
-                if (session.State == RunState.Running)
+                if (speedChoiceRequested.HasValue) session.ChooseSpeed(speedChoiceRequested.Value);
+                if (session.State == RunState.Running && !session.OfferPending)
                 {
                     if (laneRequested != 0 && session.Move(laneRequested)) audioFeedback.PlayLaneSlide();
                     if (jumpRequested && world.TryJump(session.Elapsed))
@@ -89,7 +95,7 @@ namespace Lotba.Game
                         audioFeedback.PlayJump();
                     }
                     float budget = Mathf.Min(Time.unscaledDeltaTime, .15f);
-                    while (budget > 0 && session.State == RunState.Running)
+                    while (budget > 0 && session.State == RunState.Running && !session.OfferPending)
                     {
                         float step = Mathf.Min(.02f, budget); session.Tick(step);
                         if (session.State == RunState.Running) world.Advance(session, step, false);
@@ -97,7 +103,13 @@ namespace Lotba.Game
                     }
                 }
             }
-            if (session.State == RunState.Finished) { audioFeedback.Stop(); world.ClearImpactBlink(); }
+            if (session.State == RunState.Finished)
+            {
+                audioFeedback.Stop();
+                world.ClearImpactBlink();
+                world.ClearTurboAura();
+            }
+            speedChoiceRequested = null;
             startRequested = brakeRequested = jumpRequested = pauseRequested = menuRequested = false; laneRequested = 0;
             hud.Render(session, settings, muted, devices);
         }
@@ -142,6 +154,10 @@ namespace Lotba.Game
         }
         private void RequestStart() => startRequested = true;
         private void RequestBrake() => brakeRequested = true;
+        private void ChooseSpeed(bool accelerate)
+        {
+            if (session.OfferPending && !speedChoiceRequested.HasValue) speedChoiceRequested = accelerate;
+        }
         private void RequestPause() { if (!hud.SettingsOpen) pauseRequested = true; }
         private void RequestMenu() => menuRequested = true;
         private void RequestLane(int direction) => laneRequested = direction;
@@ -205,6 +221,7 @@ namespace Lotba.Game
             hud.SoundRequested -= ToggleSound; hud.SettingsRequested -= OpenSettings;
             hud.VibrationRequested -= devices.CycleVibrationLevel;
             hud.QualityRequested -= CycleQuality;
+            hud.SpeedChosen -= ChooseSpeed;
             world.GemFeedback -= OnGem;
             world.ImpactFeedback -= OnImpact;
             world.StreakLevelUp -= audioFeedback.PlayStreakLevelUp;

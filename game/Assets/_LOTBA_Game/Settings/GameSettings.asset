@@ -12,10 +12,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f2c7bfd5218df6f4ebb04055bb2d661a, type: 3}
   m_Name: GameSettings
   m_EditorClassIdentifier: Lotba.Game::Lotba.Game.GameSettings
-  duration: 120
+  duration: 480
   initialSpeed: 18
-  maximumSpeed: 28
-  accelerationTime: 35
+  maximumSpeed: 30
+  accelerationTime: 95
+  turboAuraShader: {fileID: 4800000, guid: c60303daed4c47cbba59a4efa5c969c3, type: 3}
+  turboAuraTexture: {fileID: 2800000, guid: cf4b287221636c642a8d4fcb4284a493, type: 3}
+  turboAuraIntensity: 0.72
+  turboAuraFadeRate: 4
+  boostCameraPullback: 0.65
+  boostCameraFieldOfView: 5
+  boostCameraBlendRate: 5
+  boostLineColor: {r: 0.68, g: 0.88, b: 1, a: 0.55}
+  boostLineCount: 14
+  boostLineSpeed: 2.4
+  boostLineLength: 0.15
+  boostLineWidth: 2
   laneChangeTime: 0.11
   initialPatternSpacing: 28
   finalPatternSpacing: 26
