@@ -19,6 +19,7 @@ MonoBehaviour:
   - map: {fileID: 11400000, guid: b406a0f639b92264193a9224673410d6, type: 2}
     moduleCount: 16
     transition: 1
+    transitionTurn: 1
   - map: {fileID: 11400000, guid: 69af62632a6e1ce4cadd13cb40f11607, type: 2}
     moduleCount: 0
     transition: 0

@@ -15,21 +15,26 @@ namespace Lotba.Game
         private bool startRequested, brakeRequested, jumpRequested, pauseRequested, menuRequested;
         private int laneRequested;
         private bool muted, trackingSwipe;
+        private const string DepthBendPreference = "Lotba.CityRush.DepthBend";
+        private bool depthBendPreferred;
         private Vector2 swipeOrigin;
         private void Awake()
         {
             Application.targetFrameRate = Application.platform == RuntimePlatform.WebGLPlayer ? -1 : 60;
             muted = PlayerPrefs.GetInt("Lotba.CityRush.Muted", 0) != 0;
+            depthBendPreferred = PlayerPrefs.GetInt(DepthBendPreference, 1) != 0;
             audioFeedback.SetMuted(muted); devices.Initialize();
             world.Initialize(settings); world.ResetTrack(); session = new RunSession(settings);
+            world.ConfigureDepthBend(depthBendPreferred);
             hud.StartRequested += RequestStart; hud.BrakeRequested += RequestBrake;
             hud.PauseRequested += RequestPause; hud.MenuRequested += RequestMenu;
             hud.SoundRequested += ToggleSound; hud.SettingsRequested += OpenSettings;
             hud.VibrationRequested += devices.CycleVibrationLevel;
+            hud.DepthBendRequested += ToggleDepthBend;
             world.EncounterFeedback += OnEncounter;
             world.StreakLevelUp += audioFeedback.PlayStreakLevelUp;
             world.LetterCollected += OnLetterCollected;
-            hud.Render(session, settings, muted, devices);
+            hud.Render(session, settings, muted, devices, depthBendPreferred);
         }
         private void Update()
         {
@@ -45,11 +50,12 @@ namespace Lotba.Game
         }
         private void LateUpdate()
         {
+            world.ConfigureDepthBend(depthBendPreferred);
             if (menuRequested && (session.State == RunState.Finished || session.State == RunState.Paused))
             {
                 ResetRun(false);
                 startRequested = brakeRequested = jumpRequested = pauseRequested = menuRequested = false; laneRequested = 0;
-                hud.Render(session, settings, muted, devices);
+                hud.Render(session, settings, muted, devices, depthBendPreferred);
                 return;
             }
             if (startRequested && (session.State == RunState.Ready || session.State == RunState.Finished))
@@ -79,7 +85,7 @@ namespace Lotba.Game
             }
             if (session.State == RunState.Finished) { audioFeedback.Stop(); }
             startRequested = brakeRequested = jumpRequested = pauseRequested = menuRequested = false; laneRequested = 0;
-            hud.Render(session, settings, muted, devices);
+            hud.Render(session, settings, muted, devices, depthBendPreferred);
         }
         private void ResetRun(bool start)
         {
@@ -130,6 +136,13 @@ namespace Lotba.Game
             muted = !muted; audioFeedback.SetMuted(muted);
             PlayerPrefs.SetInt("Lotba.CityRush.Muted", muted ? 1 : 0); PlayerPrefs.Save();
         }
+        private void ToggleDepthBend()
+        {
+            if (!settings.DepthBendAvailable) return;
+            depthBendPreferred = !depthBendPreferred;
+            PlayerPrefs.SetInt(DepthBendPreference, depthBendPreferred ? 1 : 0);
+            PlayerPrefs.Save();
+        }
         private void OnApplicationFocus(bool focus) { if (!focus) PauseForFocus(); }
         private void OnApplicationPause(bool paused) { if (paused) PauseForFocus(); }
         private void PauseForFocus()
@@ -145,6 +158,7 @@ namespace Lotba.Game
             hud.PauseRequested -= RequestPause; hud.MenuRequested -= RequestMenu;
             hud.SoundRequested -= ToggleSound; hud.SettingsRequested -= OpenSettings;
             hud.VibrationRequested -= devices.CycleVibrationLevel;
+            hud.DepthBendRequested -= ToggleDepthBend;
             world.EncounterFeedback -= OnEncounter;
             world.StreakLevelUp -= audioFeedback.PlayStreakLevelUp;
             world.LetterCollected -= OnLetterCollected;

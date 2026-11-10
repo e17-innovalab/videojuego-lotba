@@ -3,6 +3,8 @@ using UnityEngine;
 
 namespace Lotba.Game
 {
+    public enum TransitionTurn { Straight = 0, Left = -1, Right = 1 }
+
     [Serializable]
     public sealed class RouteSection
     {
@@ -10,9 +12,12 @@ namespace Lotba.Game
         [Tooltip("Number of 12 m modules. Zero means infinite and is allowed only in the final section.")]
         [SerializeField, Min(0)] private int moduleCount;
         [SerializeField] private bool transition;
+        [Tooltip("Visual turn when approaching this transition section.")]
+        [SerializeField] private TransitionTurn transitionTurn;
         public MapDefinition Map => map;
         public int ModuleCount => moduleCount;
         public bool Transition => transition;
+        public TransitionTurn Turn => transitionTurn;
 #if UNITY_EDITOR
         internal void SetPreviewMap(MapDefinition value) => map = value;
 #endif
@@ -79,6 +84,32 @@ namespace Lotba.Game
         {
             int section = SectionAt(distance, out _);
             return sections[section].Transition;
+        }
+
+        public float TransitionBendAt(float distance, float leadDistance)
+        {
+            float start = 0f, previousTurnEnd = 0f;
+            for (int i = 0; i < sections.Length - 1; i++)
+            {
+                RouteSection section = sections[i];
+                float end = start + section.ModuleCount * RoadStandard.ModuleLength;
+                if (section.Transition && section.Turn != TransitionTurn.Straight)
+                {
+                    float leadStart = Mathf.Max(previousTurnEnd, start - leadDistance);
+                    if (distance < leadStart) return 0f;
+                    if (distance < end)
+                    {
+                        float peak = leadStart < start ? start : (start + end) * .5f;
+                        float weight = distance < peak
+                            ? Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(leadStart, peak, distance))
+                            : Mathf.SmoothStep(1f, 0f, Mathf.InverseLerp(peak, end, distance));
+                        return (int)section.Turn * weight;
+                    }
+                    previousTurnEnd = end;
+                }
+                start = end;
+            }
+            return 0f;
         }
         public bool NeedsGentlePatterns(float near, float far)
         {

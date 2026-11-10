@@ -19,7 +19,24 @@ namespace Lotba.Game
         [SerializeField, Min(.1f)] private float finalGemSpacing = 3.5f;
         [SerializeField, Min(0f)] private float patternClearance = 8f;
         [SerializeField, Min(2f)] private float previewTime = 3.3f;
+        [Header("Pattern visibility")]
+        [SerializeField, Min(0f)] private float minimumPatternLookAhead = 58f;
+        [Tooltip("Prepare patterns beyond the linear fog or camera clipping distance.")]
+        [SerializeField] private bool preparePatternsBeyondVisibility = true;
+        [SerializeField, Min(0f)] private float patternVisibilityMargin = 20f;
         [SerializeField] private int seed = 2710;
+        [Header("World bend by distance")]
+        [SerializeField] private bool depthBendEnabled = true;
+        [SerializeField] private Shader depthBendShader;
+        [SerializeField, Min(0f)] private float depthBendStart = 25f;
+        [SerializeField, Range(-.006f, .006f)] private float depthBendStrength = .004f;
+        [Tooltip("Metres before a zone transition at which the visual turn starts.")]
+        [SerializeField, Min(0f)] private float transitionBendLeadDistance = 80f;
+        public bool DepthBendAvailable => depthBendEnabled && depthBendShader != null && depthBendShader.isSupported;
+        public Shader DepthBendShader => depthBendShader;
+        public float DepthBendStart => depthBendStart;
+        public float DepthBendStrength => depthBendStrength;
+        public float TransitionBendLeadDistance => Mathf.Max(0f, transitionBendLeadDistance);
         [Header("Pickup flashes")]
         [SerializeField] private PickupFlashSettings gemFlash = new PickupFlashSettings();
         [SerializeField] private PickupFlashSettings letterFlash = new PickupFlashSettings();
@@ -87,6 +104,9 @@ namespace Lotba.Game
 
         public float PatternClearance => Mathf.Max(0f, patternClearance);
         public float PreviewTime => previewTime;
+        public float MinimumPatternLookAhead => Mathf.Max(0f, minimumPatternLookAhead);
+        public bool PreparePatternsBeyondVisibility => preparePatternsBeyondVisibility;
+        public float PatternVisibilityMargin => Mathf.Max(0f, patternVisibilityMargin);
         public int Seed => seed;
     }
     [System.Serializable]

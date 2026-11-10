@@ -53,7 +53,7 @@ namespace Lotba.Game.Editor
                         if (section == null) continue;
                         text.AppendLine($"{section.Map?.DisplayName ?? "Unassigned"}: " +
                             (section.ModuleCount == 0 ? "infinite" : $"{section.ModuleCount} modules / {section.ModuleCount * RoadStandard.ModuleLength:0} m") +
-                            (section.Transition ? " (transition)" : ""));
+                            (section.Transition ? $" (transition, {section.Turn})" : ""));
                     }
                 summary.text = text.ToString();
             }
@@ -170,7 +170,7 @@ namespace Lotba.Game.Editor
             var route = new PropertyField(serializedObject.FindProperty("route")); root.Add(route);
             var module = new PropertyField(serializedObject.FindProperty("module"), "Module");
             root.Add(module);
-            foreach (string name in new[] { "speed", "showRider", "showCoins", "showObstacles" })
+            foreach (string name in new[] { "speed", "showRider", "showCoins", "showObstacles", "showWorldBend" })
                 root.Add(new PropertyField(serializedObject.FindProperty(name)));
             var references = new Foldout { text = "Referencias internas", value = false };
             references.Add(new HelpBox("These connections are already configured. Settings supplies shared gameplay tuning: editing its asset also affects the main game. World animates the rider, camera and encounters. Road Stream recycles road modules and applies the route environment.", HelpBoxMessageType.Info));

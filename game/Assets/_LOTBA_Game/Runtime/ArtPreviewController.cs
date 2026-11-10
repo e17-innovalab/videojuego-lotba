@@ -17,6 +17,7 @@ namespace Lotba.Game
         [SerializeField] private RoadModule module;
         [SerializeField, Min(1)] private float speed = 22;
         [SerializeField] private bool showRider = true, showCoins = true, showObstacles = true;
+        [SerializeField] private bool showWorldBend = true;
         [SerializeField] private GameSettings settings;
         [SerializeField] private RunnerWorld world;
         [SerializeField] private RoadStreamer roadStream;
@@ -47,15 +48,16 @@ namespace Lotba.Game
                 selected = temporaryRoute = RouteDefinition.CreatePreview(temporaryMap);
             }
             roadStream.SetRoute(selected);
-            world.ConfigureArtPreview(showCoins, showObstacles, showRider);
-            world.Initialize(settings); world.ResetTrack();
+            world.Initialize(settings);
+            ApplyPreviewSettings();
+            world.ResetTrack();
             session = new RunSession(settings); session.Start();
         }
         private void Update()
         {
             if (session == null) return;
             // Apply Inspector visibility changes even while playback is paused.
-            world.ConfigureArtPreview(showCoins, showObstacles, showRider);
+            ApplyPreviewSettings();
             var keyboard = Keyboard.current;
             if (keyboard != null)
             {
@@ -75,6 +77,11 @@ namespace Lotba.Game
                 session.TickPreview(step, Mathf.Max(1, speed));
                 world.Advance(session, step, false); budget -= step;
             }
+        }
+        private void ApplyPreviewSettings()
+        {
+            world.ConfigureArtPreview(showCoins, showObstacles, showRider);
+            world.ConfigureDepthBend(showWorldBend);
         }
         private void OnDestroy()
         {

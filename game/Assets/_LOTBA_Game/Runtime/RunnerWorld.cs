@@ -5,6 +5,7 @@ using UnityEngine;
 namespace Lotba.Game
 {
     /// <summary>Pooled runner presentation and swept encounters. Scenery never decides run state.</summary>
+    [DefaultExecutionOrder(100)]
     public sealed class RunnerWorld : MonoBehaviour
     {
         public const float LaneSpacing = RoadStandard.LaneSpacing;
@@ -13,6 +14,11 @@ namespace Lotba.Game
         [SerializeField] private Transform[] pedals;
         [SerializeField] private RoadStreamer roadStream;
         [SerializeField] private Camera worldCamera;
+        private float riderDistance;
+        private float depthBendStart, depthBendStrength;
+        private bool refreshDepthBend;
+        private bool depthBendRequested;
+        private float letterLaneX;
         [SerializeField] private GameObject coinPrefab;
         private SpriteRenderer gemFlash;
         private PickupFlashSettings activeFlash;
@@ -61,7 +67,7 @@ namespace Lotba.Game
         private readonly HashSet<ObstacleDefinition> registeredObstacles = new HashSet<ObstacleDefinition>();
         private GameSettings settings;
         private System.Random random;
-        private const float MinimumPreviewDistance = 58f;
+        private const float FirstPatternDistance = 58f;
         private float nextPatternDistance;
         private float lastPatternEnd;
         private float laneTime;
@@ -82,12 +88,26 @@ namespace Lotba.Game
                     item.View.gameObject.SetActive(item.Active && (item.Kind == ItemKind.Coin ? coins : obstacles));
         }
 #endif
+        public void ConfigureDepthBend(bool enabled) => depthBendRequested = enabled;
+
+        private void UpdateDepthBend()
+        {
+            if (settings == null) return;
+            depthBendStart = settings.DepthBendStart;
+            float strength = depthBendRequested && settings.DepthBendAvailable
+                ? Mathf.Abs(settings.DepthBendStrength) * roadStream.Route.TransitionBendAt(riderDistance, settings.TransitionBendLeadDistance)
+                : 0f;
+            bool enabled = roadStream.ConfigureDepthBend(strength != 0f, depthBendStart, strength);
+            refreshDepthBend = depthBendStrength != 0f || enabled;
+            depthBendStrength = enabled ? strength : 0f;
+        }
         public event Action<bool, int> EncounterFeedback;
         public event Action StreakLevelUp;
         private enum ItemKind { Coin, Obstacle }
         private sealed class TrackItem
         {
             public Transform View;
+            public float LaneX;
             public ItemKind Kind;
             public ObstacleDefinition Definition;
             public int AirborneNote;
@@ -109,7 +129,7 @@ namespace Lotba.Game
                 Debug.LogWarning("GameSettings has no Gem Flash Sprite assigned.", this);
             cameraOrigin = worldCamera.transform.localPosition;
             cameraRotation = worldCamera.transform.localRotation;
-            roadStream.Initialize();
+            roadStream.Initialize(settings.DepthBendShader);
             wheelOrigins = new Quaternion[wheels.Length];
             for (int i = 0; i < wheels.Length; i++) wheelOrigins[i] = wheels[i].localRotation;
             for (int i = 0; i < 72; i++) AddToPool(coinPrefab, ItemKind.Coin);
@@ -117,9 +137,10 @@ namespace Lotba.Game
         }
         public void ResetTrack()
         {
+            riderDistance = 0f;
             random = new System.Random(settings.Seed);
             foreach (TrackItem item in items) Hide(item);
-            jump.Reset(); nextPatternDistance = MinimumPreviewDistance; wave = 0; safeLane = visualLane = 1;
+            jump.Reset(); nextPatternDistance = FirstPatternDistance; wave = 0; safeLane = visualLane = 1;
             lastPatternEnd = 19f; // End of the opening gem row.
             ResetLetters();
             laneOrigin = laneTime = pedalAngle = 0;
@@ -137,6 +158,7 @@ namespace Lotba.Game
         public bool TryJump(float time) => jump.TryStart(time);
         public void Advance(RunSession session, float dt, bool reducedMotion)
         {
+            riderDistance = session.Distance;
             float oldX = rider.localPosition.x;
             if (session.Lane != visualLane)
             {
@@ -181,13 +203,13 @@ namespace Lotba.Game
                 float fraction = crossing.Fraction;
                 float crossingX = Mathf.Lerp(oldX, x, fraction);
                 float crossingHeight = jump.HeightAt(session.Elapsed - dt + dt * fraction);
-                bool sameLane = Mathf.Abs(item.View.localPosition.x - crossingX) < .83f;
+                bool sameLane = Mathf.Abs(item.LaneX - crossingX) < .83f;
                 if (sameLane && item.Kind == ItemKind.Coin && JumpArc.CanCollect(crossingHeight, item.View.localPosition.y))
                 {
                     int previousMultiplier = session.Multiplier;
                     session.CollectCoin();
                     if (item.View.gameObject.activeInHierarchy)
-                        EmitPickupFlash(transform.TransformPoint(new Vector3(item.View.localPosition.x, item.View.localPosition.y, 0)), settings.GemFlash);
+                        EmitPickupFlash(transform.TransformPoint(new Vector3(item.LaneX, item.View.localPosition.y, 0)), settings.GemFlash);
                     Hide(item);
                     EncounterFeedback?.Invoke(false, item.AirborneNote);
                     if (session.Multiplier > previousMultiplier) StreakLevelUp?.Invoke();
@@ -208,7 +230,10 @@ namespace Lotba.Game
                 if (item.Active && item.View.localPosition.z < behind) Hide(item);
             }
             // Speed changes the reveal horizon while the route positions stay fixed.
-            float spawnHorizon = session.Distance + Mathf.Max(MinimumPreviewDistance, session.Speed * settings.PreviewTime);
+            float lookAhead = Mathf.Max(settings.MinimumPatternLookAhead, session.Speed * settings.PreviewTime);
+            if (settings.PreparePatternsBeyondVisibility)
+                lookAhead = Mathf.Max(lookAhead, roadStream.VisibilityDistance + settings.PatternVisibilityMargin);
+            float spawnHorizon = session.Distance + lookAhead;
             AdvanceLetter(travel, oldX, x, session, dt);
             float clearance = Mathf.Max(0f, letterClearance);
             while (true)
@@ -323,10 +348,11 @@ namespace Lotba.Game
             SetLetterText(activeWord[activeLetter]);
             // The reserved gap clears all lanes, so choose a lane other than the previous gem row.
             int letterLane = (safeLane + letterRandom.Next(1, 3)) % 3;
+            letterLaneX = (letterLane - 1) * LaneSpacing;
             letterHoverTime = 0f;
             letterBeamTime = 0f;
             letterPickup.transform.SetLocalPositionAndRotation(
-                new Vector3((letterLane - 1) * LaneSpacing, LetterPickupHeight, distance - riderDistance),
+                new Vector3(letterLaneX, LetterPickupHeight, distance - riderDistance),
                 Quaternion.identity);
             letterPickup.gameObject.SetActive(true);
             UpdateLetterBeam(letterPickup.transform.localPosition, 0f);
@@ -385,7 +411,7 @@ namespace Lotba.Game
                 float tilt = Mathf.SmoothStep(0f, 1f, phase * 4f)
                     - Mathf.SmoothStep(0f, 1f, (phase - .5f) * 4f);
                 letterPickup.transform.SetLocalPositionAndRotation(
-                    new Vector3(position.x, LetterPickupHeight + hover * letterHoverHeight, nextZ),
+                    new Vector3(letterLaneX, LetterPickupHeight + hover * letterHoverHeight, nextZ),
                     Quaternion.AngleAxis(tilt * letterTilt, Vector3.forward));
                 UpdateLetterBeam(letterPickup.transform.localPosition, dt);
                 return;
@@ -397,14 +423,14 @@ namespace Lotba.Game
             if (letterBeam != null) letterBeam.enabled = false;
             float fraction = travel > 0f ? Mathf.Clamp01(position.z / travel) : 0f;
             float height = jump.HeightAt(session.Elapsed - dt + dt * fraction);
-            if (!wordCollectionEnabled || Mathf.Abs(position.x - Mathf.Lerp(oldX, x, fraction)) >= .83f ||
+            if (!wordCollectionEnabled || Mathf.Abs(letterLaneX - Mathf.Lerp(oldX, x, fraction)) >= .83f ||
                 !JumpArc.CanCollect(height, LetterPickupHeight))
             {
                 pendingLetters.Enqueue(index);
                 return;
             }
             collectedLetters[index] = true;
-            EmitPickupFlash(transform.TransformPoint(new Vector3(position.x, position.y, 0f)), settings.LetterFlash);
+            EmitPickupFlash(transform.TransformPoint(new Vector3(letterLaneX, position.y, 0f)), settings.LetterFlash);
             LetterCollected?.Invoke(activeWord, collectedLetters, pendingLetters.Count == 0);
         }
 
@@ -510,7 +536,8 @@ namespace Lotba.Game
             item.Active = true;
             item.ObstacleHit = false;
             item.AirborneNote = airborneNote;
-            item.View.SetLocalPositionAndRotation(new Vector3((lane - 1) * LaneSpacing, kind == ItemKind.Coin ? height : 0, z), Quaternion.identity);
+            item.LaneX = (lane - 1) * LaneSpacing;
+            item.View.SetLocalPositionAndRotation(new Vector3(item.LaneX, kind == ItemKind.Coin ? height : 0, z), Quaternion.identity);
             bool visible = true;
 #if UNITY_EDITOR
             visible = kind == ItemKind.Coin ? previewCoins : previewObstacles;
@@ -551,7 +578,7 @@ namespace Lotba.Game
             if (previousZ < rear || currentZ > front || travel <= 0) return false;
             float enter = Mathf.Clamp01((previousZ - front) / travel), exit = Mathf.Clamp01((previousZ - rear) / travel);
             float halfWidth = obstacle.Width * .5f + .27f;
-            float minimumX = item.View.localPosition.x - halfWidth, maximumX = item.View.localPosition.x + halfWidth;
+            float minimumX = item.LaneX - halfWidth, maximumX = item.LaneX + halfWidth;
             float firstX = Mathf.Lerp(oldX, newX, enter), lastX = Mathf.Lerp(oldX, newX, exit);
             if (Mathf.Max(firstX, lastX) < minimumX || Mathf.Min(firstX, lastX) > maximumX) return false;
             fraction = enter;
@@ -601,6 +628,28 @@ namespace Lotba.Game
 
         private void LateUpdate()
         {
+            UpdateDepthBend();
+            if (refreshDepthBend)
+            {
+                foreach (TrackItem item in items)
+                {
+                    if (!item.Active) continue;
+                    BendPickup(item.View, item.LaneX);
+                    if (item.Kind == ItemKind.Obstacle)
+                    {
+                        float distance = Mathf.Max(0f, item.View.localPosition.z - depthBendStart);
+                        float yaw = Mathf.Atan(2f * depthBendStrength * distance) * Mathf.Rad2Deg;
+                        item.View.localRotation = Quaternion.Euler(0f, yaw, 0f);
+                    }
+                }
+                if (activeLetter >= 0)
+                {
+                    BendPickup(letterPickup.transform, letterLaneX);
+                    if (letterBeam != null && letterBeam.enabled)
+                        BendPickup(letterBeam.transform, letterLaneX + settings.LetterBeamBaseOffset.x, letterPickup.transform.localPosition.z);
+                }
+                refreshDepthBend = depthBendStrength != 0f;
+            }
             if (gemFlash == null || !gemFlash.enabled) return;
             float progress = (Time.unscaledTime - gemFlashStarted) / activeFlash.Duration;
             if (progress >= 1f)
@@ -618,6 +667,14 @@ namespace Lotba.Game
             gemFlash.color = new Color(1f, 1f, 1f, opacity);
             gemFlash.transform.localScale = Vector3.one * scale;
             gemFlash.transform.rotation = worldCamera.transform.rotation * gemFlashRoll;
+        }
+
+        private void BendPickup(Transform visual, float laneX, float? referenceZ = null)
+        {
+            Vector3 position = visual.localPosition;
+            float distance = Mathf.Max(0f, (referenceZ ?? position.z) - depthBendStart);
+            position.x = laneX + depthBendStrength * distance * distance;
+            visual.localPosition = position;
         }
         private static void Hide(TrackItem item)
         {

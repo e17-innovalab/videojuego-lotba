@@ -25,6 +25,7 @@ namespace Lotba.Game
             Gizmos.DrawWireCube(new Vector3(0, RoadStandard.ClearHeight * .5f, 6), new Vector3(RoadStandard.RoadWidth, RoadStandard.ClearHeight, RoadStandard.ModuleLength));
         }
         public Transform ArtRoot => artRoot;
+        internal Renderer RoadSurface => roadSurface;
         public Transform Entry => entry;
         public Transform Exit => exit;
         public string ValidationError

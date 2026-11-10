@@ -24,7 +24,15 @@ MonoBehaviour:
   finalGemSpacing: 3.5
   patternClearance: 8
   previewTime: 3.3
+  minimumPatternLookAhead: 58
+  preparePatternsBeyondVisibility: 1
+  patternVisibilityMargin: 20
   seed: 2710
+  depthBendEnabled: 1
+  depthBendShader: {fileID: 4800000, guid: 3741174ce89046758e917aa0726183b0, type: 3}
+  depthBendStart: 25
+  depthBendStrength: 0.004
+  transitionBendLeadDistance: 80
   gemFlash:
     sprite: {fileID: 21300000, guid: 5c4e84a4028ad554f9017ce5914c00da, type: 3}
     material: {fileID: 2100000, guid: 0bf9a636867e4805b5d9265e82a1c79f, type: 2}
