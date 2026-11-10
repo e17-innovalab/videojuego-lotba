@@ -14,7 +14,7 @@ namespace Lotba.Game
         [SerializeField] private TMPro.TMP_Text soundLabel, vibrationLabel;
         [SerializeField] private UnityEngine.UI.Button qualityButton;
         [SerializeField] private TMPro.TMP_Text qualityLabel;
-        [SerializeField] private TMPro.TMP_Text score, coins, streak, multiplier, speed, remaining, resultTitle, resultStats;
+        [SerializeField] private TMPro.TMP_Text score, gems, streak, multiplier, speed, remaining, resultTitle, resultStats;
         [SerializeField] private UnityEngine.UI.Image streakFill;
         [SerializeField] private SpeedGauge gauge;
         [SerializeField] private SpeedLines speedLines;
@@ -109,7 +109,7 @@ namespace Lotba.Game
                 wordLabel.rectTransform.anchorMax = Vector2.one;
                 wordLabel.rectTransform.offsetMin = new Vector2(14f, 4f);
                 wordLabel.rectTransform.offsetMax = new Vector2(-14f, -4f);
-                wordLabel.font = coins.font;
+                wordLabel.font = gems.font;
                 wordLabel.fontStyle = TMPro.FontStyles.Bold;
                 wordLabel.alignment = TMPro.TextAlignmentOptions.Center;
                 wordLabel.enableAutoSizing = true;
@@ -165,7 +165,7 @@ namespace Lotba.Game
             raceHud.SetActive(active); controls.SetActive(active);
             RenderWordBanner(running);
             pause.interactable = !SettingsOpen;
-            score.text = session.Score.ToString(); coins.text = session.CoinValue.ToString();
+            score.text = session.Score.ToString(); gems.text = session.GemBasePoints.ToString();
             streak.text = $"RACHA {session.Streak}"; multiplier.text = $"×{session.Multiplier}";
             if (session.Multiplier > previousMultiplier) multiplierPulseUntil = Time.unscaledTime + .3f;
             previousMultiplier = session.Multiplier;
@@ -182,7 +182,7 @@ namespace Lotba.Game
             if (session.State == RunState.Finished)
             {
                 resultTitle.text = session.Ending == RunEnding.Brake ? "VOS MARCASTE\nEL FINAL" : "RECORRIDO\nCOMPLETADO";
-                resultStats.text = $"<size=54><color=#FFD14C>{session.Score}</color></size>\nPUNTOS\n\n{session.CoinValue} monedas · {session.Coins} recogidas\n{session.Distance:0} m · {session.Elapsed:0} s  ·  {session.PeakSpeed * 3.6f:0} km/h máx.\n\nMejor racha: {session.BestStreak}  ·  ×{session.BestMultiplier}\nChoques: {session.Collisions}";
+                resultStats.text = $"<size=54><color=#FFD14C>{session.Score}</color></size>\nPUNTOS\n\n{session.Gems} gemas · {session.GemBasePoints} pts base\n{session.Distance:0} m · {session.Elapsed:0} s  ·  {session.PeakSpeed * 3.6f:0} km/h máx.\n\nMejor racha: {session.BestStreak}  ·  ×{session.BestMultiplier}\nChoques: {session.Collisions}";
             }
         }
     }

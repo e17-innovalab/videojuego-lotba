@@ -159,7 +159,7 @@ MonoBehaviour:
   module: {fileID: 8444432085023419656, guid: a3ea240dcfd0d0f41bd41afc56e88919, type: 3}
   speed: 22
   showRider: 1
-  showCoins: 1
+  showGems: 1
   showObstacles: 1
   settings: {fileID: 11400000, guid: 3dd862a5bb6d2bf499b3cc3fdc8dd9c8, type: 2}
   world: {fileID: 1708434620}
@@ -1162,7 +1162,7 @@ MonoBehaviour:
   - {fileID: 1124116508}
   roadStream: {fileID: 1708434622}
   worldCamera: {fileID: 265114052}
-  coinPrefab: {fileID: 2372746718442866254, guid: 6a5717118b1d8ab4783b577989af8f05, type: 3}
+  gemPrefab: {fileID: 2372746718442866254, guid: 6a5717118b1d8ab4783b577989af8f05, type: 3}
   riderShadow: {fileID: 425062163}
 --- !u!4 &1708434621
 Transform:

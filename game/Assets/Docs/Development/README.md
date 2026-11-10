@@ -34,7 +34,7 @@ Las rutas de la tabla son relativas a `Assets/`.
 | `_LOTBA_Game/Maps` | Barrios, módulos, transiciones y recorridos |
 | `_LOTBA_Game/Obstacles` | Definiciones, catálogos y prefabs de obstáculos |
 | `_LOTBA_Game/Art` | Meshes, materiales y recursos visuales compartidos |
-| `_LOTBA_Game/Prefabs` | Ciclista, UI, monedas, feedback y modelos compartidos |
+| `_LOTBA_Game/Prefabs` | Ciclista, UI, gemas, feedback y modelos compartidos |
 | `_LOTBA_Game/Settings` | Parámetros del juego |
 | `ThirdParty/TextMesh Pro` | Fuentes, shaders y configuración de texto |
 | `Docs` | Guías técnicas mantenidas junto al proyecto |
@@ -45,7 +45,7 @@ El código principal usa el namespace `Lotba.Game`, con assemblies separadas par
 
 | Componente | Responsabilidad |
 |---|---|
-| `RunSession` | Estado de partida, tiempo, velocidad, puntaje, monedas y racha; sin objetos de escena |
+| `RunSession` | Estado de partida, tiempo, velocidad, puntaje, gemas y racha; sin objetos de escena |
 | `GameController` | Composición, prioridades de entrada y coordinación de pausa, menú y partida |
 | `RunnerWorld` | Ciclista, cámara, patrones, pools y detección de encuentros |
 | `GameHud` | Presentación de menús, configuración, HUD y resultados |
@@ -55,7 +55,7 @@ El código principal usa el namespace `Lotba.Game`, con assemblies separadas par
 | `AudioManager` | Feedback sonoro |
 | `PortraitViewport` | Encuadre vertical y zona segura |
 
-La lógica de sesión y la presentación se mantienen separadas. Monedas, obstáculos y módulos utilizan pools; los perfiles de mapas y obstáculos definen el contenido por referencias serializadas. Ver sus contratos antes de reemplazar arte o cambiar huellas jugables.
+La lógica de sesión y la presentación se mantienen separadas. Gemas, obstáculos y módulos utilizan pools; los perfiles de mapas y obstáculos definen el contenido por referencias serializadas. Ver sus contratos antes de reemplazar arte o cambiar huellas jugables.
 
 ## Configuración de Unity
 
@@ -87,7 +87,7 @@ Las claves de preferencias locales son identificadores persistentes y no deben c
 | Balance de velocidad, duración o anticipación | Asset `GameSettings`; consultar sus unidades y la curva en `RunSession` |
 | Prioridad de un control, gesto, pausa o cambio de estado | `GameController`; conservar la prioridad de frenar sobre la simulación |
 | Botón o panel | `Game UI.prefab` para autoría; `GameHud` para referencias y eventos serializados |
-| Patrón de monedas o detección de un obstáculo | `RunnerWorld`; mantener el contrato de `ObstacleDefinition` |
+| Patrón de gemas o detección de un obstáculo | `RunnerWorld`; mantener el contrato de `ObstacleDefinition` |
 | Recorrido o selección de zona | Perfiles y proceso de integración de [World.md](World.md) |
 | Feedback o una capacidad de dispositivo | `DeviceFeedbackAndInput`, `AudioManager` y el ciclo de pausa/foco de `GameController` |
 | Nombre público | `GameIdentity`; el nombre de la aplicación lo sincroniza `GameIdentitySettings` |

@@ -30,7 +30,7 @@ Para una zona nueva, creá un RouteDefinition con una sección, asigná su MapDe
 
 **Route_LaBocaToObelisco** permite revisar varios barrios y el enlace entre ellos.
 
-**Speed** usa metros por segundo: 22 m/s equivalen a 79,2 km/h. Se puede ajustar durante Play. Show Rider, Show Coins y Show Obstacles se pueden cambiar durante Play, incluso con la reproducción pausada. Afectan también a los objetos presentes; los elementos ocultos siguen simulándose y reciclando sus instancias. Permiten limpiar la imagen para estudiar fachadas o revisar la escala con tráfico. Detener y volver a entrar en Play después de cambiar el modo o las referencias de contenido.
+**Speed** usa metros por segundo: 22 m/s equivalen a 79,2 km/h. Se puede ajustar durante Play. Show Rider, Show Gems y Show Obstacles se pueden cambiar durante Play, incluso con la reproducción pausada. Afectan también a los objetos presentes; los elementos ocultos siguen simulándose y reciclando sus instancias. Permiten limpiar la imagen para estudiar fachadas o revisar la escala con tráfico. Detener y volver a entrar en Play después de cambiar el modo o las referencias de contenido.
 
 ## Referencias internas
 
@@ -39,7 +39,7 @@ La sección **Referencias internas** está plegada por defecto. Sus campos conec
 | Campo | Responsabilidad |
 |---|---|
 | Settings (`GameSettings`) | Parámetros compartidos de cámara, cambio de carril y aparición de encuentros. La velocidad de revisión se controla con Speed. |
-| World (`RunnerWorld`) | Anima al ciclista, controla la cámara y presenta monedas y obstáculos. |
+| World (`RunnerWorld`) | Anima al ciclista, controla la cámara y presenta gemas y obstáculos. |
 | Road Stream (`RoadStreamer`) | Coloca y recicla los módulos de 12 m y aplica el ambiente del recorrido. |
 
 Las referencias ya están asignadas. **Editar el asset compartido de Settings modifica también el juego principal.** Para estudiar el arte, usar los controles visibles de la prueba. Cambiar estas conexiones solo al preparar o mantener la escena.

@@ -32,7 +32,7 @@ El cierre debe reducir la estimulación, recuperar decisiones reales de la sesi�
 
 ## Prototipo actual
 
-El proyecto principal está en [`game/`](game/). Su implementación actual incluye movimiento por carriles, salto, obstáculos, monedas, rachas, multiplicador, aceleración progresiva, frenado voluntario, pausa y resultados.
+El proyecto principal está en [`game/`](game/). Su implementación actual incluye movimiento por carriles, salto, obstáculos, gemas, rachas, multiplicador, aceleración progresiva, frenado voluntario, pausa y resultados.
 
 El recorrido predeterminado va de **La Boca a Obelisco**, con una transición visual continua. Se configura desde el Editor; el jugador no elige escenario. Una escena independiente permite al equipo revisar zonas, módulos y recorridos sin pasar por los menús. La interfaz contempla controles táctiles y teclado, sonido configurable, y vibración en Android.
 

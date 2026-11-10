@@ -2,7 +2,7 @@
 
 ## Flujo y controles
 
-El menú permite empezar y abrir Configuración. Antes de empezar se puede elegir Obelisco, La Boca o La Boca → Obelisco. Durante la partida se avanza automáticamente, se cambia entre tres carriles y se saltan obstáculos bajos para recoger monedas.
+El menú permite empezar y abrir Configuración. Antes de empezar se puede elegir Obelisco, La Boca o La Boca → Obelisco. Durante la partida se avanza automáticamente, se cambia entre tres carriles y se saltan obstáculos bajos para recoger gemas.
 
 **FRENAR** termina la partida y muestra los resultados. La pausa permite continuar, configurar sonido y dispositivos o volver al inicio. Volver al inicio descarta la partida en curso. Los resultados permiten reintentar o regresar al menú.
 
@@ -16,18 +16,18 @@ El recorrido se asigna desde el Editor en RoadStreamer; no se elige desde el men
 | Pausa | P o Escape | Botón de pausa |
 
 
-## Monedas, puntaje y racha
+## Gemas, puntaje y racha
 
-- Cada recogida incrementa el valor del contador de monedas en **10**. `Coins` cuenta las recogidas y `CoinValue` expone `Coins × 10`.
+- Cada recogida incrementa el valor del contador de gemas en **10**. `Gems` cuenta las recogidas y `GemBasePoints` expone `Gems × 10`.
 - El puntaje suma **10 × multiplicador activo** por recogida. La distancia recorrida se registra por separado.
-- La carga ganada por moneda es `1 / (FirstLevelCoins + ExtraCoinsPerLevel × (Multiplier − 1))`. Subir el multiplicador exige progresivamente más monedas.
+- La carga ganada por gema es `1 / (FirstLevelGems + ExtraGemsPerLevel × (Multiplier − 1))`. Subir el multiplicador exige progresivamente más gemas.
 - Al completar la barra, el multiplicador aumenta y se conserva una reserva de carga. No hay un máximo de diseño para el multiplicador.
 - La barra pierde carga mientras la partida está en marcha. Cuando se vacía, la racha vuelve a cero y el multiplicador a ×1.
 - El puntaje usa un entero de 64 bits. El multiplicador y la cantidad de recogidas usan enteros de 32 bits.
 
 Un choque reinicia la racha y descuenta `min(puntaje, max(50, puntaje / 4))`, usando división entera. También reduce temporalmente la velocidad y activa 1,1 segundos de protección frente a impactos. Cada obstáculo puede cobrar un único impacto.
 
-Las gemas desaparecen al recogerlas y el marcador se actualiza en el HUD. Los resultados distinguen valor de monedas, cantidad recogida, puntaje y distancia.
+Las gemas desaparecen al recogerlas y el marcador se actualiza en el HUD. Los resultados distinguen valor de gemas, cantidad recogida, puntaje y distancia.
 
 ## Parámetros de diseño
 
@@ -45,7 +45,7 @@ El asset [GameSettings](../../_LOTBA_Game/Settings/GameSettings.asset) concentra
 | Pattern Clearance | 8 m | Margen desde la última gema o el fin de la colisión hasta el próximo patrón |
 | Preview Time | 3,3 s | Anticipación para la aparición de encuentros |
 | Camera Follow Time / Strength | 0,13 s / 0,95 | Amortiguación y seguimiento lateral |
-| First Level Coins / Extra Coins Per Level | 8 / 3 | Exigencia de carga por nivel |
+| First Level Gems / Extra Gems Per Level | 8 / 3 | Exigencia de carga por nivel |
 | Streak Drain Per Second | 0,025 | Pérdida de 2,5 % de la barra por segundo |
 | Level Up Reserve | 0,30 | Carga conservada al subir de nivel |
 | Seed | 2710 | Semilla de generación |
@@ -59,7 +59,7 @@ La cámara persigue lateralmente al ciclista con amortiguación corta. La aparie
 La interfaz está orientada a pantalla vertical. `PortraitViewport` adapta el encuadre y la zona segura; en pantallas anchas mantiene una presentación vertical.
 
 - **Sonido:** puede activarse o silenciarse desde Configuración.
-- **Vibración:** se solicita por defecto y solo se habilita cuando Android confirma que existe un vibrador. Monedas e impactos usan feedback distinto y limitado en frecuencia.
+- **Vibración:** se solicita por defecto y solo se habilita cuando Android confirma que existe un vibrador. Gemas e impactos usan feedback distinto y limitado en frecuencia.
 - **Pausa y pérdida de foco:** se detienen el audio de feedback y la vibración. El dispositivo se libera al cerrar la escena.
 
 `AndroidHapticsPermissions` agrega `android.permission.VIBRATE` al manifest generado. Las opciones de sonido y vibración se guardan por separado. Los dispositivos sin hardware compatible conservan los controles disponibles.

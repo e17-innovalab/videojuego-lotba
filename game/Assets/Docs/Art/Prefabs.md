@@ -82,11 +82,11 @@ Los bondis comparten el modelo `Obstacles/Prefabs/Art/Shared bus.prefab`. Las fi
 
 Si reemplazás sus piezas, actualizá en `BusSkin` las listas **Body Panels**, **Stripe Panels** y **Numbers**. Si quedan apuntando a objetos eliminados, la personalización no tendrá dónde aplicarse. Las variantes actuales miden 2,15 × 3,25 × 8,8 m y no se pueden saltar.
 
-## 5. Ciclista, monedas e interfaz
+## 5. Ciclista, gemas e interfaz
 
 `Prefabs/Cyclist.prefab` conserva referencias de ruedas y pedales que el juego anima por código. Para un reemplazo visual simple, mantener esos puntos de montaje y ajustar sus hijos. Si el personaje necesita otro rig, otra jerarquía o animaciones propias, coordinar la integración con desarrollo; importar el modelo no conecta esas animaciones automáticamente.
 
-`Coin.prefab` también es compartido. El destello de recolección y los efectos de las letras se configuran en `GameSettings`.
+`Gem_04_Diamante.prefab` también es compartido. El destello de recolección y los efectos de las letras se configuran en `GameSettings`.
 
 En `Game UI.prefab`, conservar botones, textos, componentes y referencias. Los cambios de jerarquía, posiciones y tamaños deben coordinarse con desarrollo para conservar los enlaces de GameHud. La posición de los paneles se edita directamente en el prefab. Las fuentes deben seguir funcionando con TextMesh Pro y mostrar los acentos utilizados por el juego.
 

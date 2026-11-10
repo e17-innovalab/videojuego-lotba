@@ -10,7 +10,7 @@ Vas a cambiar una cuadra de La Boca y verla en movimiento. Trabajá en el duplic
 2. Abrí la copia con doble clic. En **Hierarchy**, expandí **Art**. Agregá un prefab visual propio o un cubo de prueba directamente bajo **Art**, junto a el montaje **Streetscape**. Si usás un cubo, ponelo en la posición local **(5.7, 1, 6)** para verlo sobre la vereda. Conservá la raíz, **Entry**, **Exit** y **Art**. La calle del módulo está en **Art → montaje visual → Road**.
 3. Guardá el prefab y salí de **Prefab Mode**. Abrí **LOTBA > Open art preview** y seleccioná **Art preview - configure here** en **Hierarchy**.
 4. En el **Inspector**, elegí **Mode = Module**, arrastrá `Module_Practica` a **Module** y asigná `Maps/Zones/LaBoca/Zone_LaBoca.asset` a **Module Environment**.
-5. Entrá en **Play**. Deberías ver el nuevo objeto en la misma posición de cada tramo, con la superficie de La Boca. Podés desactivar **Show Obstacles** y **Show Coins** para mirar la cuadra con más claridad.
+5. Entrá en **Play**. Deberías ver el nuevo objeto en la misma posición de cada tramo, con la superficie de La Boca. Podés desactivar **Show Obstacles** y **Show Gems** para mirar la cuadra con más claridad.
 
 Si ves la cuadra original, comprobá que **Module** apunta a la copia y que guardaste el cambio bajo **Art**. Para ajustar la posición, salí de Play y editá el prefab. Consultá la [guía de prefabs](Prefabs.md) y la [guía de ArtPreview](Preview.md) para seguir trabajando.
 

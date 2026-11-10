@@ -22,8 +22,8 @@ namespace Lotba.Game
         public float Speed { get; private set; }
         public float PeakSpeed { get; private set; }
         public long Score { get; private set; }
-        public long CoinValue => Coins * 10L;
-        public int Coins { get; private set; }
+        public long GemBasePoints => Gems * 10L;
+        public int Gems { get; private set; }
         public int Streak { get; private set; }
         public int BestStreak { get; private set; }
         public int Collisions { get; private set; }
@@ -100,16 +100,16 @@ namespace Lotba.Game
             Record("lane_changed");
             return true;
         }
-        public long CollectCoin(int airborneNote = -1)
+        public long CollectGem(int airborneNote = -1)
         {
             if (State != RunState.Running) return 0;
             int previousStreak = Streak, previousMultiplier = Multiplier;
             float previousProgress = streakEnergy;
             long reward = 10L * Multiplier;
-            Score += reward; Coins++; Streak++;
+            Score += reward; Gems++; Streak++;
             BestStreak = Math.Max(BestStreak, Streak);
-            float coinsForLevel = settings.FirstLevelCoins + settings.ExtraCoinsPerLevel * (Multiplier - 1f);
-            streakEnergy += 1f / Math.Max(1, coinsForLevel);
+            float gemsForLevel = settings.FirstLevelGems + settings.ExtraGemsPerLevel * (Multiplier - 1f);
+            streakEnergy += 1f / Math.Max(1, gemsForLevel);
             if (streakEnergy >= 1)
             {
                 Multiplier++;
@@ -165,7 +165,7 @@ namespace Lotba.Game
                 Telemetry.summary = new RunTelemetrySummary
                 {
                     ending = reason, timeSeconds = Elapsed, distanceMetres = Distance, peakSpeedKmh = PeakSpeed * 3.6f,
-                    score = Score, gems = Coins, collisions = Collisions, bestStreak = BestStreak, bestMultiplier = BestMultiplier
+                    score = Score, gems = Gems, collisions = Collisions, bestStreak = BestStreak, bestMultiplier = BestMultiplier
                 };
             }
             Speed = 0f;

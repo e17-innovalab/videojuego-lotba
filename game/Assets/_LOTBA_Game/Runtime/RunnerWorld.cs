@@ -19,7 +19,7 @@ namespace Lotba.Game
         private bool refreshDepthBend;
         private bool depthBendRequested;
         private float letterLaneX;
-        [SerializeField] private GameObject coinPrefab;
+        [SerializeField] private GameObject gemPrefab;
         private SpriteRenderer gemFlash;
         private PickupFlashSettings activeFlash;
         private Material defaultFlashMaterial;
@@ -77,15 +77,15 @@ namespace Lotba.Game
         private int wave;
         private float pedalAngle;
 #if UNITY_EDITOR
-        private bool previewCoins = true, previewObstacles = true, previewInvulnerable;
-        public void ConfigureArtPreview(bool coins, bool obstacles, bool showRider)
+        private bool previewGems = true, previewObstacles = true, previewInvulnerable;
+        public void ConfigureArtPreview(bool gems, bool obstacles, bool showRider)
         {
-            bool visibilityChanged = coins != previewCoins || obstacles != previewObstacles;
-            previewCoins = coins; previewObstacles = obstacles; previewInvulnerable = true;
+            bool visibilityChanged = gems != previewGems || obstacles != previewObstacles;
+            previewGems = gems; previewObstacles = obstacles; previewInvulnerable = true;
             rider.gameObject.SetActive(showRider); riderShadow.gameObject.SetActive(showRider);
             if (visibilityChanged)
                 foreach (TrackItem item in items)
-                    item.View.gameObject.SetActive(item.Active && (item.Kind == ItemKind.Coin ? coins : obstacles));
+                    item.View.gameObject.SetActive(item.Active && (item.Kind == ItemKind.Gem ? gems : obstacles));
         }
 #endif
         public void ConfigureDepthBend(bool enabled) => depthBendRequested = enabled;
@@ -104,7 +104,7 @@ namespace Lotba.Game
         public event Action<bool, int> EncounterFeedback;
         public RouteDefinition Route => roadStream.Route;
         public event Action StreakLevelUp;
-        private enum ItemKind { Coin, Obstacle }
+        private enum ItemKind { Gem, Obstacle }
         private sealed class TrackItem
         {
             public Transform View;
@@ -133,7 +133,7 @@ namespace Lotba.Game
             roadStream.Initialize(settings.DepthBendShader);
             wheelOrigins = new Quaternion[wheels.Length];
             for (int i = 0; i < wheels.Length; i++) wheelOrigins[i] = wheels[i].localRotation;
-            for (int i = 0; i < 72; i++) AddToPool(coinPrefab, ItemKind.Coin);
+            for (int i = 0; i < 72; i++) AddToPool(gemPrefab, ItemKind.Gem);
             foreach (var section in roadStream.Route.Sections) WarmSet(section.Map.Obstacles);
         }
         public void ResetTrack()
@@ -153,7 +153,7 @@ namespace Lotba.Game
             cameraVelocity = Vector3.zero;
             worldCamera.transform.SetLocalPositionAndRotation(cameraOrigin, cameraRotation);
             if (gemFlash != null) gemFlash.enabled = false;
-            for (int i = 0; i < 4; i++) Place(ItemKind.Coin, 1, 10 + i * 3, 1.1f);
+            for (int i = 0; i < 4; i++) Place(ItemKind.Gem, 1, 10 + i * 3, 1.1f);
             SetFieldOfView(60f);
         }
         public bool TryJump(float time) => jump.TryStart(time);
@@ -188,7 +188,7 @@ namespace Lotba.Game
                 if (!item.Active) continue;
                 float previousZ = item.View.localPosition.z;
                 item.View.localPosition += Vector3.back * travel;
-                if (item.Kind == ItemKind.Coin)
+                if (item.Kind == ItemKind.Gem)
                 {
                     if (previousZ >= 0 && item.View.localPosition.z < 0)
                         crossings.Add(new Crossing(item, Mathf.Clamp01(previousZ / travel)));
@@ -205,10 +205,10 @@ namespace Lotba.Game
                 float crossingX = Mathf.Lerp(oldX, x, fraction);
                 float crossingHeight = jump.HeightAt(session.Elapsed - dt + dt * fraction);
                 bool sameLane = Mathf.Abs(item.LaneX - crossingX) < .83f;
-                if (sameLane && item.Kind == ItemKind.Coin && JumpArc.CanCollect(crossingHeight, item.View.localPosition.y))
+                if (sameLane && item.Kind == ItemKind.Gem && JumpArc.CanCollect(crossingHeight, item.View.localPosition.y))
                 {
                     int previousMultiplier = session.Multiplier;
-                    session.CollectCoin(item.AirborneNote);
+                    session.CollectGem(item.AirborneNote);
                     if (item.View.gameObject.activeInHierarchy)
                         EmitPickupFlash(transform.TransformPoint(new Vector3(item.LaneX, item.View.localPosition.y, 0)), settings.GemFlash);
                     Hide(item);
@@ -266,7 +266,7 @@ namespace Lotba.Game
             bool gentle = roadStream.Route.NeedsGentlePatterns(distance - 6, patternEnd + 6);
             bool jumping = !gentle && distance > 155f && wave % 4 == 2;
             for (int i = 0; i < 4; i++)
-                Place(ItemKind.Coin, safeLane, z + i * spacing, jumping ? (i == 0 || i == 3 ? 2.05f : 2.7f) : 1.1f,
+                Place(ItemKind.Gem, safeLane, z + i * spacing, jumping ? (i == 0 || i == 3 ? 2.05f : 2.7f) : 1.1f,
                     airborneNote: jumping ? i : -1);
             ObstacleSet obstacleSet = obstacleOverride != null ? obstacleOverride : roadStream.Route.MapAtDistance(distance).Obstacles;
             float maximumLength = gentle || distance < 220f ? 4.5f : float.PositiveInfinity;
@@ -285,7 +285,7 @@ namespace Lotba.Game
                         PlaceObstacle(obstacleSet, true, otherLane, z + obstacleOffset, maximumLength));
                 }
             }
-            // A jump row blocks at most two lanes; every other row keeps the coin lane clear.
+            // A jump row blocks at most two lanes; every other row keeps the gem lane clear.
             wave++;
             return Mathf.Max(patternEnd, obstacleEnd);
         }
@@ -531,7 +531,7 @@ namespace Lotba.Game
             }
             if (item == null)
             {
-                AddToPool(definition == null ? coinPrefab : definition.Prefab.gameObject, kind, definition);
+                AddToPool(definition == null ? gemPrefab : definition.Prefab.gameObject, kind, definition);
                 item = items[items.Count - 1];
             }
 
@@ -539,10 +539,10 @@ namespace Lotba.Game
             item.ObstacleHit = false;
             item.AirborneNote = airborneNote;
             item.LaneX = (lane - 1) * LaneSpacing;
-            item.View.SetLocalPositionAndRotation(new Vector3(item.LaneX, kind == ItemKind.Coin ? height : 0, z), Quaternion.identity);
+            item.View.SetLocalPositionAndRotation(new Vector3(item.LaneX, kind == ItemKind.Gem ? height : 0, z), Quaternion.identity);
             bool visible = true;
 #if UNITY_EDITOR
-            visible = kind == ItemKind.Coin ? previewCoins : previewObstacles;
+            visible = kind == ItemKind.Gem ? previewGems : previewObstacles;
 #endif
             item.View.gameObject.SetActive(visible);
         }

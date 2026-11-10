@@ -113,7 +113,7 @@ namespace Lotba.Game
         }
         public bool NeedsGentlePatterns(float near, float far)
         {
-            // The whole wave, not only its first coin, must fit inside the section.
+            // The whole wave, not only its first gem, must fit inside the section.
             int first = SectionAt(near, out _), last = SectionAt(far, out _);
             return first != last || sections[first].Transition || sections[last].Transition;
         }

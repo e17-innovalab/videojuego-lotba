@@ -20,7 +20,7 @@ Para cambiarlo: abrir Game, seleccionar Game world, asignar otro RouteDefinition
 | RouteSection | Zona, cantidad de módulos y condición de transición |
 | RouteDefinition | Sección y módulo correspondientes a una distancia |
 | RoadStreamer | Reciclado de módulos, ambiente e hitos |
-| RunnerWorld | Ciclista, cámara, monedas, patrones y encuentros |
+| RunnerWorld | Ciclista, cámara, gemas, patrones y encuentros |
 
 Los módulos y perfiles son assets normales editables. No hay generadores de arte ni un comando global de actualización. La interfaz se edita en `Prefabs/Game UI.prefab`; las escenas se editan y guardan directamente.
 

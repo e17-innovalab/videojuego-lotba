@@ -16,7 +16,7 @@ namespace Lotba.Game
         [SerializeField] private RouteDefinition route;
         [SerializeField] private RoadModule module;
         [SerializeField, Min(1)] private float speed = 22;
-        [SerializeField] private bool showRider = true, showCoins = true, showObstacles = true;
+        [SerializeField] private bool showRider = true, showGems = true, showObstacles = true;
         [SerializeField] private bool showWorldBend = true;
         [SerializeField] private GameSettings settings;
         [SerializeField] private RunnerWorld world;
@@ -80,7 +80,7 @@ namespace Lotba.Game
         }
         private void ApplyPreviewSettings()
         {
-            world.ConfigureArtPreview(showCoins, showObstacles, showRider);
+            world.ConfigureArtPreview(showGems, showObstacles, showRider);
             world.ConfigureDepthBend(showWorldBend);
         }
         private void OnDestroy()

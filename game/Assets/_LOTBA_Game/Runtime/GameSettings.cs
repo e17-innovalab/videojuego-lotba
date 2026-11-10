@@ -83,12 +83,12 @@ namespace Lotba.Game
         public float CameraFollowTime => cameraFollowTime;
         public float CameraFollowStrength => cameraFollowStrength;
         [Header("Streak charge and decay")]
-        [SerializeField, Min(2f)] private float firstLevelCoins = 8f;
-        [SerializeField, Min(.1f)] private float extraCoinsPerLevel = 3f;
+        [SerializeField, Min(2f)] private float firstLevelGems = 8f;
+        [SerializeField, Min(.1f)] private float extraGemsPerLevel = 3f;
         [SerializeField, Range(.005f, .15f)] private float streakDrainPerSecond = .025f;
         [SerializeField, Range(.1f, .5f)] private float levelUpReserve = .3f;
-        public float FirstLevelCoins => firstLevelCoins;
-        public float ExtraCoinsPerLevel => extraCoinsPerLevel;
+        public float FirstLevelGems => firstLevelGems;
+        public float ExtraGemsPerLevel => extraGemsPerLevel;
         public float StreakDrainPerSecond => streakDrainPerSecond;
         public float LevelUpReserve => levelUpReserve;
         public float Duration => duration;

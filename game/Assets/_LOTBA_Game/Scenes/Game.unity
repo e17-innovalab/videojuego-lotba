@@ -1171,7 +1171,7 @@ MonoBehaviour:
   - {fileID: 1124116508}
   roadStream: {fileID: 1708434622}
   worldCamera: {fileID: 265114052}
-  coinPrefab: {fileID: 2372746718442866254, guid: 6a5717118b1d8ab4783b577989af8f05, type: 3}
+  gemPrefab: {fileID: 2372746718442866254, guid: 6a5717118b1d8ab4783b577989af8f05, type: 3}
   riderShadow: {fileID: 425062163}
   wordCollectionEnabled: 1
   collectibleWords:

@@ -145,7 +145,7 @@ MonoBehaviour:
   soundLabel: {fileID: 2960250386188663841}
   vibrationLabel: {fileID: 2154412589186038501}
   score: {fileID: 2650350128870389472}
-  coins: {fileID: 4256082007228491059}
+  gems: {fileID: 4256082007228491059}
   streak: {fileID: 6248460104099095721}
   multiplier: {fileID: 6660111285852491833}
   speed: {fileID: 8641416489337417626}
@@ -3568,7 +3568,7 @@ GameObject:
   - component: {fileID: 8333819567328202825}
   - component: {fileID: 8387405585047401136}
   m_Layer: 0
-  m_Name: Coin counter
+  m_Name: Gem counter
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6278,7 +6278,7 @@ GameObject:
   - component: {fileID: 2569392835833276518}
   - component: {fileID: 4256082007228491059}
   m_Layer: 0
-  m_Name: Coins
+  m_Name: Gems
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
