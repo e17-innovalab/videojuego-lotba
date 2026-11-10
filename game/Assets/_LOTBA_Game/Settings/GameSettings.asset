@@ -25,6 +25,94 @@ MonoBehaviour:
   patternClearance: 8
   previewTime: 3.3
   seed: 2710
+  gemFlash:
+    sprite: {fileID: 21300000, guid: 5c4e84a4028ad554f9017ce5914c00da, type: 3}
+    material: {fileID: 2100000, guid: 0bf9a636867e4805b5d9265e82a1c79f, type: 2}
+    gradientMode: 1
+    topTint: {r: 1, g: 1, b: 1, a: 1}
+    bottomTint: {r: 0.55, g: 0.86, b: 1, a: 1}
+    randomRotation: 180
+    size: 1.5
+    offset: {x: 0, y: 0, z: 1}
+    duration: 0.24
+    opacity: 0.6
+    startScale: 0.15
+    growthFraction: 0.6
+  letterFlash:
+    sprite: {fileID: 21300000, guid: 5c4e84a4028ad554f9017ce5914c00da, type: 3}
+    material: {fileID: 2100000, guid: 0bf9a636867e4805b5d9265e82a1c79f, type: 2}
+    gradientMode: 1
+    topTint: {r: 1, g: 0.9, b: 0.45, a: 1}
+    bottomTint: {r: 1, g: 0.56, b: 0.18, a: 1}
+    randomRotation: 180
+    size: 1.5
+    offset: {x: 0, y: 0, z: 1}
+    duration: 0.24
+    opacity: 0.6
+    startScale: 0.15
+    growthFraction: 0.6
+  letterBeamSprite: {fileID: 21300000, guid: cd0be195392d22b408b90cc2c9b54aae, type: 3}
+  letterMoteSprite: {fileID: 21300000, guid: 2c1a59e93ef24c87ae8339e1ef5e95fd, type: 3}
+  letterBeamMaterial: {fileID: 2100000, guid: 0bf9a636867e4805b5d9265e82a1c79f, type: 2}
+  letterBeamTopTint: {r: 0.9056712, g: 1, b: 0.5707547, a: 0.5176471}
+  letterBeamBottomTint: {r: 1, g: 0.7339252, b: 0, a: 0.78431374}
+  letterMoteTint: {r: 1, g: 1, b: 1, a: 0.78431374}
+  letterMoteScaleMultiplier: 0.5
+  letterBeamInFront: 1
+  letterBeamBaseOffset: {x: 0, y: -0.5, z: 0}
+  letterBeamBaseScale: 4
+  letterBeamHeightPulse: 1
+  letterBeamMinOpacity: 0.676
+  letterBeamMaxOpacity: 0.859
+  letterBeamPulseDuration: 0.5
+  letterBeamHeightCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  letterBeamOpacityCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   cameraFollowTime: 0.13
   cameraFollowStrength: 0.95
   firstLevelCoins: 8

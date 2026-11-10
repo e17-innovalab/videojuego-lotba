@@ -20,6 +20,46 @@ namespace Lotba.Game
         [SerializeField, Min(0f)] private float patternClearance = 8f;
         [SerializeField, Min(2f)] private float previewTime = 3.3f;
         [SerializeField] private int seed = 2710;
+        [Header("Pickup flashes")]
+        [SerializeField] private PickupFlashSettings gemFlash = new PickupFlashSettings();
+        [SerializeField] private PickupFlashSettings letterFlash = new PickupFlashSettings();
+        public PickupFlashSettings GemFlash => gemFlash;
+        public PickupFlashSettings LetterFlash => letterFlash;
+        [Header("Letter beam")]
+        [SerializeField] private Sprite letterBeamSprite;
+        [SerializeField] private Sprite letterMoteSprite;
+        [SerializeField] private Material letterBeamMaterial;
+        [SerializeField] private Color letterBeamTopTint = new Color(1f, .91f, .65f);
+        [UnityEngine.Serialization.FormerlySerializedAs("letterBeamTint")]
+        [SerializeField] private Color letterBeamBottomTint = new Color(1f, .8f, .4f);
+        [SerializeField] private Color letterMoteTint = new Color(1f, .91f, .65f);
+        [SerializeField, Min(.01f)] private float letterMoteScaleMultiplier = 1f;
+        [SerializeField] private bool letterBeamInFront;
+        [SerializeField] private Vector3 letterBeamBaseOffset = new Vector3(0f, .04f, .18f);
+        [SerializeField, Min(.1f)] private float letterBeamBaseScale = 5f;
+        [SerializeField, Min(0f)] private float letterBeamHeightPulse = .25f;
+        [SerializeField, Range(0f, 1f)] private float letterBeamMinOpacity = .85f;
+        [SerializeField, Range(0f, 1f)] private float letterBeamMaxOpacity = 1f;
+        [SerializeField, Min(.1f)] private float letterBeamPulseDuration = 2.2f;
+        [SerializeField] private AnimationCurve letterBeamHeightCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
+        [SerializeField] private AnimationCurve letterBeamOpacityCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
+        public Sprite LetterBeamSprite => letterBeamSprite;
+        public Sprite LetterMoteSprite => letterMoteSprite;
+        public Material LetterBeamMaterial => letterBeamMaterial;
+        public Color LetterBeamTopTint => letterBeamTopTint;
+        public Color LetterBeamBottomTint => letterBeamBottomTint;
+        public Color LetterMoteTint => letterMoteTint;
+        public float LetterMoteScaleMultiplier => letterMoteScaleMultiplier;
+        public bool LetterBeamInFront => letterBeamInFront;
+        public Vector3 LetterBeamBaseOffset => letterBeamBaseOffset;
+        public float LetterBeamBaseScale => letterBeamBaseScale;
+        public float LetterBeamHeightPulse => letterBeamHeightPulse;
+        public float LetterBeamMinOpacity => letterBeamMinOpacity;
+        public float LetterBeamMaxOpacity => letterBeamMaxOpacity;
+        public float LetterBeamPulseDuration => Mathf.Max(.1f, letterBeamPulseDuration);
+        public AnimationCurve LetterBeamHeightCurve => letterBeamHeightCurve;
+        public AnimationCurve LetterBeamOpacityCurve => letterBeamOpacityCurve;
+
         [Header("Camera follow")]
         [SerializeField, Range(.05f, .3f)] private float cameraFollowTime = .13f;
         [SerializeField, Range(.5f, 1f)] private float cameraFollowStrength = .95f;
@@ -49,4 +89,39 @@ namespace Lotba.Game
         public float PreviewTime => previewTime;
         public int Seed => seed;
     }
+    [System.Serializable]
+    public sealed class PickupFlashSettings
+    {
+        [SerializeField] private Sprite sprite;
+        [SerializeField] private Material material;
+        [Tooltip("In radial mode, Top Tint is the centre and Bottom Tint is the edge.")]
+        [SerializeField] private FlashGradientMode gradientMode;
+        [SerializeField] private Color topTint = Color.white;
+        [SerializeField] private Color bottomTint = Color.white;
+        [Tooltip("Maximum random rotation in either direction, in degrees.")]
+        [SerializeField, Range(0f, 180f)] private float randomRotation = 180f;
+        [SerializeField, Min(.1f)] private float size = 3f;
+        [Tooltip("Offset from the pickup in track coordinates. Positive Z is ahead.")]
+        [SerializeField] private Vector3 offset = Vector3.forward;
+        [SerializeField, Min(.01f)] private float duration = .24f;
+        [SerializeField, Range(0f, 1f)] private float opacity = .6f;
+        [Tooltip("Initial scale as a fraction of the maximum size.")]
+        [SerializeField, Range(0f, 1f)] private float startScale = .15f;
+        [Tooltip("Fraction of the duration spent growing before the flash fades.")]
+        [SerializeField, Range(.05f, .95f)] private float growthFraction = .6f;
+        public Sprite Sprite => sprite;
+        public Material Material => material;
+        public Color TopTint => topTint;
+        public Color BottomTint => bottomTint;
+        public FlashGradientMode GradientMode => gradientMode;
+        public float RandomRotation => randomRotation;
+        public float Size => size;
+        public Vector3 Offset => offset;
+        public float Duration => Mathf.Max(.01f, duration);
+        public float Opacity => opacity;
+        public float StartScale => startScale;
+        public float GrowthFraction => Mathf.Clamp(growthFraction, .05f, .95f);
+    }
+
+    public enum FlashGradientMode { Linear, Radial }
 }

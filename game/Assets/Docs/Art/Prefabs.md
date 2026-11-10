@@ -86,7 +86,7 @@ Si reemplazás sus piezas, actualizá en `BusSkin` las listas **Body Panels**, *
 
 `Prefabs/Cyclist.prefab` conserva referencias de ruedas y pedales que el juego anima por código. Para un reemplazo visual simple, mantener esos puntos de montaje y ajustar sus hijos. Si el personaje necesita otro rig, otra jerarquía o animaciones propias, coordinar la integración con desarrollo; importar el modelo no conecta esas animaciones automáticamente.
 
-`Coin.prefab` y `Pickup feedback.prefab` también son compartidos. Mantener sus componentes y el origen previsto al cambiar su aspecto: el juego controla su aparición, recogida y reciclado.
+`Coin.prefab` también es compartido. El destello de recolección y los efectos de las letras se configuran en `GameSettings`.
 
 En `Game UI.prefab`, conservar botones, textos, componentes y referencias. Los cambios de jerarquía, posiciones y tamaños deben coordinarse con desarrollo para conservar los enlaces de GameHud. La posición de los paneles se edita directamente en el prefab. Las fuentes deben seguir funcionando con TextMesh Pro y mostrar los acentos utilizados por el juego.
 

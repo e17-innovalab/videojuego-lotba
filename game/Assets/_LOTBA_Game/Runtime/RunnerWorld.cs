@@ -14,7 +14,15 @@ namespace Lotba.Game
         [SerializeField] private RoadStreamer roadStream;
         [SerializeField] private Camera worldCamera;
         [SerializeField] private GameObject coinPrefab;
-        [SerializeField] private ParticleSystem sparks;
+        private SpriteRenderer gemFlash;
+        private PickupFlashSettings activeFlash;
+        private Material defaultFlashMaterial;
+        private MaterialPropertyBlock gemFlashProperties;
+        private Quaternion gemFlashRoll;
+        private static readonly int FlashTopTint = Shader.PropertyToID("_TopTint");
+        private static readonly int FlashBottomTint = Shader.PropertyToID("_BottomTint");
+        private static readonly int FlashRadialGradient = Shader.PropertyToID("_RadialGradient");
+        private float gemFlashStarted;
         [SerializeField] private Transform riderShadow;
         [Header("Word collection")]
         [SerializeField] private bool wordCollectionEnabled;
@@ -31,6 +39,10 @@ namespace Lotba.Game
         private readonly Queue<int> pendingLetters = new Queue<int>();
         private readonly System.Random letterRandom = new System.Random();
         private TMPro.TextMeshPro letterPickup;
+        private SpriteRenderer letterBeam;
+        private MaterialPropertyBlock letterBeamProperties;
+        private readonly SpriteRenderer[] letterMotes = new SpriteRenderer[10];
+        private float letterBeamTime;
         private TMPro.TMP_FontAsset LetterFont => letterFont != null ? letterFont : TMPro.TMP_Settings.defaultFontAsset;
         private string activeWord;
         private bool[] collectedLetters;
@@ -93,19 +105,11 @@ namespace Lotba.Game
         public void Initialize(GameSettings configuration)
         {
             settings = configuration;
+            if (settings.GemFlash.Sprite == null)
+                Debug.LogWarning("GameSettings has no Gem Flash Sprite assigned.", this);
             cameraOrigin = worldCamera.transform.localPosition;
             cameraRotation = worldCamera.transform.localRotation;
             roadStream.Initialize();
-            var sparkMain = sparks.main;
-            sparkMain.simulationSpace = ParticleSystemSimulationSpace.World;
-            sparkMain.gravityModifier = 0f;
-            var sparkFade = sparks.colorOverLifetime;
-            sparkFade.enabled = true;
-            var fade = new Gradient();
-            fade.SetKeys(
-                new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
-                new[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(0f, 1f) });
-            sparkFade.color = new ParticleSystem.MinMaxGradient(fade);
             wheelOrigins = new Quaternion[wheels.Length];
             for (int i = 0; i < wheels.Length; i++) wheelOrigins[i] = wheels[i].localRotation;
             for (int i = 0; i < 72; i++) AddToPool(coinPrefab, ItemKind.Coin);
@@ -126,7 +130,7 @@ namespace Lotba.Game
             foreach (Transform pedal in pedals) pedal.localRotation = Quaternion.identity;
             cameraVelocity = Vector3.zero;
             worldCamera.transform.SetLocalPositionAndRotation(cameraOrigin, cameraRotation);
-            sparks.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            if (gemFlash != null) gemFlash.enabled = false;
             for (int i = 0; i < 4; i++) Place(ItemKind.Coin, 1, 10 + i * 3, 1.1f);
             SetFieldOfView(60f);
         }
@@ -183,7 +187,7 @@ namespace Lotba.Game
                     int previousMultiplier = session.Multiplier;
                     session.CollectCoin();
                     if (item.View.gameObject.activeInHierarchy)
-                        EmitGemFlash(transform.TransformPoint(new Vector3(item.View.localPosition.x, item.View.localPosition.y, 0)));
+                        EmitPickupFlash(transform.TransformPoint(new Vector3(item.View.localPosition.x, item.View.localPosition.y, 0)), settings.GemFlash);
                     Hide(item);
                     EncounterFeedback?.Invoke(false, item.AirborneNote);
                     if (session.Multiplier > previousMultiplier) StreakLevelUp?.Invoke();
@@ -195,7 +199,7 @@ namespace Lotba.Game
                 )
                 {
                     item.ObstacleHit = true;
-                    session.Hit(); EmitImpact(); EncounterFeedback?.Invoke(true, -1);
+                    session.Hit(); EncounterFeedback?.Invoke(true, -1);
                 }
             }
             foreach (TrackItem item in items)
@@ -263,6 +267,7 @@ namespace Lotba.Game
         private void ResetLetters()
         {
             if (letterPickup != null) letterPickup.gameObject.SetActive(false);
+            if (letterBeam != null) letterBeam.enabled = false;
             activeLetter = -1;
             activeWord = null;
             pendingLetters.Clear();
@@ -319,10 +324,12 @@ namespace Lotba.Game
             // The reserved gap clears all lanes, so choose a lane other than the previous gem row.
             int letterLane = (safeLane + letterRandom.Next(1, 3)) % 3;
             letterHoverTime = 0f;
+            letterBeamTime = 0f;
             letterPickup.transform.SetLocalPositionAndRotation(
                 new Vector3((letterLane - 1) * LaneSpacing, LetterPickupHeight, distance - riderDistance),
                 Quaternion.identity);
             letterPickup.gameObject.SetActive(true);
+            UpdateLetterBeam(letterPickup.transform.localPosition, 0f);
             nextLetterDistance = distance + Mathf.Max(20f, letterInterval);
             return true;
         }
@@ -380,12 +387,14 @@ namespace Lotba.Game
                 letterPickup.transform.SetLocalPositionAndRotation(
                     new Vector3(position.x, LetterPickupHeight + hover * letterHoverHeight, nextZ),
                     Quaternion.AngleAxis(tilt * letterTilt, Vector3.forward));
+                UpdateLetterBeam(letterPickup.transform.localPosition, dt);
                 return;
             }
 
             int index = activeLetter;
             activeLetter = -1;
             letterPickup.gameObject.SetActive(false);
+            if (letterBeam != null) letterBeam.enabled = false;
             float fraction = travel > 0f ? Mathf.Clamp01(position.z / travel) : 0f;
             float height = jump.HeightAt(session.Elapsed - dt + dt * fraction);
             if (!wordCollectionEnabled || Mathf.Abs(position.x - Mathf.Lerp(oldX, x, fraction)) >= .83f ||
@@ -395,7 +404,87 @@ namespace Lotba.Game
                 return;
             }
             collectedLetters[index] = true;
+            EmitPickupFlash(transform.TransformPoint(new Vector3(position.x, position.y, 0f)), settings.LetterFlash);
             LetterCollected?.Invoke(activeWord, collectedLetters, pendingLetters.Count == 0);
+        }
+
+        private void UpdateLetterBeam(Vector3 letterPosition, float dt)
+        {
+            Sprite sprite = settings.LetterBeamSprite;
+            if (sprite == null)
+            {
+                if (letterBeam != null) letterBeam.enabled = false;
+                UpdateLetterMotes(null, 0f);
+                return;
+            }
+            if (letterBeam == null)
+            {
+                var visual = new GameObject("Letter beam", typeof(SpriteRenderer));
+                visual.transform.SetParent(transform, false);
+                letterBeam = visual.GetComponent<SpriteRenderer>();
+                letterBeamProperties = new MaterialPropertyBlock();
+            }
+
+            float duration = settings.LetterBeamPulseDuration;
+            letterBeamTime = Mathf.Repeat(letterBeamTime + dt, duration);
+            // Traverse the curves in both directions to return smoothly to the initial state.
+            float phase = Mathf.PingPong(2f * letterBeamTime / duration, 1f);
+            Bounds bounds = sprite.bounds;
+            float baseScale = settings.LetterBeamBaseScale;
+            float heightPulse = settings.LetterBeamHeightPulse * Mathf.Clamp01(settings.LetterBeamHeightCurve.Evaluate(phase));
+            float verticalScale = baseScale + heightPulse / bounds.size.y;
+            letterBeam.sprite = sprite;
+            letterBeam.sortingOrder = settings.LetterBeamInFront ? 1 : -1;
+            if (settings.LetterBeamMaterial != null)
+            {
+                letterBeam.sharedMaterial = settings.LetterBeamMaterial;
+                letterBeam.GetPropertyBlock(letterBeamProperties);
+                letterBeamProperties.SetColor(FlashTopTint, settings.LetterBeamTopTint);
+                letterBeamProperties.SetColor(FlashBottomTint, settings.LetterBeamBottomTint);
+                letterBeamProperties.SetFloat(FlashRadialGradient, 0f);
+                letterBeam.SetPropertyBlock(letterBeamProperties);
+            }
+            letterBeam.transform.localScale = new Vector3(baseScale, verticalScale, 1f);
+            Vector3 basePosition = new Vector3(letterPosition.x, 0f, letterPosition.z) + settings.LetterBeamBaseOffset;
+            letterBeam.transform.localPosition = basePosition - Vector3.up * (bounds.min.y * verticalScale);
+            letterBeam.transform.rotation = Quaternion.Euler(0f, worldCamera.transform.eulerAngles.y, 0f);
+            Color color = Color.white;
+            color.a *= Mathf.Lerp(settings.LetterBeamMinOpacity, settings.LetterBeamMaxOpacity,
+                settings.LetterBeamOpacityCurve.Evaluate(phase));
+            letterBeam.color = color;
+            letterBeam.enabled = true;
+            UpdateLetterMotes(settings.LetterMoteSprite, letterBeamTime / duration);
+        }
+
+        private void UpdateLetterMotes(Sprite sprite, float phase)
+        {
+            for (int i = 0; i < letterMotes.Length; i++)
+            {
+                SpriteRenderer mote = letterMotes[i];
+                if (sprite == null)
+                {
+                    if (mote != null) mote.enabled = false;
+                    continue;
+                }
+                if (mote == null)
+                {
+                    var visual = new GameObject("Letter mote", typeof(SpriteRenderer));
+                    visual.transform.SetParent(letterPickup.transform, false);
+                    mote = letterMotes[i] = visual.GetComponent<SpriteRenderer>();
+                    mote.sortingOrder = 2;
+                }
+                float angle = (phase + (float)i / letterMotes.Length) * 2f * Mathf.PI;
+                mote.transform.localPosition = new Vector3(.85f * Mathf.Cos(angle),
+                    .52f * Mathf.Sin(2f * angle + i), .42f * Mathf.Sin(angle));
+                mote.transform.rotation = worldCamera.transform.rotation;
+                float scale = (.65f + .25f * Mathf.Sin(angle + i)) * settings.LetterMoteScaleMultiplier;
+                mote.transform.localScale = Vector3.one * scale;
+                Color color = settings.LetterMoteTint;
+                color.a *= Mathf.Lerp(.28f, .7f, .5f + .5f * Mathf.Cos(angle - i));
+                mote.sprite = sprite;
+                mote.color = color;
+                mote.enabled = true;
+            }
         }
         private void AddToPool(GameObject prefab, ItemKind kind, ObstacleDefinition definition = null)
         {
@@ -481,40 +570,55 @@ namespace Lotba.Game
             // The entire vehicle body remains dangerous until its rear passes the rider.
             return true;
         }
-        private void EmitGemFlash(Vector3 position)
+        private void EmitPickupFlash(Vector3 position, PickupFlashSettings flash)
         {
-            // The bright centre fades first, leaving a few cyan glints around the pickup.
-            EmitSpark(position, Vector3.zero, new Color(.82f, .97f, 1f), 1f, .14f);
-            EmitSparkRing(position, new Color(.45f, .85f, 1f), 8, .25f, .26f);
-        }
-
-        private void EmitImpact() =>
-            EmitSparkRing(rider.position + Vector3.up * 1.15f, new Color(1f, .35f, .15f), 14, .27f, .28f);
-
-        private void EmitSparkRing(Vector3 position, Color color, int count, float size, float lifetime)
-        {
-            Transform cameraTransform = worldCamera.transform;
-            for (int i = 0; i < count; i++)
+            if (flash.Sprite == null) return;
+            if (gemFlash == null)
             {
-                float angle = (i + .5f) * (2f * Mathf.PI / count);
-                Vector3 direction = cameraTransform.right * Mathf.Cos(angle) + cameraTransform.up * Mathf.Sin(angle);
-                EmitSpark(position + direction * .12f, direction * 2.8f, color, size, lifetime);
+                var visual = new GameObject("Gem flash", typeof(SpriteRenderer));
+                visual.transform.SetParent(transform, false);
+                gemFlash = visual.GetComponent<SpriteRenderer>();
+                gemFlashProperties = new MaterialPropertyBlock();
+                defaultFlashMaterial = gemFlash.sharedMaterial;
             }
+            activeFlash = flash;
+            gemFlash.sprite = flash.Sprite;
+            gemFlash.sharedMaterial = flash.Material != null ? flash.Material : defaultFlashMaterial;
+            gemFlash.GetPropertyBlock(gemFlashProperties);
+            gemFlashProperties.SetColor(FlashTopTint, flash.TopTint);
+            gemFlashProperties.SetColor(FlashBottomTint, flash.BottomTint);
+            gemFlashProperties.SetFloat(FlashRadialGradient, flash.GradientMode == FlashGradientMode.Radial ? 1f : 0f);
+            gemFlash.SetPropertyBlock(gemFlashProperties);
+            float maxRoll = flash.RandomRotation;
+            gemFlashRoll = Quaternion.AngleAxis(UnityEngine.Random.Range(-maxRoll, maxRoll), Vector3.forward);
+            Vector3 flashPosition = position + transform.TransformDirection(flash.Offset);
+            gemFlash.transform.SetPositionAndRotation(flashPosition, worldCamera.transform.rotation * gemFlashRoll);
+            gemFlash.transform.localScale = Vector3.one * (flash.StartScale * flash.Size);
+            gemFlash.color = new Color(1f, 1f, 1f, 0f);
+            gemFlash.enabled = true;
+            gemFlashStarted = Time.unscaledTime;
         }
 
-        private void EmitSpark(Vector3 position, Vector3 velocity, Color color, float size, float lifetime)
+        private void LateUpdate()
         {
-            if (!sparks.isPlaying) sparks.Play(false);
-            sparks.Emit(new ParticleSystem.EmitParams
+            if (gemFlash == null || !gemFlash.enabled) return;
+            float progress = (Time.unscaledTime - gemFlashStarted) / activeFlash.Duration;
+            if (progress >= 1f)
             {
-                position = position,
-                velocity = velocity,
-                startColor = color,
-                startSize = size,
-                startLifetime = lifetime
-            }, 1);
+                gemFlash.enabled = false;
+                return;
+            }
+            float peak = activeFlash.GrowthFraction;
+            float size = activeFlash.Size;
+            float scale = Mathf.SmoothStep(activeFlash.StartScale * size, size, progress / peak);
+            float maxOpacity = activeFlash.Opacity;
+            float opacity = progress < peak
+                ? Mathf.SmoothStep(0f, maxOpacity, progress / peak)
+                : Mathf.SmoothStep(maxOpacity, 0f, (progress - peak) / (1f - peak));
+            gemFlash.color = new Color(1f, 1f, 1f, opacity);
+            gemFlash.transform.localScale = Vector3.one * scale;
+            gemFlash.transform.rotation = worldCamera.transform.rotation * gemFlashRoll;
         }
-
         private static void Hide(TrackItem item)
         {
             item.Active = false;
