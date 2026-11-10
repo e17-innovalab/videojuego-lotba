@@ -10,8 +10,10 @@ namespace Lotba.Game
         [SerializeField] private GameObject readyPanel, pausePanel, resultPanel, raceHud, controls, settingsPanel;
         [SerializeField] private UnityEngine.UI.Button start, retry, menu, pause, resume, brake, pauseMenu, exit;
         [SerializeField] private UnityEngine.UI.Button[] configurationButtons;
-        [SerializeField] private UnityEngine.UI.Button closeSettings, soundButton, vibrationButton, depthBendButton;
-        [SerializeField] private TMPro.TMP_Text soundLabel, vibrationLabel, depthBendLabel;
+        [SerializeField] private UnityEngine.UI.Button closeSettings, soundButton, vibrationButton;
+        [SerializeField] private TMPro.TMP_Text soundLabel, vibrationLabel;
+        [SerializeField] private UnityEngine.UI.Button qualityButton;
+        [SerializeField] private TMPro.TMP_Text qualityLabel;
         [SerializeField] private TMPro.TMP_Text score, coins, streak, multiplier, speed, remaining, resultTitle, resultStats;
         [SerializeField] private UnityEngine.UI.Image streakFill;
         [SerializeField] private SpeedGauge gauge;
@@ -24,7 +26,7 @@ namespace Lotba.Game
         private int previousMultiplier = 1;
         public bool SettingsOpen { get; private set; }
         public event Action StartRequested, MenuRequested, PauseRequested, BrakeRequested, SoundRequested, SettingsRequested, VibrationRequested;
-        public event Action DepthBendRequested;
+        public event Action QualityRequested;
         private void Awake()
         {
             ApplyIdentity();
@@ -39,7 +41,7 @@ namespace Lotba.Game
             closeSettings.onClick.AddListener(() => SettingsOpen = false);
             soundButton.onClick.AddListener(() => SoundRequested?.Invoke());
             vibrationButton.onClick.AddListener(() => VibrationRequested?.Invoke());
-            depthBendButton.onClick.AddListener(() => DepthBendRequested?.Invoke());
+            qualityButton.onClick.AddListener(() => QualityRequested?.Invoke());
         }
         private static void ExitGame()
         {
@@ -134,13 +136,18 @@ namespace Lotba.Game
             wordBanner.anchoredPosition = Vector2.up * Mathf.SmoothStep(42f, -126f, slide);
         }
         public void OpenSettings() => SettingsOpen = true;
+        public void SetQuality(string label, bool canChange)
+        {
+            qualityLabel.text = $"CALIDAD: {label}";
+            qualityButton.interactable = canChange;
+        }
         public bool IsRaceButtonAt(Vector2 screenPoint) =>
             IsButtonAt(pause, screenPoint) || IsButtonAt(brake, screenPoint);
 
         private static bool IsButtonAt(UnityEngine.UI.Button button, Vector2 screenPoint) =>
             button.isActiveAndEnabled && button.IsInteractable() &&
             RectTransformUtility.RectangleContainsScreenPoint((RectTransform)button.transform, screenPoint);
-        public void Render(RunSession session, GameSettings settings, bool muted, DeviceFeedbackAndInput devices, bool depthBendPreferred)
+        public void Render(RunSession session, GameSettings settings, bool muted, DeviceFeedbackAndInput devices)
         {
             bool running = session.State == RunState.Running;
             bool active = running || session.State == RunState.Paused;
@@ -164,8 +171,6 @@ namespace Lotba.Game
             if (running) speedLines.Intensity = Mathf.InverseLerp(settings.InitialSpeed * .8f, settings.MaximumSpeed, session.Speed);
             else speedLines.ClearEffect();
             soundLabel.text = muted ? "SONIDO: NO" : "SONIDO: SÍ";
-            depthBendButton.interactable = settings.DepthBendAvailable;
-            depthBendLabel.text = settings.DepthBendAvailable && depthBendPreferred ? "CURVA VISUAL: SÍ" : "CURVA VISUAL: NO";
             vibrationButton.interactable = devices.VibrationAvailable;
             vibrationLabel.text = !devices.VibrationAvailable ? "VIBRACIÓN: NO DISPONIBLE" : "VIBRACIÓN: " + devices.VibrationLevelLabel;
             if (session.State == RunState.Finished)

@@ -15,26 +15,30 @@ namespace Lotba.Game
         private bool startRequested, brakeRequested, jumpRequested, pauseRequested, menuRequested;
         private int laneRequested;
         private bool muted, trackingSwipe;
-        private const string DepthBendPreference = "Lotba.CityRush.DepthBend";
-        private bool depthBendPreferred;
+        private const string QualityPreference = "Lotba.CityRush.Quality";
+        private static readonly string[] QualityNames = { "Low", "Medium", "High" };
+        private static readonly string[] QualityLabels = { "BAJA", "MEDIA", "ALTA" };
+        private readonly int[] qualityLevels = new int[QualityNames.Length];
+        private int qualityChoice = -1;
+        private bool IsHighQuality => qualityChoice >= 0 && QualityNames[qualityChoice] == "High";
         private Vector2 swipeOrigin;
         private void Awake()
         {
             Application.targetFrameRate = Application.platform == RuntimePlatform.WebGLPlayer ? -1 : 60;
             muted = PlayerPrefs.GetInt("Lotba.CityRush.Muted", 0) != 0;
-            depthBendPreferred = PlayerPrefs.GetInt(DepthBendPreference, 1) != 0;
+            InitializeQuality();
             audioFeedback.SetMuted(muted); devices.Initialize();
             world.Initialize(settings); world.ResetTrack(); session = new RunSession(settings);
-            world.ConfigureDepthBend(depthBendPreferred);
+            world.ConfigureDepthBend(IsHighQuality);
             hud.StartRequested += RequestStart; hud.BrakeRequested += RequestBrake;
             hud.PauseRequested += RequestPause; hud.MenuRequested += RequestMenu;
             hud.SoundRequested += ToggleSound; hud.SettingsRequested += OpenSettings;
             hud.VibrationRequested += devices.CycleVibrationLevel;
-            hud.DepthBendRequested += ToggleDepthBend;
+            hud.QualityRequested += CycleQuality;
             world.EncounterFeedback += OnEncounter;
             world.StreakLevelUp += audioFeedback.PlayStreakLevelUp;
             world.LetterCollected += OnLetterCollected;
-            hud.Render(session, settings, muted, devices, depthBendPreferred);
+            hud.Render(session, settings, muted, devices);
         }
         private void Update()
         {
@@ -50,12 +54,12 @@ namespace Lotba.Game
         }
         private void LateUpdate()
         {
-            world.ConfigureDepthBend(depthBendPreferred);
+            world.ConfigureDepthBend(IsHighQuality);
             if (menuRequested && (session.State == RunState.Finished || session.State == RunState.Paused))
             {
                 ResetRun(false);
                 startRequested = brakeRequested = jumpRequested = pauseRequested = menuRequested = false; laneRequested = 0;
-                hud.Render(session, settings, muted, devices, depthBendPreferred);
+                hud.Render(session, settings, muted, devices);
                 return;
             }
             if (startRequested && (session.State == RunState.Ready || session.State == RunState.Finished))
@@ -85,7 +89,7 @@ namespace Lotba.Game
             }
             if (session.State == RunState.Finished) { audioFeedback.Stop(); }
             startRequested = brakeRequested = jumpRequested = pauseRequested = menuRequested = false; laneRequested = 0;
-            hud.Render(session, settings, muted, devices, depthBendPreferred);
+            hud.Render(session, settings, muted, devices);
         }
         private void ResetRun(bool start)
         {
@@ -136,12 +140,39 @@ namespace Lotba.Game
             muted = !muted; audioFeedback.SetMuted(muted);
             PlayerPrefs.SetInt("Lotba.CityRush.Muted", muted ? 1 : 0); PlayerPrefs.Save();
         }
-        private void ToggleDepthBend()
+        private void InitializeQuality()
         {
-            if (!settings.DepthBendAvailable) return;
-            depthBendPreferred = !depthBendPreferred;
-            PlayerPrefs.SetInt(DepthBendPreference, depthBendPreferred ? 1 : 0);
-            PlayerPrefs.Save();
+            string[] available = QualitySettings.names;
+            for (int i = 0; i < QualityNames.Length; i++)
+                qualityLevels[i] = System.Array.IndexOf(available, QualityNames[i]);
+
+            int preferred = System.Array.IndexOf(QualityNames, PlayerPrefs.GetString(QualityPreference, "Medium"));
+            if (preferred < 0 || qualityLevels[preferred] < 0)
+                preferred = qualityLevels[1] >= 0 ? 1 : System.Array.FindIndex(qualityLevels, level => level >= 0);
+            ApplyQuality(preferred);
+        }
+
+        private void CycleQuality()
+        {
+            if (qualityChoice < 0) return;
+            for (int step = 1; step < QualityNames.Length; step++)
+            {
+                int next = (qualityChoice + step) % QualityNames.Length;
+                if (qualityLevels[next] < 0) continue;
+                ApplyQuality(next);
+                PlayerPrefs.SetString(QualityPreference, QualityNames[next]);
+                PlayerPrefs.Save();
+                return;
+            }
+        }
+
+        private void ApplyQuality(int choice)
+        {
+            qualityChoice = choice;
+            if (choice >= 0 && QualitySettings.GetQualityLevel() != qualityLevels[choice])
+                QualitySettings.SetQualityLevel(qualityLevels[choice], true);
+            hud.SetQuality(choice >= 0 ? QualityLabels[choice] : "NO DISPONIBLE",
+                System.Array.FindAll(qualityLevels, level => level >= 0).Length > 1);
         }
         private void OnApplicationFocus(bool focus) { if (!focus) PauseForFocus(); }
         private void OnApplicationPause(bool paused) { if (paused) PauseForFocus(); }
@@ -158,7 +189,7 @@ namespace Lotba.Game
             hud.PauseRequested -= RequestPause; hud.MenuRequested -= RequestMenu;
             hud.SoundRequested -= ToggleSound; hud.SettingsRequested -= OpenSettings;
             hud.VibrationRequested -= devices.CycleVibrationLevel;
-            hud.DepthBendRequested -= ToggleDepthBend;
+            hud.QualityRequested -= CycleQuality;
             world.EncounterFeedback -= OnEncounter;
             world.StreakLevelUp -= audioFeedback.PlayStreakLevelUp;
             world.LetterCollected -= OnLetterCollected;
