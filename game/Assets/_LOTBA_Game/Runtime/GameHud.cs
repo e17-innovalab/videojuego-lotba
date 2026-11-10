@@ -14,13 +14,12 @@ namespace Lotba.Game
         [SerializeField] private TMPro.TMP_Text soundLabel, vibrationLabel;
         [SerializeField] private UnityEngine.UI.Button qualityButton;
         [SerializeField] private TMPro.TMP_Text qualityLabel;
-        [SerializeField] private TMPro.TMP_Text score, gems, streak, multiplier, speed, remaining, resultTitle, resultStats;
+        [SerializeField] private TMPro.TMP_Text score, gems, streak, multiplier, remaining, resultTitle, resultStats;
         [SerializeField] private UnityEngine.UI.Image streakFill;
         [SerializeField] private SpeedGauge gauge;
-        [SerializeField] private SpeedLines speedLines;
-        [SerializeField] private Sprite wordBannerSprite;
-        private RectTransform wordBanner;
-        private TMPro.TextMeshProUGUI wordLabel;
+        [SerializeField] private RectTransform wordBanner;
+        [SerializeField] private TMPro.TMP_Text wordLabel;
+        private Vector2 wordBannerVisiblePosition;
         private float wordBannerStarted, wordBannerUntil;
         private float multiplierPulseUntil;
         private int previousMultiplier = 1;
@@ -33,6 +32,8 @@ namespace Lotba.Game
         private void Awake()
         {
             ApplyIdentity();
+            wordBannerVisiblePosition = wordBanner.anchoredPosition;
+            wordBanner.gameObject.SetActive(false);
             telemetryPanel = new RunTelemetryPanel(resultPanel, resultStats, menu);
             exit.gameObject.SetActive(Application.platform != RuntimePlatform.WebGLPlayer);
             exit.onClick.AddListener(ExitGame);
@@ -88,36 +89,6 @@ namespace Lotba.Game
 
         public void ShowWordProgress(string word, bool[] collected, bool complete)
         {
-            if (wordBanner == null)
-            {
-                var panel = new GameObject("Word progress", typeof(RectTransform), typeof(UnityEngine.UI.Image));
-                wordBanner = (RectTransform)panel.transform;
-                wordBanner.SetParent(raceHud.transform, false);
-                wordBanner.anchorMin = new Vector2(.15f, 1f);
-                wordBanner.anchorMax = new Vector2(.85f, 1f);
-                wordBanner.sizeDelta = new Vector2(0f, 66f);
-                var background = panel.GetComponent<UnityEngine.UI.Image>();
-                background.sprite = wordBannerSprite;
-                background.type = UnityEngine.UI.Image.Type.Sliced;
-                background.color = new Color(.07f, .35f, .58f, .98f);
-                background.raycastTarget = false;
-
-                var label = new GameObject("Letters", typeof(RectTransform), typeof(TMPro.TextMeshProUGUI));
-                wordLabel = label.GetComponent<TMPro.TextMeshProUGUI>();
-                wordLabel.rectTransform.SetParent(wordBanner, false);
-                wordLabel.rectTransform.anchorMin = Vector2.zero;
-                wordLabel.rectTransform.anchorMax = Vector2.one;
-                wordLabel.rectTransform.offsetMin = new Vector2(14f, 4f);
-                wordLabel.rectTransform.offsetMax = new Vector2(-14f, -4f);
-                wordLabel.font = gems.font;
-                wordLabel.fontStyle = TMPro.FontStyles.Bold;
-                wordLabel.alignment = TMPro.TextAlignmentOptions.Center;
-                wordLabel.enableAutoSizing = true;
-                wordLabel.fontSizeMin = 12f;
-                wordLabel.fontSizeMax = 38f;
-                wordLabel.overflowMode = TMPro.TextOverflowModes.Ellipsis;
-                wordLabel.raycastTarget = false;
-            }
             var text = new System.Text.StringBuilder();
             for (int i = 0; i < word.Length; i++)
             {
@@ -138,7 +109,9 @@ namespace Lotba.Game
             wordBanner.gameObject.SetActive(visible);
             if (!visible) return;
             float slide = Mathf.Min((now - wordBannerStarted) / .22f, (wordBannerUntil - now) / .22f);
-            wordBanner.anchoredPosition = Vector2.up * Mathf.SmoothStep(42f, -126f, slide);
+            float hiddenY = wordBanner.rect.height * wordBanner.pivot.y + 9f;
+            wordBanner.anchoredPosition = new Vector2(wordBannerVisiblePosition.x,
+                Mathf.SmoothStep(hiddenY, wordBannerVisiblePosition.y, slide));
         }
         public void OpenSettings() => SettingsOpen = true;
         public void SetQuality(string label, bool canChange)
@@ -172,10 +145,8 @@ namespace Lotba.Game
             float pulse = running ? Mathf.Clamp01((multiplierPulseUntil - Time.unscaledTime) / .3f) : 0;
             multiplier.transform.parent.localScale = Vector3.one * (1 + Mathf.Sin(pulse * Mathf.PI) * .18f);
             streakFill.fillAmount = session.StreakProgress;
-            speed.text = $"{session.Speed * 3.6f:0}"; remaining.text = $"{session.Remaining:0} s";
-            gauge.Value = Mathf.InverseLerp(8, settings.MaximumSpeed, session.Speed);
-            if (running) speedLines.Intensity = Mathf.InverseLerp(settings.InitialSpeed * .8f, settings.MaximumSpeed, session.Speed);
-            else speedLines.ClearEffect();
+            remaining.text = $"{session.Remaining:0} s";
+            gauge.SetSpeed(session.Speed, settings.MaximumSpeed);
             soundLabel.text = muted ? "SONIDO: NO" : "SONIDO: SÍ";
             vibrationButton.interactable = devices.VibrationAvailable;
             vibrationLabel.text = !devices.VibrationAvailable ? "VIBRACIÓN: NO DISPONIBLE" : "VIBRACIÓN: " + devices.VibrationLevelLabel;

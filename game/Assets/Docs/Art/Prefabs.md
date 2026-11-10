@@ -90,6 +90,10 @@ Si reemplazás sus piezas, actualizá en `BusSkin` las listas **Body Panels**, *
 
 En `Game UI.prefab`, conservar botones, textos, componentes y referencias. Los cambios de jerarquía, posiciones y tamaños deben coordinarse con desarrollo para conservar los enlaces de GameHud. La posición de los paneles se edita directamente en el prefab. Las fuentes deben seguir funcionando con TextMesh Pro y mostrar los acentos utilizados por el juego.
 
+El velocímetro es una instancia de `Speed Dial.prefab` dentro de `Game UI`. Editá el prefab fuente para cambiar los sprites de **Base** y **Active arc**, la imagen **Needle** o los textos. El arco activo usa relleno radial de 180° desde abajo. Mantené ese ajuste y las referencias de `SpeedGauge` para que la aguja, el arco y la cifra respondan a la velocidad. Para mover el conjunto dentro del HUD, editá el RectTransform de la instancia en `Game UI`.
+
+El cartel de palabras es una instancia de `Word Banner.prefab` en **Race HUD**. Podés cambiar el sprite del fondo, la fuente y el tamaño en el prefab fuente. Conservá el anclaje superior para que la entrada animada siga viniendo desde arriba. El juego actualiza el texto de **Letters** según lo que recoge el jugador.
+
 ## 6. Revisar el montaje antes de entregar
 
 Para mirar una unión sin modificar la escena de juego, creá una escena de revisión fuera de la lista de escenas del build. Arrastrá dos o tres módulos y colocalos en Z = 0, 12 y 24, con X/Y = 0 y escala uno.
