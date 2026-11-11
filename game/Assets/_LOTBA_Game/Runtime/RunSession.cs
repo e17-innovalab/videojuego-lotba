@@ -15,22 +15,26 @@ namespace Lotba.Game
         private const float ImpactRecoverySeconds = 2.5f;
         private const float ImpactSpeedLoss = 9f;
         private const float ImpactProtectionSeconds = 1.1f;
+        public const int BoostImpactGemLoss = 5;
         private float impactTime = float.NegativeInfinity;
         private float protectedUntil;
-        private float streakEnergy;
-        public const float OfferMilestoneMetres = 600f;
+        private int multiplierStartGems;
+        private float decisionStartDistance;
         public const float BoostSeconds = 6f;
         public const float BoostSpeed = 6f;
         private float boostUntil;
-        private bool offerShown;
         public bool OfferPending { get; private set; }
         public bool BoostActive => Elapsed < boostUntil;
         public float BoostProgress => BoostActive ? (boostUntil - Elapsed) / BoostSeconds : 0f;
         public int VoluntaryBoosts { get; private set; }
         public int BonusGems { get; private set; }
         public float OfferDistance { get; private set; }
-        public float OfferProgress => Math.Min(1f, Distance / Math.Max(OfferMilestoneMetres, OfferDistance));
-        public bool OfferResolved => offerShown && !OfferPending;
+        public int DecisionsShown { get; private set; }
+        public int DecisionsKept { get; private set; }
+        public float NextDecisionDistance => decisionStartDistance + settings.FirstDecisionMetres +
+            DecisionsShown * settings.ExtraMetresPerDecision;
+        public float OfferProgress => OfferPending ? 1f : Math.Min(1f,
+            (Distance - decisionStartDistance) / ((OfferDistance > 0f ? OfferDistance : NextDecisionDistance) - decisionStartDistance));
         public RunState State { get; private set; }
         public RunEnding Ending { get; private set; }
         public float Elapsed { get; private set; }
@@ -38,15 +42,15 @@ namespace Lotba.Game
         public float Speed { get; private set; }
         public float PeakSpeed { get; private set; }
         public long Score { get; private set; }
-        public long GemBasePoints => Gems * 10L;
         public int Gems { get; private set; }
-        public int Streak { get; private set; }
-        public int BestStreak { get; private set; }
+        public int GemsLost { get; private set; }
+        public int GemBalance => Gems - GemsLost;
+        public int BoostCollisions { get; private set; }
         public int Collisions { get; private set; }
         public int Lane { get; private set; } = 1;
         public int Multiplier { get; private set; } = 1;
-        public int BestMultiplier { get; private set; } = 1;
-        public float StreakProgress => streakEnergy;
+        public int GemsForMultiplier => settings.FirstMultiplierGems + (Multiplier - 1) * settings.ExtraGemsPerMultiplier;
+        public float MultiplierProgress => (Gems - multiplierStartGems) / (float)GemsForMultiplier;
         public float Remaining => Math.Max(0f, settings.Duration - Elapsed);
         public bool IsProtected => Elapsed < protectedUntil;
         public float ProtectionProgress => IsProtected
@@ -98,45 +102,37 @@ namespace Lotba.Game
                     Record("zone_entered");
                 }
             }
-            if (Streak > 0)
-            {
-                float previousProgress = streakEnergy;
-                streakEnergy = Math.Max(0, streakEnergy - settings.StreakDrainPerSecond * step);
-                if (streakEnergy <= 0)
-                {
-                    int previousStreak = Streak, previousMultiplier = Multiplier;
-                    ResetStreak();
-                    Record("streak_lost", "decay", previousStreak: previousStreak,
-                        previousMultiplier: previousMultiplier, previousProgress: previousProgress);
-                }
-            }
             if (Remaining <= 0f) Finish(RunEnding.TimeLimit);
         }
         public void ScheduleSpeedOffer(float distance)
         {
-            if (Telemetry != null && OfferDistance == 0f) OfferDistance = distance;
+            if (Telemetry != null && OfferDistance == 0f && distance >= NextDecisionDistance) OfferDistance = distance;
         }
 
         public void ShowSpeedOffer()
         {
-            if (OfferDistance <= 0f || Distance < OfferDistance || State != RunState.Running || offerShown) return;
-            offerShown = OfferPending = true;
-            Record("speed_offer_shown");
+            if (OfferDistance <= 0f || Distance < OfferDistance || State != RunState.Running || OfferPending) return;
+            OfferPending = true;
+            DecisionsShown++;
+            Record("speed_offer_shown", decisionNumber: DecisionsShown);
         }
 
         public void ChooseSpeed(bool accelerate)
         {
             if (!OfferPending || State != RunState.Running) return;
             OfferPending = false;
+            decisionStartDistance = Distance;
+            OfferDistance = 0f;
             if (!accelerate)
             {
-                Record("speed_kept");
+                DecisionsKept++;
+                Record("speed_kept", decisionNumber: DecisionsShown);
                 return;
             }
 
             boostUntil = Elapsed + BoostSeconds;
             VoluntaryBoosts++;
-            Record("boost_activated");
+            Record("boost_activated", decisionNumber: DecisionsShown);
         }
 
         public bool Move(int direction)
@@ -151,43 +147,40 @@ namespace Lotba.Game
         public long CollectGem(int airborneNote = -1)
         {
             if (State != RunState.Running) return 0;
-            int previousStreak = Streak, previousMultiplier = Multiplier;
-            float previousProgress = streakEnergy;
+            int previousMultiplier = Multiplier;
             int gemCount = BoostActive ? 2 : 1;
             long reward = 10L * Multiplier * gemCount;
-            Score += reward; Gems += gemCount; BonusGems += gemCount - 1; Streak++;
-            BestStreak = Math.Max(BestStreak, Streak);
-            float gemsForLevel = settings.FirstLevelGems + settings.ExtraGemsPerLevel * (Multiplier - 1f);
-            streakEnergy += 1f / Math.Max(1, gemsForLevel);
-            if (streakEnergy >= 1)
+            Score += reward; Gems += gemCount; BonusGems += gemCount - 1;
+            if (Gems - multiplierStartGems >= GemsForMultiplier)
             {
+                multiplierStartGems += GemsForMultiplier;
                 Multiplier++;
-                BestMultiplier = Math.Max(BestMultiplier, Multiplier);
-                // Leave a reserve after levelling up; an empty bar must always mean a lost streak.
-                streakEnergy = Math.Min(1, settings.LevelUpReserve + streakEnergy - 1);
             }
-            Record("gem_collected", airborneNote >= 0 ? "air" : "ground", reward, previousStreak, previousMultiplier, previousProgress);
+            Record("gem_collected", airborneNote >= 0 ? "air" : "ground", reward,
+                previousMultiplier: previousMultiplier, gemDelta: gemCount);
             if (gemCount > 1) Record("boost_bonus_gem");
             if (Multiplier > previousMultiplier)
-                Record("streak_level_up", previousStreak: previousStreak,
-                    previousMultiplier: previousMultiplier, previousProgress: previousProgress);
+                Record("multiplier_level_up", previousMultiplier: previousMultiplier);
             return reward;
         }
         public long Hit(string obstacleId = null)
         {
             if (State != RunState.Running || IsProtected) return 0;
-            int previousStreak = Streak, previousMultiplier = Multiplier;
-            float previousProgress = streakEnergy;
-            long loss = Math.Min(Score, Math.Max(50L, Score / 4));
-            Score -= loss; ResetStreak(); Collisions++;
-            impactTime = Elapsed; protectedUntil = Elapsed + ImpactProtectionSeconds;
-            Record("obstacle_hit", obstacleId, -loss, previousStreak, previousMultiplier, previousProgress);
-            if (previousStreak > 0)
-                Record("streak_lost", "collision", previousStreak: previousStreak,
-                    previousMultiplier: previousMultiplier, previousProgress: previousProgress);
+            bool duringBoost = BoostActive;
+            int gemLoss = duringBoost ? Math.Min(GemBalance, BoostImpactGemLoss) : 0;
+            long loss = duringBoost ? 0 : Math.Min(Score, Math.Max(50L, Score / 4));
+            GemsLost += gemLoss;
+            Score -= loss; Collisions++;
+            if (duringBoost)
+            {
+                BoostCollisions++;
+                boostUntil = Elapsed;
+            }
+            impactTime = Elapsed;
+            protectedUntil = impactTime + ImpactProtectionSeconds;
+            Record("obstacle_hit", obstacleId, -loss, gemDelta: -gemLoss, duringBoost: duringBoost);
             return loss;
         }
-        private void ResetStreak() { Streak = 0; streakEnergy = 0; Multiplier = 1; }
         public void Pause()
         {
             if (State != RunState.Running) return;
@@ -216,8 +209,10 @@ namespace Lotba.Game
                 Telemetry.summary = new RunTelemetrySummary
                 {
                     ending = reason, timeSeconds = Elapsed, distanceMetres = Distance, peakSpeedKmh = PeakSpeed * 3.6f,
-                    score = Score, gems = Gems, collisions = Collisions, bestStreak = BestStreak, bestMultiplier = BestMultiplier,
-                    voluntaryBoosts = VoluntaryBoosts, bonusGems = BonusGems
+                    score = Score, gems = Gems, collisions = Collisions, bestMultiplier = Multiplier,
+                    decisionsShown = DecisionsShown, decisionsKept = DecisionsKept,
+                    voluntaryBoosts = VoluntaryBoosts, bonusGems = BonusGems,
+                    gemsLost = GemsLost, gemBalance = GemBalance, boostCollisions = BoostCollisions
                 };
             }
             Speed = 0f;
@@ -233,7 +228,7 @@ namespace Lotba.Game
         }
 
         private void Record(string type, string detail = null, long delta = 0,
-            int? previousStreak = null, int? previousMultiplier = null, float? previousProgress = null)
+            int? previousMultiplier = null, int gemDelta = 0, bool duringBoost = false, int decisionNumber = 0)
         {
             if (Telemetry == null) return;
             Telemetry.events.Add(new RunTelemetryEvent
@@ -241,9 +236,10 @@ namespace Lotba.Game
                 sequence = Telemetry.events.Count + 1, type = type, detail = detail,
                 zone = telemetryRoute.Sections[telemetrySection].Map.DisplayName,
                 timeSeconds = Elapsed, distanceMetres = Distance, speedKmh = Speed * 3.6f,
-                lane = Lane, score = Score, scoreDelta = delta, streak = Streak, multiplier = Multiplier,
-                streakProgress = streakEnergy, streakBefore = previousStreak ?? Streak,
-                multiplierBefore = previousMultiplier ?? Multiplier, streakProgressBefore = previousProgress ?? streakEnergy
+                lane = Lane, score = Score, scoreDelta = delta, multiplier = Multiplier,
+                gemsCollected = Gems, gemBalance = GemBalance, gemDelta = gemDelta, duringBoost = duringBoost,
+                multiplierBefore = previousMultiplier ?? Multiplier, decisionNumber = decisionNumber,
+                multiplierProgress = MultiplierProgress
             });
         }
     }

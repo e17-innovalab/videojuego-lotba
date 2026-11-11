@@ -64,10 +64,18 @@ namespace Lotba.Game
         private Quaternion cameraRotation;
         private Vector3 cameraVelocity;
         private float boostCameraBlend;
+        private bool pickupEffectsEnabled = true;
+        private readonly Transform[] scatteredGems = new Transform[RunSession.BoostImpactGemLoss];
+        private Vector3 gemScatterOrigin;
+        private float gemScatterTime;
+        private int scatteredGemCount;
         private TurboAuraController turboAura;
         private float referenceFieldOfView;
         private Renderer[] riderRenderers;
-        private bool riderHiddenByImpact;
+        private Material riderImpactMaterial;
+        private Material[][] riderMaterials;
+        private Material[][] riderWhiteMaterials;
+        private bool riderImpactWhite;
         private ObstacleSet obstacleOverride;
         private readonly HashSet<ObstacleDefinition> registeredObstacles = new HashSet<ObstacleDefinition>();
         private GameSettings settings;
@@ -94,6 +102,15 @@ namespace Lotba.Game
         }
 #endif
         public void ConfigureDepthBend(bool enabled) => depthBendRequested = enabled;
+        public void ConfigurePickupEffects(bool enabled)
+        {
+            pickupEffectsEnabled = enabled;
+            if (enabled) return;
+            ClearGemScatter();
+            if (gemFlash != null) gemFlash.enabled = false;
+            if (letterBeam != null) letterBeam.enabled = false;
+            UpdateLetterMotes(null, 0f);
+        }
 
         private void UpdateDepthBend()
         {
@@ -107,7 +124,7 @@ namespace Lotba.Game
             depthBendStrength = enabled ? strength : 0f;
         }
         public event Action<int> GemFeedback;
-        public event Action<long, bool> ImpactFeedback;
+        public event Action<bool> ImpactFeedback;
         public RouteDefinition Route => roadStream.Route;
         public event Action StreakLevelUp;
         private enum ItemKind { Gem, Obstacle }
@@ -138,6 +155,19 @@ namespace Lotba.Game
             cameraOrigin = worldCamera.transform.localPosition;
             cameraRotation = worldCamera.transform.localRotation;
             riderRenderers = rider.GetComponentsInChildren<Renderer>(true);
+            if (settings.RiderImpactShader != null)
+            {
+                riderImpactMaterial = new Material(settings.RiderImpactShader);
+                riderMaterials = new Material[riderRenderers.Length][];
+                riderWhiteMaterials = new Material[riderRenderers.Length][];
+                for (int i = 0; i < riderRenderers.Length; i++)
+                {
+                    riderMaterials[i] = riderRenderers[i].sharedMaterials;
+                    riderWhiteMaterials[i] = new Material[riderMaterials[i].Length];
+                    for (int slot = 0; slot < riderWhiteMaterials[i].Length; slot++)
+                        riderWhiteMaterials[i][slot] = riderImpactMaterial;
+                }
+            }
             roadStream.Initialize(settings.DepthBendShader);
             wheelOrigins = new Quaternion[wheels.Length];
             for (int i = 0; i < wheels.Length; i++) wheelOrigins[i] = wheels[i].localRotation;
@@ -147,8 +177,9 @@ namespace Lotba.Game
         public void ResetTrack()
         {
             turboAura?.Clear();
+            ClearGemScatter();
             riderDistance = 0f;
-            SetRiderImpactHidden(false);
+            ClearImpactBlink();
             random = new System.Random(settings.Seed);
             foreach (TrackItem item in items) Hide(item);
             jump.Reset(); nextPatternDistance = FirstPatternDistance; wave = 0; safeLane = visualLane = 1;
@@ -178,9 +209,52 @@ namespace Lotba.Game
 
         public void ClearTurboAura() => turboAura?.Clear();
 
+        public void ClearGemScatter()
+        {
+            for (int i = 0; i < scatteredGemCount; i++)
+                scatteredGems[i].gameObject.SetActive(false);
+            scatteredGemCount = 0;
+        }
+
+        private void ScatterGems(int count)
+        {
+            ClearGemScatter();
+            if (!pickupEffectsEnabled) return;
+            gemScatterOrigin = rider.localPosition + Vector3.up * .9f;
+            gemScatterTime = 0f;
+            for (int i = 0; i < count; i++)
+            {
+                if (scatteredGems[i] == null) scatteredGems[i] = Instantiate(gemPrefab, transform).transform;
+                scatteredGems[i].SetLocalPositionAndRotation(gemScatterOrigin, Quaternion.identity);
+                scatteredGems[i].gameObject.SetActive(true);
+            }
+            scatteredGemCount = count;
+        }
+
+        private void AdvanceGemScatter(float dt)
+        {
+            if (scatteredGemCount == 0) return;
+            gemScatterTime += dt;
+            if (gemScatterTime >= .8f)
+            {
+                ClearGemScatter();
+                return;
+            }
+
+            float t = gemScatterTime / .8f;
+            float height = 1.4f * Mathf.Abs(Mathf.Sin(t * 2f * Mathf.PI)) * (1f - t);
+            for (int i = 0; i < scatteredGemCount; i++)
+            {
+                float side = i % 2 == 0 ? -1f : 1f;
+                Vector3 offset = new Vector3(side * (1.4f + i * .28f) * t, height - .7f * t, (.7f - i * .58f) * t);
+                scatteredGems[i].SetLocalPositionAndRotation(gemScatterOrigin + offset, Quaternion.Euler(0f, t * 540f, side * t * 85f));
+            }
+        }
+
         public bool TryJump(float time) => jump.TryStart(time);
         public void Advance(RunSession session, float dt, bool reducedMotion, bool boostCamera = false, bool boostAura = false)
         {
+            AdvanceGemScatter(dt);
             if (boostAura) turboAura?.Advance(session.BoostActive, reducedMotion, dt, settings);
             else turboAura?.Clear();
             riderDistance = session.Distance;
@@ -260,9 +334,22 @@ namespace Lotba.Game
                         Hide(item);
                     if (session.IsProtected) continue;
                     item.ImpactTime = session.Elapsed;
-                    bool lostStreak = session.Streak > 0;
-                    long loss = session.Hit(item.Definition.Id);
-                    ImpactFeedback?.Invoke(loss, lostStreak);
+                    bool duringBoost = session.BoostActive;
+                    int previousGemsLost = session.GemsLost;
+                    session.Hit(item.Definition.Id);
+                    int gemsLost = session.GemsLost - previousGemsLost;
+                    if (duringBoost)
+                    {
+                        turboAura?.Clear();
+                        var position = worldCamera.transform.localPosition;
+                        position.z = cameraOrigin.z;
+                        worldCamera.transform.localPosition = position;
+                        cameraVelocity.z = 0f;
+                        SetFieldOfView(Mathf.Max(60f, referenceFieldOfView - settings.BoostCameraFieldOfView * boostCameraBlend));
+                        boostCameraBlend = 0f;
+                        ScatterGems(gemsLost);
+                    }
+                    ImpactFeedback?.Invoke(duringBoost);
                 }
             }
             foreach (TrackItem item in items)
@@ -289,7 +376,7 @@ namespace Lotba.Game
                 if (nextPatternDistance > spawnHorizon) break;
 
                 if (session.Telemetry != null && session.OfferDistance == 0f &&
-                    nextPatternDistance >= RunSession.OfferMilestoneMetres)
+                    nextPatternDistance >= session.NextDecisionDistance)
                 {
                     session.ScheduleSpeedOffer(nextPatternDistance + 4f);
                     nextPatternDistance += 16f;
@@ -301,15 +388,13 @@ namespace Lotba.Game
             }
             session.ShowSpeedOffer();
             float protection = session.ProtectionProgress;
-            // The blink rate rises from 1.25 to 2.75 cycles per second.
-            float blinkPhase = 1.1f * (1.25f * protection + .75f * protection * protection);
-            SetRiderImpactHidden(!reducedMotion && session.IsProtected && Mathf.Repeat(blinkPhase, 1f) < .28f);
+            // Keep the pulses brief and under three per second.
+            float blinkPhase = protection * 3f;
+            SetRiderImpactWhite(!reducedMotion && session.IsProtected && Mathf.Repeat(blinkPhase, 1f) < .14f);
             float boostTarget = session.BoostActive && !reducedMotion ? 1f : 0f;
             boostCameraBlend = reducedMotion || !boostCamera ? 0f :
                 Mathf.Lerp(boostCameraBlend, boostTarget, 1f - Mathf.Exp(-settings.BoostCameraBlendRate * dt));
-            Vector3 cameraTarget = cameraOrigin + (reducedMotion ? Vector3.zero : Vector3.right * (x * settings.CameraFollowStrength));
-            cameraTarget += Vector3.back * (settings.BoostCameraPullback * boostCameraBlend);
-            worldCamera.transform.localPosition = Vector3.SmoothDamp(worldCamera.transform.localPosition, cameraTarget, ref cameraVelocity, settings.CameraFollowTime, Mathf.Infinity, dt);
+            FollowRider(x, reducedMotion, dt);
             if (session.IsProtected && !reducedMotion) return;
             float pace = session.Speed - (session.BoostActive ? RunSession.BoostSpeed : 0f);
             float intensity = Mathf.InverseLerp(settings.InitialSpeed, settings.MaximumSpeed, pace);
@@ -318,14 +403,27 @@ namespace Lotba.Game
             SetFieldOfView(Mathf.Lerp(referenceFieldOfView, targetFieldOfView, 1f - Mathf.Exp(-10f * dt)));
         }
 
-        public void ClearImpactBlink() => SetRiderImpactHidden(false);
-
-        private void SetRiderImpactHidden(bool hidden)
+        private void FollowRider(float x, bool reducedMotion, float dt)
         {
-            if (riderHiddenByImpact == hidden) return;
-            riderHiddenByImpact = hidden;
-            foreach (Renderer visual in riderRenderers)
-                visual.forceRenderingOff = hidden;
+            Vector3 cameraTarget = cameraOrigin + (reducedMotion ? Vector3.zero : Vector3.right * (x * settings.CameraFollowStrength));
+            cameraTarget += Vector3.back * (settings.BoostCameraPullback * boostCameraBlend);
+            worldCamera.transform.localPosition = Vector3.SmoothDamp(worldCamera.transform.localPosition, cameraTarget, ref cameraVelocity, settings.CameraFollowTime, Mathf.Infinity, dt);
+        }
+
+        public void ClearImpactBlink() => SetRiderImpactWhite(false);
+
+        private void SetRiderImpactWhite(bool white)
+        {
+            if (riderImpactMaterial == null || riderImpactWhite == white) return;
+            riderImpactWhite = white;
+            Material[][] materials = white ? riderWhiteMaterials : riderMaterials;
+            for (int i = 0; i < riderRenderers.Length; i++)
+                riderRenderers[i].sharedMaterials = materials[i];
+        }
+
+        private void OnDestroy()
+        {
+            if (riderImpactMaterial != null) Destroy(riderImpactMaterial);
         }
         private float SpawnPattern(float distance, float riderDistance)
         {
@@ -508,7 +606,7 @@ namespace Lotba.Game
 
         private void UpdateLetterBeam(Vector3 letterPosition, float dt)
         {
-            Sprite sprite = settings.LetterBeamSprite;
+            Sprite sprite = pickupEffectsEnabled ? settings.LetterBeamSprite : null;
             if (sprite == null)
             {
                 if (letterBeam != null) letterBeam.enabled = false;
@@ -672,6 +770,7 @@ namespace Lotba.Game
         }
         private void EmitPickupFlash(Vector3 position, PickupFlashSettings flash)
         {
+            if (!pickupEffectsEnabled) return;
             if (flash.Sprite == null) return;
             if (gemFlash == null)
             {

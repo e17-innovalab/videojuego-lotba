@@ -16,6 +16,7 @@ MonoBehaviour:
   initialSpeed: 18
   maximumSpeed: 30
   accelerationTime: 95
+  riderImpactShader: {fileID: 4800000, guid: d0754c08401847a0b4258c29d03d1d75, type: 3}
   turboAuraShader: {fileID: 4800000, guid: c60303daed4c47cbba59a4efa5c969c3, type: 3}
   turboAuraTexture: {fileID: 2800000, guid: cf4b287221636c642a8d4fcb4284a493, type: 3}
   turboAuraIntensity: 0.72
@@ -135,7 +136,7 @@ MonoBehaviour:
     m_RotationOrder: 4
   cameraFollowTime: 0.13
   cameraFollowStrength: 0.95
-  firstLevelGems: 8
-  extraGemsPerLevel: 3
-  streakDrainPerSecond: 0.025
-  levelUpReserve: 0.3
+  firstMultiplierGems: 200
+  extraGemsPerMultiplier: 100
+  firstDecisionMetres: 600
+  extraMetresPerDecision: 300

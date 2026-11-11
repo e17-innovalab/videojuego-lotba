@@ -107,9 +107,15 @@ namespace Lotba.Game
             AddText(content, "RESUMEN", 23f, true);
             AddText(content, $"{Ending(result.ending)}\n{result.score} puntos · {result.gems} gemas · {result.collisions} choques\n" +
                 $"{result.distanceMetres:0.0} m · {result.timeSeconds:0.0} s activos · {result.peakSpeedKmh:0.0} km/h máx.\n" +
-                $"Mejor racha: {result.bestStreak} · Mejor multiplicador: ×{result.bestMultiplier}", 19f);
+                (report.schemaVersion >= 5 ? $"Multiplicador final: ×{result.bestMultiplier}" :
+                    $"Mejor {(report.schemaVersion >= 4 ? "combo" : "racha")}: {result.bestStreak} · Mejor multiplicador: ×{result.bestMultiplier}"), 19f);
+            if (report.schemaVersion >= 5)
+                AddText(content, $"Ofertas mostradas: {result.decisionsShown} · Ritmo mantenido: {result.decisionsKept}", 19f);
             if (report.schemaVersion >= 2)
                 AddText(content, $"Aceleraciones voluntarias: {result.voluntaryBoosts} · Gemas extra: {result.bonusGems}", 19f);
+            if (report.schemaVersion >= 3)
+                AddText(content, $"Gemas recogidas: {result.gems} · Perdidas: {result.gemsLost} · Saldo: {result.gemBalance}\n" +
+                    $"Choques con impulso: {result.boostCollisions}", 19f);
             AddText(content, $"Ruta: {report.route}\nVersión: {report.gameVersion} · Esquema: {report.schemaVersion}\n" +
                 $"Semilla: {report.seed} · Tiempo previsto: {report.durationSeconds:0} s\nPartida: {report.runId}", 17f);
         }

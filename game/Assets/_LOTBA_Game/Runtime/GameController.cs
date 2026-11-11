@@ -33,6 +33,7 @@ namespace Lotba.Game
             world.Initialize(settings); world.ResetTrack(); session = new RunSession(settings, world.Route);
             if (IsHighQuality) world.InitializeTurboAura();
             world.ConfigureDepthBend(IsHighQuality);
+            world.ConfigurePickupEffects(UseBoostCamera);
             hud.StartRequested += RequestStart; hud.BrakeRequested += RequestBrake;
             hud.PauseRequested += RequestPause; hud.MenuRequested += RequestMenu;
             hud.SoundRequested += ToggleSound; hud.SettingsRequested += OpenSettings;
@@ -115,7 +116,10 @@ namespace Lotba.Game
                 audioFeedback.Stop();
                 world.ClearImpactBlink();
                 world.ClearTurboAura();
+                world.ClearGemScatter();
             }
+            devices.UpdateBoostFeedback(session.State == RunState.Running
+                ? session.BoostProgress * RunSession.BoostSeconds : 0f);
             speedChoiceRequested = null;
             startRequested = brakeRequested = jumpRequested = pauseRequested = menuRequested = false; laneRequested = 0;
             hud.Render(session, settings, muted, devices, IsHighQuality);
@@ -147,11 +151,10 @@ namespace Lotba.Game
             audioFeedback.PlayGemPickup(airborneNote);
             devices.Feedback(false);
         }
-        private void OnImpact(long loss, bool lostStreak)
+        private void OnImpact(bool duringBoost)
         {
-            audioFeedback.PlayCollision(session.BoostActive);
-            devices.Feedback(true);
-            hud.ShowImpact(loss, lostStreak);
+            audioFeedback.PlayCollision(duringBoost);
+            devices.Feedback(true, duringBoost);
         }
         private void OnLetterCollected(string word, bool[] collected, bool complete)
         {
@@ -209,6 +212,7 @@ namespace Lotba.Game
             qualityChoice = choice;
             if (session != null)
             {
+                world.ConfigurePickupEffects(UseBoostCamera);
                 if (IsHighQuality) world.InitializeTurboAura();
                 else world.ClearTurboAura();
             }

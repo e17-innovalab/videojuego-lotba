@@ -7,7 +7,7 @@ namespace Lotba.Game
     [Serializable]
     public sealed class RunTelemetry
     {
-        public int schemaVersion = 2;
+        public int schemaVersion = 5;
         public string runId = Guid.NewGuid().ToString("N");
         public string gameVersion = Application.version;
         public string route;
@@ -32,9 +32,11 @@ namespace Lotba.Game
         public int lane;
         public long score;
         public long scoreDelta;
-        public int streakBefore, streak;
+        public int gemsCollected, gemBalance, gemDelta;
+        public bool duringBoost;
         public int multiplierBefore, multiplier;
-        public float streakProgressBefore, streakProgress;
+        public float multiplierProgress;
+        public int decisionNumber;
     }
 
     [Serializable]
@@ -45,5 +47,7 @@ namespace Lotba.Game
         public long score;
         public int gems, collisions, bestStreak, bestMultiplier;
         public int voluntaryBoosts, bonusGems;
+        public int decisionsShown, decisionsKept;
+        public int gemsLost, gemBalance, boostCollisions;
     }
 }

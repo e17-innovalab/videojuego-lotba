@@ -14,21 +14,23 @@ namespace Lotba.Game
         [SerializeField] private TMPro.TMP_Text soundLabel, vibrationLabel;
         [SerializeField] private UnityEngine.UI.Button qualityButton;
         [SerializeField] private TMPro.TMP_Text qualityLabel;
-        [SerializeField] private TMPro.TMP_Text score, gems, streak, multiplier, remaining, resultTitle, resultStats;
-        [SerializeField] private UnityEngine.UI.Image streakFill;
+        [SerializeField] private TMPro.TMP_Text score, gems, multiplier, resultTitle, resultStats;
+        [SerializeField] private Sprite flameOutline, flameFill;
         [SerializeField] private SpeedGauge gauge;
         [SerializeField] private RectTransform wordBanner;
         [SerializeField] private TMPro.TMP_Text wordLabel;
         private Vector2 wordBannerVisiblePosition;
         private float wordBannerStarted, wordBannerUntil;
         private float multiplierPulseUntil;
-        private TMPro.TextMeshProUGUI impactLabel;
-        private float impactUntil;
+        private float scorePulseUntil;
+        private long previousScore;
         private RectTransform speedOffer;
         private BoostSpeedLines boostSpeedLines;
         private RectTransform milestoneBar;
         private RectTransform milestoneFill;
+        private UnityEngine.UI.Image multiplierFill;
         private TMPro.TextMeshProUGUI milestoneLabel;
+        private RectTransform boostTimeFill;
         private int previousMultiplier = 1;
         public bool SettingsOpen { get; private set; }
         private RunTelemetryPanel telemetryPanel;
@@ -42,19 +44,6 @@ namespace Lotba.Game
             ApplyIdentity();
             wordBannerVisiblePosition = wordBanner.anchoredPosition;
             wordBanner.gameObject.SetActive(false);
-            var impactObject = new GameObject("Impact feedback", typeof(RectTransform), typeof(TMPro.TextMeshProUGUI));
-            var impactRect = (RectTransform)impactObject.transform;
-            impactRect.SetParent(raceHud.transform, false);
-            impactRect.anchorMin = impactRect.anchorMax = new Vector2(.5f, .72f);
-            impactRect.sizeDelta = new Vector2(320f, 60f);
-            impactLabel = impactObject.GetComponent<TMPro.TextMeshProUGUI>();
-            impactLabel.font = score.font;
-            impactLabel.fontSize = 24f;
-            impactLabel.fontStyle = TMPro.FontStyles.Bold;
-            impactLabel.alignment = TMPro.TextAlignmentOptions.Center;
-            impactLabel.color = new Color32(255, 223, 145, 255);
-            impactLabel.raycastTarget = false;
-            impactObject.SetActive(false);
             var linesObject = new GameObject("Boost speed lines", typeof(RectTransform), typeof(CanvasRenderer), typeof(BoostSpeedLines));
             var linesRect = (RectTransform)linesObject.transform;
             linesRect.SetParent(raceHud.transform, false);
@@ -127,11 +116,38 @@ namespace Lotba.Game
                 Label("Detalle", card, new Vector2(.07f, .08f), new Vector2(.93f, .57f), description, 17f);
             }
 
-            milestoneBar = Region("Hito de velocidad", raceHud.transform, new Vector2(.22f, .74f), new Vector2(.78f, .8f));
-            Background(milestoneBar, new Color32(17, 29, 43, 235));
-            milestoneFill = Region("Progreso", milestoneBar, new Vector2(.04f, .12f), new Vector2(.96f, .25f));
+            milestoneBar = Region("Próxima decisión", raceHud.transform, new Vector2(.035f, .44f), new Vector2(.087f, .72f));
+            var track = Region("Carril de progreso", milestoneBar, Vector2.zero, new Vector2(1f, .82f));
+            Background(track, new Color32(17, 29, 43, 235));
+            milestoneFill = Region("Progreso", track, new Vector2(.12f, .02f), new Vector2(.88f, .98f));
             Background(milestoneFill, new Color32(107, 221, 195, 255));
-            milestoneLabel = Label("Estado del hito", milestoneBar, new Vector2(.03f, .27f), new Vector2(.97f, .97f), "", 17f);
+            var cardsIcon = Region("Icono de tres cartas", milestoneBar, new Vector2(-.28f, .87f), new Vector2(1.28f, 1f));
+            for (int i = -1; i <= 1; i++)
+            {
+                var card = Region("Carta", cardsIcon, new Vector2(.27f + .18f * i, .1f), new Vector2(.73f + .18f * i, .9f));
+                card.localRotation = Quaternion.Euler(0f, 0f, -i * 19f);
+                Background(card, new Color32(145, 195, 217, 255));
+                Background(Region("Centro", card, new Vector2(.16f, .12f), new Vector2(.84f, .88f)), new Color32(28, 54, 72, 255));
+            }
+            cardsIcon.GetChild(1).SetAsLastSibling();
+            milestoneLabel = Label("Indicador de impulso", raceHud.transform, new Vector2(.28f, .69f), new Vector2(.72f, .74f), "IMPULSO · GEMAS ×2", 17f);
+            var boostTrack = Region("Tiempo de impulso", milestoneLabel.transform, new Vector2(.12f, 0f), new Vector2(.88f, .09f));
+            Background(boostTrack, new Color32(17, 29, 43, 235));
+            boostTimeFill = Region("Tiempo restante", boostTrack, Vector2.zero, Vector2.one);
+            Background(boostTimeFill, new Color32(107, 221, 195, 255));
+            milestoneLabel.gameObject.SetActive(false);
+
+            Transform badge = multiplier.transform.parent;
+            var flameRegion = Region("Fuego", badge, new Vector2(.05f, .06f), new Vector2(.49f, .94f));
+            multiplierFill = Background(Region("Relleno", flameRegion, Vector2.zero, Vector2.one), new Color32(255, 159, 45, 255));
+            multiplierFill.sprite = flameFill;
+            multiplierFill.preserveAspect = true;
+            multiplierFill.type = UnityEngine.UI.Image.Type.Filled;
+            multiplierFill.fillMethod = UnityEngine.UI.Image.FillMethod.Vertical;
+            multiplierFill.fillAmount = 0f;
+            var outline = Background(Region("Contorno", flameRegion, Vector2.zero, Vector2.one), new Color32(255, 221, 164, 255));
+            outline.sprite = flameOutline;
+            outline.preserveAspect = true;
 
             speedOffer = Region("Tarjetas de velocidad", raceHud.transform, new Vector2(.04f, .35f), new Vector2(.96f, .66f));
             Background(speedOffer, new Color32(16, 27, 39, 245));
@@ -177,18 +193,13 @@ namespace Lotba.Game
         public void ResetView()
         {
             multiplierPulseUntil = 0; previousMultiplier = 1; SettingsOpen = false;
-            impactUntil = 0f;
+            scorePulseUntil = 0f;
+            previousScore = 0;
             telemetryPanel?.SetReport(null);
             wordBannerUntil = 0;
             if (wordBanner != null) wordBanner.gameObject.SetActive(false);
         }
 
-        public void ShowImpact(long loss, bool lostStreak)
-        {
-            impactLabel.text = loss > 0 ? $"−{loss} puntos" : "Choque";
-            if (lostStreak) impactLabel.text += "\nRacha perdida";
-            impactUntil = Time.unscaledTime + 1.15f;
-        }
 
         public void ShowWordProgress(string word, bool[] collected, bool complete)
         {
@@ -240,27 +251,27 @@ namespace Lotba.Game
             resultPanel.SetActive(session.State == RunState.Finished && !TelemetryOpen);
             raceHud.SetActive(active); controls.SetActive(active);
             if (boostSpeedLines != null) boostSpeedLines.Render(settings, session, showBoostLines);
-            if (impactLabel != null)
-                impactLabel.gameObject.SetActive(running && Time.unscaledTime < impactUntil);
             RenderWordBanner(running);
             pause.interactable = !SettingsOpen && !session.OfferPending;
             if (speedOffer != null)
             {
                 speedOffer.gameObject.SetActive(running && session.OfferPending);
-                milestoneBar.gameObject.SetActive(running && !session.OfferPending && (!session.OfferResolved || session.BoostActive));
-                float progress = session.BoostActive ? session.BoostProgress : session.OfferProgress;
-                milestoneFill.anchorMax = new Vector2(Mathf.Lerp(.04f, .96f, progress), .25f);
-                milestoneLabel.text = session.BoostActive ? "IMPULSO · GEMAS ×2" : "PRÓXIMA DECISIÓN · DISTANCIA";
+                milestoneBar.gameObject.SetActive(active);
+                milestoneFill.anchorMax = new Vector2(.88f, Mathf.Lerp(.02f, .98f, session.OfferProgress));
+                milestoneLabel.gameObject.SetActive(running && session.BoostActive);
+                boostTimeFill.anchorMax = new Vector2(session.BoostProgress, 1f);
             }
-            score.text = session.Score.ToString(); gems.text = session.GemBasePoints.ToString();
-            streak.text = $"RACHA {session.Streak}"; multiplier.text = $"×{session.Multiplier}";
+            if (session.Score > previousScore) scorePulseUntil = Time.unscaledTime + .24f;
+            previousScore = session.Score;
+            float scorePulse = running ? Mathf.Clamp01((scorePulseUntil - Time.unscaledTime) / .24f) : 0f;
+            score.rectTransform.localScale = Vector3.one * (1f + Mathf.Sin(scorePulse * Mathf.PI) * .25f);
+            score.text = session.Score.ToString(); gems.text = $"{session.GemBalance} ×";
+            multiplier.text = $"×{session.Multiplier}";
+            if (multiplierFill != null) multiplierFill.fillAmount = session.MultiplierProgress;
             if (session.Multiplier > previousMultiplier) multiplierPulseUntil = Time.unscaledTime + .3f;
             previousMultiplier = session.Multiplier;
             float pulse = running ? Mathf.Clamp01((multiplierPulseUntil - Time.unscaledTime) / .3f) : 0;
             multiplier.transform.parent.localScale = Vector3.one * (1 + Mathf.Sin(pulse * Mathf.PI) * .18f);
-            streakFill.fillAmount = session.StreakProgress;
-            int remainingSeconds = Mathf.CeilToInt(session.Remaining);
-            remaining.text = $"{remainingSeconds / 60}:{remainingSeconds % 60:00}";
             gauge.SetSpeed(session.Speed, settings.InitialSpeed, settings.MaximumSpeed);
             soundLabel.text = muted ? "SONIDO: NO" : "SONIDO: SÍ";
             vibrationButton.interactable = devices.VibrationAvailable;
@@ -268,9 +279,7 @@ namespace Lotba.Game
             if (session.State == RunState.Finished)
             {
                 resultTitle.text = session.Ending == RunEnding.Brake ? "VOS MARCASTE\nEL FINAL" : "RECORRIDO\nCOMPLETADO";
-                resultStats.text = $"<size=54><color=#FFD14C>{session.Score}</color></size>\nPUNTOS\n\n{session.Gems} gemas · {session.GemBasePoints} pts base\n{session.Distance:0} m · {session.Elapsed:0} s  ·  {SpeedGauge.DisplaySpeed(session.PeakSpeed):0} km/h máx.\n\nMejor racha: {session.BestStreak}  ·  ×{session.BestMultiplier}\nChoques: {session.Collisions}";
-                if (session.VoluntaryBoosts > 0)
-                    resultStats.text += $"\nAceleraciones elegidas: {session.VoluntaryBoosts} · Gemas extra: {session.BonusGems}";
+                resultStats.text = $"<size=54><color=#FFD14C>{session.Score}</color></size>\nPUNTOS\n\nGemas: {session.Gems} recogidas · {session.GemsLost} perdidas · {session.GemBalance} saldo\n{session.Distance:0} m · {session.Elapsed:0} s  ·  {SpeedGauge.DisplaySpeed(session.PeakSpeed):0} km/h máx.\n\nMultiplicador: ×{session.Multiplier}\nChoques: {session.Collisions} · {session.BoostCollisions} con impulso\nDecisiones: {session.DecisionsKept} mantener · {session.VoluntaryBoosts} acelerar";
             }
         }
     }

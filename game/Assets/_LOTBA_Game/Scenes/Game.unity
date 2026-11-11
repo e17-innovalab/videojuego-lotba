@@ -1575,6 +1575,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 29, guid: f0b10b17edb6a2948a61becb1af1e219, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.7994428
+      objectReference: {fileID: 0}
+    - target: {fileID: 29, guid: f0b10b17edb6a2948a61becb1af1e219, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0.6007423
+      objectReference: {fileID: 0}
     - target: {fileID: 107927031759936298, guid: f0b10b17edb6a2948a61becb1af1e219, type: 3}
       propertyPath: m_Name
       value: Game UI
@@ -1592,6 +1600,34 @@ PrefabInstance:
       value: 4294114041
       objectReference: {fileID: 0}
     - target: {fileID: 1062056654791103194, guid: f0b10b17edb6a2948a61becb1af1e219, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
+    - target: {fileID: 1146384927191790069, guid: f0b10b17edb6a2948a61becb1af1e219, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1921438446395555214, guid: f0b10b17edb6a2948a61becb1af1e219, type: 3}
+      propertyPath: m_text
+      value: 45
+      objectReference: {fileID: 0}
+    - target: {fileID: 1921438446395555214, guid: f0b10b17edb6a2948a61becb1af1e219, type: 3}
+      propertyPath: m_fontSize
+      value: 25
+      objectReference: {fileID: 0}
+    - target: {fileID: 1921438446395555214, guid: f0b10b17edb6a2948a61becb1af1e219, type: 3}
+      propertyPath: m_fontSizeBase
+      value: 25
+      objectReference: {fileID: 0}
+    - target: {fileID: 1921438446395555214, guid: f0b10b17edb6a2948a61becb1af1e219, type: 3}
+      propertyPath: m_overflowMode
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1921438446395555214, guid: f0b10b17edb6a2948a61becb1af1e219, type: 3}
+      propertyPath: m_fontColor32.rgba
+      value: 4294114041
+      objectReference: {fileID: 0}
+    - target: {fileID: 1921438446395555214, guid: f0b10b17edb6a2948a61becb1af1e219, type: 3}
       propertyPath: m_TextStyleHashCode
       value: -1183493901
       objectReference: {fileID: 0}
@@ -1684,12 +1720,20 @@ PrefabInstance:
       value: -1183493901
       objectReference: {fileID: 0}
     - target: {fileID: 3843262112591517653, guid: f0b10b17edb6a2948a61becb1af1e219, type: 3}
+      propertyPath: m_overflowMode
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 3843262112591517653, guid: f0b10b17edb6a2948a61becb1af1e219, type: 3}
       propertyPath: m_fontColor32.rgba
       value: 4294114041
       objectReference: {fileID: 0}
     - target: {fileID: 3843262112591517653, guid: f0b10b17edb6a2948a61becb1af1e219, type: 3}
       propertyPath: m_TextStyleHashCode
       value: -1183493901
+      objectReference: {fileID: 0}
+    - target: {fileID: 4228891774475473495, guid: f0b10b17edb6a2948a61becb1af1e219, type: 3}
+      propertyPath: m_overflowMode
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 4228891774475473495, guid: f0b10b17edb6a2948a61becb1af1e219, type: 3}
       propertyPath: m_fontColor32.rgba
@@ -1703,6 +1747,14 @@ PrefabInstance:
       propertyPath: worldCamera
       value: 
       objectReference: {fileID: 265114052}
+    - target: {fileID: 6002033664560379141, guid: f0b10b17edb6a2948a61becb1af1e219, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8034349246650696209, guid: f0b10b17edb6a2948a61becb1af1e219, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8683877809164623699, guid: f0b10b17edb6a2948a61becb1af1e219, type: 3}
       propertyPath: m_fontColor32.rgba
       value: 4294114041

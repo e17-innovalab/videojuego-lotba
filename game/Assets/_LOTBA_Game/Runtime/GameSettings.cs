@@ -10,6 +10,8 @@ namespace Lotba.Game
         [SerializeField, Min(1f)] private float initialSpeed = 18f;
         [SerializeField, Min(1f)] private float maximumSpeed = 30f;
         [SerializeField, Min(1f)] private float accelerationTime = 95f;
+        [SerializeField] private Shader riderImpactShader;
+        public Shader RiderImpactShader => riderImpactShader;
         [Header("Boost effects")]
         [SerializeField] private Shader turboAuraShader;
         [SerializeField] private Texture2D turboAuraTexture;
@@ -107,15 +109,15 @@ namespace Lotba.Game
         [SerializeField, Range(.5f, 1f)] private float cameraFollowStrength = .95f;
         public float CameraFollowTime => cameraFollowTime;
         public float CameraFollowStrength => cameraFollowStrength;
-        [Header("Streak charge and decay")]
-        [SerializeField, Min(2f)] private float firstLevelGems = 8f;
-        [SerializeField, Min(.1f)] private float extraGemsPerLevel = 3f;
-        [SerializeField, Range(.005f, .15f)] private float streakDrainPerSecond = .025f;
-        [SerializeField, Range(.1f, .5f)] private float levelUpReserve = .3f;
-        public float FirstLevelGems => firstLevelGems;
-        public float ExtraGemsPerLevel => extraGemsPerLevel;
-        public float StreakDrainPerSecond => streakDrainPerSecond;
-        public float LevelUpReserve => levelUpReserve;
+        [Header("Progression")]
+        [SerializeField, Min(2)] private int firstMultiplierGems = 200;
+        [SerializeField, Min(1)] private int extraGemsPerMultiplier = 100;
+        [SerializeField, Min(200f)] private float firstDecisionMetres = 600f;
+        [SerializeField, Min(1f)] private float extraMetresPerDecision = 300f;
+        public int FirstMultiplierGems => firstMultiplierGems;
+        public int ExtraGemsPerMultiplier => extraGemsPerMultiplier;
+        public float FirstDecisionMetres => firstDecisionMetres;
+        public float ExtraMetresPerDecision => extraMetresPerDecision;
         public float Duration => duration;
         public float InitialSpeed => initialSpeed;
         public float MaximumSpeed => Mathf.Max(initialSpeed, maximumSpeed);
