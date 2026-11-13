@@ -12,6 +12,7 @@ namespace Lotba.Game
         private const int Behind = 2, MinimumVisibleModules = 14;
         private readonly Dictionary<RoadModule, Queue<RoadModule>> pools = new Dictionary<RoadModule, Queue<RoadModule>>();
         private readonly List<LandmarkView> landmarks = new List<LandmarkView>();
+        private readonly List<BackdropView> backdrops = new List<BackdropView>();
         private Slot[] slots;
         private Shader bendShader;
         private bool bendEnabled;
@@ -21,7 +22,8 @@ namespace Lotba.Game
         private readonly Dictionary<Renderer, Material[]> bendSources = new Dictionary<Renderer, Material[]>();
         private static readonly int DepthBend = Shader.PropertyToID("_LotbaDepthBend");
         private sealed class Slot { public int Index = int.MinValue; public RoadModule Source, View; }
-        private sealed class LandmarkView { public Transform View; public float Start, Offset; }
+        private sealed class LandmarkView { public Transform View; public float Start, Offset, Lateral; public bool Pass; }
+        private sealed class BackdropView { public Transform View; public float Start, PassDistance; public Vector2 ExitInterval; }
         public RouteDefinition Route => route;
         private bool UsesLinearFog => RenderSettings.fog && RenderSettings.fogMode == FogMode.Linear;
         public float VisibilityDistance => UsesLinearFog
@@ -49,8 +51,9 @@ namespace Lotba.Game
             for (int i = 0; i < slots.Length; i++) slots[i] = new Slot();
             var capacity = new Dictionary<RoadModule, int>();
             float start = 0;
-            foreach (var section in route.Sections)
+            for (int sectionIndex = 0; sectionIndex < route.Sections.Length; sectionIndex++)
             {
+                RouteSection section = route.Sections[sectionIndex];
                 RoadModule[] modules = section.Map.Modules;
                 foreach (RoadModule prefab in modules)
                 {
@@ -63,7 +66,27 @@ namespace Lotba.Game
                 {
                     Transform landmark = Instantiate(section.Map.Landmark, transform).transform;
                     RegisterBendRenderers(landmark);
-                    landmarks.Add(new LandmarkView { View = landmark, Start = start, Offset = section.Map.LandmarkDistance });
+                    landmarks.Add(new LandmarkView { View = landmark, Start = start, Offset = section.Map.LandmarkDistance,
+                        Lateral = section.LandmarkLateralOffset, Pass = section.PassLandmark });
+                }
+                if (section.Map.ZoneBackdrop != null)
+                {
+                    Transform view = Instantiate(section.Map.ZoneBackdrop, transform).transform;
+                    view.localPosition = Vector3.zero;
+                    float farthest = 0f;
+                    foreach (Renderer renderer in view.GetComponentsInChildren<Renderer>())
+                    {
+                        Bounds bounds = renderer.bounds;
+                        float center = transform.InverseTransformPoint(bounds.center).z;
+                        Vector3 extent = bounds.extents;
+                        float depth = Mathf.Abs(transform.InverseTransformVector(Vector3.right * extent.x).z)
+                            + Mathf.Abs(transform.InverseTransformVector(Vector3.up * extent.y).z)
+                            + Mathf.Abs(transform.InverseTransformVector(Vector3.forward * extent.z).z);
+                        farthest = Mathf.Max(farthest, center + depth);
+                    }
+                    backdrops.Add(new BackdropView { View = view, Start = start,
+                        ExitInterval = route.BackdropExitInterval(sectionIndex, start),
+                        PassDistance = farthest + 24f });
                 }
                 start += section.ModuleCount * RoadStandard.ModuleLength;
             }
@@ -114,7 +137,25 @@ namespace Lotba.Game
                 slot.View.transform.localPosition = new Vector3(0, 0, index * RoadStandard.ModuleLength - distance);
             }
             foreach (var landmark in landmarks)
-                landmark.View.localPosition = new Vector3(0, 0, Mathf.Max(landmark.Offset, landmark.Start + landmark.Offset - distance));
+            {
+                float z = landmark.Start + landmark.Offset - distance;
+                landmark.View.localPosition = new Vector3(landmark.Lateral, 0, landmark.Pass ? z : Mathf.Max(landmark.Offset, z));
+            }
+            foreach (var backdrop in backdrops)
+            {
+                const float blendDistance = 48f;
+                float approach = Mathf.Clamp01((distance - backdrop.Start + blendDistance) / blendDistance);
+                float travelled = Mathf.Max(0f, distance - backdrop.Start);
+                float parallax = Mathf.Min(20f, travelled * .04f);
+                float departure = 0f;
+                if (distance > backdrop.ExitInterval.x)
+                    departure = Mathf.InverseLerp(backdrop.ExitInterval.x, backdrop.ExitInterval.y, distance);
+                float entryOffset = Mathf.SmoothStep(worldCamera.farClipPlane, 0f, approach);
+                float passOffset = backdrop.PassDistance * departure;
+                backdrop.View.localPosition = Vector3.forward * (entryOffset - parallax - passOffset);
+                bool visible = approach > 0f && departure < 1f;
+                if (backdrop.View.gameObject.activeSelf != visible) backdrop.View.gameObject.SetActive(visible);
+            }
             ApplyEnvironment(distance);
         }
 

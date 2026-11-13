@@ -18,17 +18,16 @@ No hay que ejecutar una actualización ni combinar meshes. Una modificación gua
 | Mode | Campos | Resultado |
 |---|---|---|
 | Route | Route | Recorre una o varias zonas, con las transiciones incluidas en el recorrido |
+| Zone | Zone | Recorre todos los módulos de la zona en el orden del asset y vuelve al primero |
 | Module | Module Environment y Module | Repite solamente ese módulo; Module Environment aporta suelo, ambiente, hito y obstáculos |
 
-Module sirve para ver el borde final contra el inicial. Para comprobar vecinos diferentes o transiciones, elegir Route.
+Usá Module para unir una pieza consigo misma, Zone para comprobar vecinos distintos del mismo barrio y Route para revisar la entrada y la salida de una transición.
 
 ### Revisar un solo barrio
 
-En Route, asigná uno de los recorridos individuales de `Maps/Routes/Definitions`: **Route_LaBoca** o **Route_Obelisco**. Cada uno tiene una sola sección con Module Count = 0; repite el barrio indefinidamente y no necesita transición.
+Elegí **Zone** y asigná el `MapDefinition` del barrio, por ejemplo `Zone_ReservaEcologica`. Entrá en Play para ver todos sus módulos, incluido el empalme del último con el primero. ArtPreview crea una ruta temporal en memoria.
 
-Para una zona nueva, creá un RouteDefinition con una sección, asigná su MapDefinition, dejá Module Count = 0 y Transition desactivado. Asigná ese recorrido a la prueba. Ver [Crear recorridos](NewMaps.md).
-
-**Route_LaBocaToObelisco** permite revisar varios barrios y el enlace entre ellos.
+Usá **Route_LaBocaToObelisco** en modo Route para revisar el trayecto de La Boca al Obelisco, incluido el giro de la transición y el cambio de ambiente.
 
 **Speed** usa metros por segundo: 22 m/s equivalen a 79,2 km/h. Se puede ajustar durante Play. Show Rider, Show Gems y Show Obstacles se pueden cambiar durante Play, incluso con la reproducción pausada. Afectan también a los objetos presentes; los elementos ocultos siguen simulándose y reciclando sus instancias. Permiten limpiar la imagen para estudiar fachadas o revisar la escala con tráfico. Detener y volver a entrar en Play después de cambiar el modo o las referencias de contenido.
 
@@ -59,7 +58,7 @@ Para comparar el encuadre, usar Game en orientación vertical. La cámara mantie
 
 Guardar los **prefabs y perfiles**, fuera de Play. Los objetos que aparecen durante la revisión son instancias recicladas: moverlos no cambia el archivo original. Los cambios hechos en la escena o en componentes durante Play normalmente se pierden al salir.
 
-Los assets pueden conservar cambios incluso durante Play; por eso se recomienda detener la revisión antes de editar. En Module, los perfiles de revisión se crean en memoria y no generan archivos nuevos. En Route, la prueba utiliza el asset de recorrido asignado; editar ese asset afecta a todas las escenas que lo referencian.
+Los assets pueden conservar cambios incluso durante Play. Detené la revisión antes de editar. Module y Zone usan rutas temporales en memoria. Route usa el asset asignado y editarlo afecta a todas las escenas que lo referencian.
 
 ## Revisar una transición antes
 
@@ -76,7 +75,7 @@ Así se llega rápido al enlace sin modificar el recorrido del producto. Revisar
 |---|---|
 | No aparece el cambio | Se editó el prefab correcto y está en Modules; reiniciar Play |
 | No arranca | Mensaje de validación del Inspector y Console |
-| No se ve una zona nueva | Asignarla a una sección de un recorrido de revisión y elegir ese recorrido en Route |
+| No se ve una zona nueva | Elegir Zone, asignar su MapDefinition y reiniciar Play |
 | Cambia todo el barrio | Se editó un visual o material compartido |
 | Se pierde una edición | Se modificó una instancia durante Play en vez del prefab fuente |
 | Se ven objetos por debajo del suelo | Escala, pivote y posición del visual bajo Art |

@@ -20,12 +20,17 @@ Duplicar un módulo mantiene referencias a sus visuales y materiales. Duplicarlo
 3. Usá **Create > LOTBA > Maps > Map definition** en la carpeta de la zona.
 4. Completá Display Name, Modules, Obstacles, Sky y Fog. En **Road Material** de este archivo MapDefinition, asigná el material que querés para el piso del barrio. Unity lo aplica a Surface durante la partida y en ArtPreview. Buscá `Road_` en el selector de materiales.
 5. Revisá la ayuda y los errores del Inspector.
-6. Creá un RouteDefinition con una sola sección: Map = la zona nueva, Module Count = 0 y Transition desactivado.
-7. Abrí ArtPreview, elegí Route y asigná ese recorrido. Entrá en Play.
+6. Abrí ArtPreview, elegí **Zone**, asigná el MapDefinition nuevo y entrá en Play.
 
 No hace falta crear una escena propia, agregar código ni registrar la zona en un menú.
 
 ## Agregar o modificar un hito
+
+Usá **Zone Backdrop** del MapDefinition para fondos que acompañan a todo un tramo, como el skyline de Puerto Madero. En la sección de ruta que contiene el fondo, elegí **Backdrop Exit Section**. **Current Section** lo retira durante la propia sección. **Next Transition** mantiene el paralaje durante el barrio y lo retira durante la transición inmediata. **Backdrop Exit Range** define inicio y fin como fracciones de esa sección. Reserva → La Boca usa **Next Transition** y el rango completo (0 a 1). Si cambia la longitud del tramo, la salida se ajusta automáticamente. En una sección infinita, el fondo permanece con paralaje.
+
+Podés ensanchar el paisaje lateral bajo **Art** para sumar lagunas, senderos secundarios o arboledas a distintas distancias. Conservá los 12 m longitudinales, los conectores, la pista de 9 m y la escala del módulo raíz. Alineá el perfil lateral en los bordes que deban empalmar. Revisá los extremos en modo Zone y los cambios de ancho entre barrios en modo Route.
+
+Para pasar un hito, activá **Pass Landmark** en su sección de ruta y ajustá **Landmark Lateral Offset** para que quede fuera de la pista. **Landmark Distance** define cuántos metros desde el inicio de la sección está el hito. Probá la aproximación y la salida en modo Route.
 
 Un hito es un prefab que sirve de referencia visual al frente del recorrido, como el monumento del Obelisco. Se asigna por zona y se instancia una vez por cada sección que lo usa.
 

@@ -75,7 +75,11 @@ namespace Lotba.Game
                 hud.Render(session, settings, muted, devices, IsHighQuality);
                 return;
             }
-            if (startRequested && (session.State == RunState.Ready || session.State == RunState.Finished))
+            if (startRequested && session.State == RunState.Ready)
+            {
+                session.Start();
+            }
+            else if (startRequested && session.State == RunState.Finished)
             {
                 ResetRun(true);
             }

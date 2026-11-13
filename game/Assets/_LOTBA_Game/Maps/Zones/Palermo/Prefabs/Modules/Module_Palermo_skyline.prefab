@@ -1,0 +1,1769 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1000
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1001}
+  - component: {fileID: 1004}
+  m_Layer: 0
+  m_Name: Module_Palermo_skyline
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1001
+Transform:
+  m_GameObject: {fileID: 1000}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 1011}
+  - {fileID: 1021}
+  - {fileID: 1031}
+  m_Father: {fileID: 0}
+--- !u!1 &1010
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1011}
+  m_Layer: 0
+  m_Name: Entry
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1011
+Transform:
+  m_GameObject: {fileID: 1010}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 1001}
+--- !u!1 &1020
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1021}
+  m_Layer: 0
+  m_Name: Exit
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1021
+Transform:
+  m_GameObject: {fileID: 1020}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 12}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 1001}
+--- !u!1 &1030
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1031}
+  m_Layer: 0
+  m_Name: Art
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1031
+Transform:
+  m_GameObject: {fileID: 1030}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 1041}
+  - {fileID: 1051}
+  m_Father: {fileID: 1001}
+--- !u!1 &1040
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1041}
+  m_Layer: 0
+  m_Name: Terreno
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1041
+Transform:
+  m_GameObject: {fileID: 1040}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 1061}
+  - {fileID: 1071}
+  - {fileID: 1081}
+  m_Father: {fileID: 1031}
+--- !u!1 &1050
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1051}
+  m_Layer: 0
+  m_Name: Elementos
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1051
+Transform:
+  m_GameObject: {fileID: 1050}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 1091}
+  - {fileID: 1101}
+  - {fileID: 1111}
+  - {fileID: 1121}
+  - {fileID: 1131}
+  - {fileID: 1171}
+  - {fileID: 1181}
+  - {fileID: 1191}
+  - {fileID: 1201}
+  - {fileID: 1211}
+  - {fileID: 1251}
+  - {fileID: 1261}
+  - {fileID: 1271}
+  - {fileID: 1281}
+  - {fileID: 1291}
+  - {fileID: 1331}
+  - {fileID: 1341}
+  - {fileID: 1351}
+  - {fileID: 1361}
+  - {fileID: 1371}
+  - {fileID: 1411}
+  - {fileID: 1421}
+  - {fileID: 1431}
+  - {fileID: 1441}
+  - {fileID: 1451}
+  - {fileID: 1491}
+  - {fileID: 1501}
+  - {fileID: 1511}
+  - {fileID: 1521}
+  - {fileID: 1531}
+  m_Father: {fileID: 1031}
+--- !u!1 &1060
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1061}
+  - component: {fileID: 1062}
+  - component: {fileID: 1063}
+  m_Layer: 0
+  m_Name: Road Surface
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1061
+Transform:
+  m_GameObject: {fileID: 1060}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -0.11, z: 6}
+  m_LocalScale: {x: 9, y: 0.22, z: 12}
+  m_Children: []
+  m_Father: {fileID: 1041}
+--- !u!33 &1062
+MeshFilter:
+  m_GameObject: {fileID: 1060}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1063
+MeshRenderer:
+  m_GameObject: {fileID: 1060}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c0100000000001a, type: 2}
+--- !u!1 &1070
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1071}
+  - component: {fileID: 1072}
+  - component: {fileID: 1073}
+  m_Layer: 0
+  m_Name: Terreno lateral
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1071
+Transform:
+  m_GameObject: {fileID: 1070}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -11.25, y: -0.13, z: 6}
+  m_LocalScale: {x: 13.5, y: 0.2, z: 12}
+  m_Children: []
+  m_Father: {fileID: 1041}
+--- !u!33 &1072
+MeshFilter:
+  m_GameObject: {fileID: 1070}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1073
+MeshRenderer:
+  m_GameObject: {fileID: 1070}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c0100000000001b, type: 2}
+--- !u!1 &1080
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1081}
+  - component: {fileID: 1082}
+  - component: {fileID: 1083}
+  m_Layer: 0
+  m_Name: Terreno lateral
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1081
+Transform:
+  m_GameObject: {fileID: 1080}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 11.25, y: -0.13, z: 6}
+  m_LocalScale: {x: 13.5, y: 0.2, z: 12}
+  m_Children: []
+  m_Father: {fileID: 1041}
+--- !u!33 &1082
+MeshFilter:
+  m_GameObject: {fileID: 1080}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1083
+MeshRenderer:
+  m_GameObject: {fileID: 1080}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c0100000000001b, type: 2}
+--- !u!1 &1090
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1091}
+  - component: {fileID: 1092}
+  - component: {fileID: 1093}
+  m_Layer: 0
+  m_Name: Torre
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1091
+Transform:
+  m_GameObject: {fileID: 1090}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -14, y: 3.5, z: 1.7}
+  m_LocalScale: {x: 2.9, y: 7, z: 2.2}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &1092
+MeshFilter:
+  m_GameObject: {fileID: 1090}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1093
+MeshRenderer:
+  m_GameObject: {fileID: 1090}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000022, type: 2}
+--- !u!1 &1100
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1101}
+  - component: {fileID: 1102}
+  - component: {fileID: 1103}
+  m_Layer: 0
+  m_Name: Franja fachada
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1101
+Transform:
+  m_GameObject: {fileID: 1100}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -12.51, y: 1.4, z: 1.7}
+  m_LocalScale: {x: 0.1, y: 0.19, z: 1.95}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &1102
+MeshFilter:
+  m_GameObject: {fileID: 1100}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1103
+MeshRenderer:
+  m_GameObject: {fileID: 1100}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000023, type: 2}
+--- !u!1 &1110
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1111}
+  - component: {fileID: 1112}
+  - component: {fileID: 1113}
+  m_Layer: 0
+  m_Name: Franja fachada
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1111
+Transform:
+  m_GameObject: {fileID: 1110}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -12.51, y: 2.8, z: 1.7}
+  m_LocalScale: {x: 0.1, y: 0.19, z: 1.95}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &1112
+MeshFilter:
+  m_GameObject: {fileID: 1110}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1113
+MeshRenderer:
+  m_GameObject: {fileID: 1110}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000023, type: 2}
+--- !u!1 &1120
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1121}
+  - component: {fileID: 1122}
+  - component: {fileID: 1123}
+  m_Layer: 0
+  m_Name: Franja fachada
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1121
+Transform:
+  m_GameObject: {fileID: 1120}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -12.51, y: 4.2, z: 1.7}
+  m_LocalScale: {x: 0.1, y: 0.19, z: 1.95}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &1122
+MeshFilter:
+  m_GameObject: {fileID: 1120}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1123
+MeshRenderer:
+  m_GameObject: {fileID: 1120}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000023, type: 2}
+--- !u!1 &1130
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1131}
+  m_Layer: 0
+  m_Name: Árbol
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1131
+Transform:
+  m_GameObject: {fileID: 1130}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -6.4, y: 0, z: 2}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 1141}
+  - {fileID: 1151}
+  - {fileID: 1161}
+  m_Father: {fileID: 1051}
+--- !u!1 &1140
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1141}
+  - component: {fileID: 1142}
+  - component: {fileID: 1143}
+  m_Layer: 0
+  m_Name: Tronco
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1141
+Transform:
+  m_GameObject: {fileID: 1140}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 1.2, z: 0}
+  m_LocalScale: {x: 0.28, y: 2.4, z: 0.28}
+  m_Children: []
+  m_Father: {fileID: 1131}
+--- !u!33 &1142
+MeshFilter:
+  m_GameObject: {fileID: 1140}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1143
+MeshRenderer:
+  m_GameObject: {fileID: 1140}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c0100000000001f, type: 2}
+--- !u!1 &1150
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1151}
+  - component: {fileID: 1152}
+  - component: {fileID: 1153}
+  m_Layer: 0
+  m_Name: Copa
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1151
+Transform:
+  m_GameObject: {fileID: 1150}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 3.04, z: 0}
+  m_LocalScale: {x: 2.52, y: 2.32, z: 2.56}
+  m_Children: []
+  m_Father: {fileID: 1131}
+--- !u!33 &1152
+MeshFilter:
+  m_GameObject: {fileID: 1150}
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1153
+MeshRenderer:
+  m_GameObject: {fileID: 1150}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c0100000000001d, type: 2}
+--- !u!1 &1160
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1161}
+  - component: {fileID: 1162}
+  - component: {fileID: 1163}
+  m_Layer: 0
+  m_Name: Copa clara
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1161
+Transform:
+  m_GameObject: {fileID: 1160}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.56, y: 3.6, z: 0.22}
+  m_LocalScale: {x: 1.44, y: 1.68, z: 1.64}
+  m_Children: []
+  m_Father: {fileID: 1131}
+--- !u!33 &1162
+MeshFilter:
+  m_GameObject: {fileID: 1160}
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1163
+MeshRenderer:
+  m_GameObject: {fileID: 1160}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c0100000000001e, type: 2}
+--- !u!1 &1170
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1171}
+  - component: {fileID: 1172}
+  - component: {fileID: 1173}
+  m_Layer: 0
+  m_Name: Torre
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1171
+Transform:
+  m_GameObject: {fileID: 1170}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -15.7, y: 4.6, z: 5.3}
+  m_LocalScale: {x: 2.9, y: 9.2, z: 2.2}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &1172
+MeshFilter:
+  m_GameObject: {fileID: 1170}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1173
+MeshRenderer:
+  m_GameObject: {fileID: 1170}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000022, type: 2}
+--- !u!1 &1180
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1181}
+  - component: {fileID: 1182}
+  - component: {fileID: 1183}
+  m_Layer: 0
+  m_Name: Franja fachada
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1181
+Transform:
+  m_GameObject: {fileID: 1180}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -14.21, y: 1.84, z: 5.3}
+  m_LocalScale: {x: 0.1, y: 0.19, z: 1.95}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &1182
+MeshFilter:
+  m_GameObject: {fileID: 1180}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1183
+MeshRenderer:
+  m_GameObject: {fileID: 1180}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000023, type: 2}
+--- !u!1 &1190
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1191}
+  - component: {fileID: 1192}
+  - component: {fileID: 1193}
+  m_Layer: 0
+  m_Name: Franja fachada
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1191
+Transform:
+  m_GameObject: {fileID: 1190}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -14.21, y: 3.68, z: 5.3}
+  m_LocalScale: {x: 0.1, y: 0.19, z: 1.95}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &1192
+MeshFilter:
+  m_GameObject: {fileID: 1190}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1193
+MeshRenderer:
+  m_GameObject: {fileID: 1190}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000023, type: 2}
+--- !u!1 &1200
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1201}
+  - component: {fileID: 1202}
+  - component: {fileID: 1203}
+  m_Layer: 0
+  m_Name: Franja fachada
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1201
+Transform:
+  m_GameObject: {fileID: 1200}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -14.21, y: 5.52, z: 5.3}
+  m_LocalScale: {x: 0.1, y: 0.19, z: 1.95}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &1202
+MeshFilter:
+  m_GameObject: {fileID: 1200}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1203
+MeshRenderer:
+  m_GameObject: {fileID: 1200}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000023, type: 2}
+--- !u!1 &1210
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1211}
+  m_Layer: 0
+  m_Name: Árbol
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1211
+Transform:
+  m_GameObject: {fileID: 1210}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -6.85, y: 0, z: 5.8}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 1221}
+  - {fileID: 1231}
+  - {fileID: 1241}
+  m_Father: {fileID: 1051}
+--- !u!1 &1220
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1221}
+  - component: {fileID: 1222}
+  - component: {fileID: 1223}
+  m_Layer: 0
+  m_Name: Tronco
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1221
+Transform:
+  m_GameObject: {fileID: 1220}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 1.38, z: 0}
+  m_LocalScale: {x: 0.28, y: 2.76, z: 0.28}
+  m_Children: []
+  m_Father: {fileID: 1211}
+--- !u!33 &1222
+MeshFilter:
+  m_GameObject: {fileID: 1220}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1223
+MeshRenderer:
+  m_GameObject: {fileID: 1220}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c0100000000001f, type: 2}
+--- !u!1 &1230
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1231}
+  - component: {fileID: 1232}
+  - component: {fileID: 1233}
+  m_Layer: 0
+  m_Name: Copa
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1231
+Transform:
+  m_GameObject: {fileID: 1230}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 3.496, z: 0}
+  m_LocalScale: {x: 2.898, y: 2.668, z: 2.944}
+  m_Children: []
+  m_Father: {fileID: 1211}
+--- !u!33 &1232
+MeshFilter:
+  m_GameObject: {fileID: 1230}
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1233
+MeshRenderer:
+  m_GameObject: {fileID: 1230}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c0100000000001d, type: 2}
+--- !u!1 &1240
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1241}
+  - component: {fileID: 1242}
+  - component: {fileID: 1243}
+  m_Layer: 0
+  m_Name: Copa clara
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1241
+Transform:
+  m_GameObject: {fileID: 1240}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.644, y: 4.14, z: 0.22}
+  m_LocalScale: {x: 1.656, y: 1.932, z: 1.886}
+  m_Children: []
+  m_Father: {fileID: 1211}
+--- !u!33 &1242
+MeshFilter:
+  m_GameObject: {fileID: 1240}
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1243
+MeshRenderer:
+  m_GameObject: {fileID: 1240}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c0100000000001e, type: 2}
+--- !u!1 &1250
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1251}
+  - component: {fileID: 1252}
+  - component: {fileID: 1253}
+  m_Layer: 0
+  m_Name: Torre
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1251
+Transform:
+  m_GameObject: {fileID: 1250}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -14, y: 5.7, z: 8.9}
+  m_LocalScale: {x: 2.9, y: 11.4, z: 2.2}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &1252
+MeshFilter:
+  m_GameObject: {fileID: 1250}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1253
+MeshRenderer:
+  m_GameObject: {fileID: 1250}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000022, type: 2}
+--- !u!1 &1260
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1261}
+  - component: {fileID: 1262}
+  - component: {fileID: 1263}
+  m_Layer: 0
+  m_Name: Franja fachada
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1261
+Transform:
+  m_GameObject: {fileID: 1260}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -12.51, y: 2.28, z: 8.9}
+  m_LocalScale: {x: 0.1, y: 0.19, z: 1.95}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &1262
+MeshFilter:
+  m_GameObject: {fileID: 1260}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1263
+MeshRenderer:
+  m_GameObject: {fileID: 1260}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000023, type: 2}
+--- !u!1 &1270
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1271}
+  - component: {fileID: 1272}
+  - component: {fileID: 1273}
+  m_Layer: 0
+  m_Name: Franja fachada
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1271
+Transform:
+  m_GameObject: {fileID: 1270}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -12.51, y: 4.56, z: 8.9}
+  m_LocalScale: {x: 0.1, y: 0.19, z: 1.95}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &1272
+MeshFilter:
+  m_GameObject: {fileID: 1270}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1273
+MeshRenderer:
+  m_GameObject: {fileID: 1270}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000023, type: 2}
+--- !u!1 &1280
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1281}
+  - component: {fileID: 1282}
+  - component: {fileID: 1283}
+  m_Layer: 0
+  m_Name: Franja fachada
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1281
+Transform:
+  m_GameObject: {fileID: 1280}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -12.51, y: 6.84, z: 8.9}
+  m_LocalScale: {x: 0.1, y: 0.19, z: 1.95}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &1282
+MeshFilter:
+  m_GameObject: {fileID: 1280}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1283
+MeshRenderer:
+  m_GameObject: {fileID: 1280}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000023, type: 2}
+--- !u!1 &1290
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1291}
+  m_Layer: 0
+  m_Name: Árbol
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1291
+Transform:
+  m_GameObject: {fileID: 1290}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -7.3, y: 0, z: 9.6}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 1301}
+  - {fileID: 1311}
+  - {fileID: 1321}
+  m_Father: {fileID: 1051}
+--- !u!1 &1300
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1301}
+  - component: {fileID: 1302}
+  - component: {fileID: 1303}
+  m_Layer: 0
+  m_Name: Tronco
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1301
+Transform:
+  m_GameObject: {fileID: 1300}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 1.56, z: 0}
+  m_LocalScale: {x: 0.28, y: 3.12, z: 0.28}
+  m_Children: []
+  m_Father: {fileID: 1291}
+--- !u!33 &1302
+MeshFilter:
+  m_GameObject: {fileID: 1300}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1303
+MeshRenderer:
+  m_GameObject: {fileID: 1300}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c0100000000001f, type: 2}
+--- !u!1 &1310
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1311}
+  - component: {fileID: 1312}
+  - component: {fileID: 1313}
+  m_Layer: 0
+  m_Name: Copa
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1311
+Transform:
+  m_GameObject: {fileID: 1310}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 3.952, z: 0}
+  m_LocalScale: {x: 3.276, y: 3.016, z: 3.328}
+  m_Children: []
+  m_Father: {fileID: 1291}
+--- !u!33 &1312
+MeshFilter:
+  m_GameObject: {fileID: 1310}
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1313
+MeshRenderer:
+  m_GameObject: {fileID: 1310}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c0100000000001d, type: 2}
+--- !u!1 &1320
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1321}
+  - component: {fileID: 1322}
+  - component: {fileID: 1323}
+  m_Layer: 0
+  m_Name: Copa clara
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1321
+Transform:
+  m_GameObject: {fileID: 1320}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.728, y: 4.68, z: 0.22}
+  m_LocalScale: {x: 1.872, y: 2.184, z: 2.132}
+  m_Children: []
+  m_Father: {fileID: 1291}
+--- !u!33 &1322
+MeshFilter:
+  m_GameObject: {fileID: 1320}
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1323
+MeshRenderer:
+  m_GameObject: {fileID: 1320}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c0100000000001e, type: 2}
+--- !u!1 &1330
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1331}
+  - component: {fileID: 1332}
+  - component: {fileID: 1333}
+  m_Layer: 0
+  m_Name: Torre
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1331
+Transform:
+  m_GameObject: {fileID: 1330}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 14, y: 3.5, z: 1.7}
+  m_LocalScale: {x: 2.9, y: 7, z: 2.2}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &1332
+MeshFilter:
+  m_GameObject: {fileID: 1330}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1333
+MeshRenderer:
+  m_GameObject: {fileID: 1330}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000022, type: 2}
+--- !u!1 &1340
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1341}
+  - component: {fileID: 1342}
+  - component: {fileID: 1343}
+  m_Layer: 0
+  m_Name: Franja fachada
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1341
+Transform:
+  m_GameObject: {fileID: 1340}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 12.51, y: 1.4, z: 1.7}
+  m_LocalScale: {x: 0.1, y: 0.19, z: 1.95}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &1342
+MeshFilter:
+  m_GameObject: {fileID: 1340}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1343
+MeshRenderer:
+  m_GameObject: {fileID: 1340}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000023, type: 2}
+--- !u!1 &1350
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1351}
+  - component: {fileID: 1352}
+  - component: {fileID: 1353}
+  m_Layer: 0
+  m_Name: Franja fachada
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1351
+Transform:
+  m_GameObject: {fileID: 1350}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 12.51, y: 2.8, z: 1.7}
+  m_LocalScale: {x: 0.1, y: 0.19, z: 1.95}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &1352
+MeshFilter:
+  m_GameObject: {fileID: 1350}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1353
+MeshRenderer:
+  m_GameObject: {fileID: 1350}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000023, type: 2}
+--- !u!1 &1360
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1361}
+  - component: {fileID: 1362}
+  - component: {fileID: 1363}
+  m_Layer: 0
+  m_Name: Franja fachada
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1361
+Transform:
+  m_GameObject: {fileID: 1360}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 12.51, y: 4.2, z: 1.7}
+  m_LocalScale: {x: 0.1, y: 0.19, z: 1.95}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &1362
+MeshFilter:
+  m_GameObject: {fileID: 1360}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1363
+MeshRenderer:
+  m_GameObject: {fileID: 1360}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000023, type: 2}
+--- !u!1 &1370
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1371}
+  m_Layer: 0
+  m_Name: Árbol
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1371
+Transform:
+  m_GameObject: {fileID: 1370}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 6.4, y: 0, z: 2}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 1381}
+  - {fileID: 1391}
+  - {fileID: 1401}
+  m_Father: {fileID: 1051}
+--- !u!1 &1380
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1381}
+  - component: {fileID: 1382}
+  - component: {fileID: 1383}
+  m_Layer: 0
+  m_Name: Tronco
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1381
+Transform:
+  m_GameObject: {fileID: 1380}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 1.2, z: 0}
+  m_LocalScale: {x: 0.28, y: 2.4, z: 0.28}
+  m_Children: []
+  m_Father: {fileID: 1371}
+--- !u!33 &1382
+MeshFilter:
+  m_GameObject: {fileID: 1380}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1383
+MeshRenderer:
+  m_GameObject: {fileID: 1380}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c0100000000001f, type: 2}
+--- !u!1 &1390
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1391}
+  - component: {fileID: 1392}
+  - component: {fileID: 1393}
+  m_Layer: 0
+  m_Name: Copa
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1391
+Transform:
+  m_GameObject: {fileID: 1390}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 3.04, z: 0}
+  m_LocalScale: {x: 2.52, y: 2.32, z: 2.56}
+  m_Children: []
+  m_Father: {fileID: 1371}
+--- !u!33 &1392
+MeshFilter:
+  m_GameObject: {fileID: 1390}
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1393
+MeshRenderer:
+  m_GameObject: {fileID: 1390}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c0100000000001d, type: 2}
+--- !u!1 &1400
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1401}
+  - component: {fileID: 1402}
+  - component: {fileID: 1403}
+  m_Layer: 0
+  m_Name: Copa clara
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1401
+Transform:
+  m_GameObject: {fileID: 1400}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.56, y: 3.6, z: 0.22}
+  m_LocalScale: {x: 1.44, y: 1.68, z: 1.64}
+  m_Children: []
+  m_Father: {fileID: 1371}
+--- !u!33 &1402
+MeshFilter:
+  m_GameObject: {fileID: 1400}
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1403
+MeshRenderer:
+  m_GameObject: {fileID: 1400}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c0100000000001e, type: 2}
+--- !u!1 &1410
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1411}
+  - component: {fileID: 1412}
+  - component: {fileID: 1413}
+  m_Layer: 0
+  m_Name: Torre
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1411
+Transform:
+  m_GameObject: {fileID: 1410}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 15.7, y: 4.6, z: 5.3}
+  m_LocalScale: {x: 2.9, y: 9.2, z: 2.2}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &1412
+MeshFilter:
+  m_GameObject: {fileID: 1410}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1413
+MeshRenderer:
+  m_GameObject: {fileID: 1410}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000022, type: 2}
+--- !u!1 &1420
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1421}
+  - component: {fileID: 1422}
+  - component: {fileID: 1423}
+  m_Layer: 0
+  m_Name: Franja fachada
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1421
+Transform:
+  m_GameObject: {fileID: 1420}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 14.21, y: 1.84, z: 5.3}
+  m_LocalScale: {x: 0.1, y: 0.19, z: 1.95}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &1422
+MeshFilter:
+  m_GameObject: {fileID: 1420}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1423
+MeshRenderer:
+  m_GameObject: {fileID: 1420}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000023, type: 2}
+--- !u!1 &1430
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1431}
+  - component: {fileID: 1432}
+  - component: {fileID: 1433}
+  m_Layer: 0
+  m_Name: Franja fachada
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1431
+Transform:
+  m_GameObject: {fileID: 1430}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 14.21, y: 3.68, z: 5.3}
+  m_LocalScale: {x: 0.1, y: 0.19, z: 1.95}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &1432
+MeshFilter:
+  m_GameObject: {fileID: 1430}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1433
+MeshRenderer:
+  m_GameObject: {fileID: 1430}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000023, type: 2}
+--- !u!1 &1440
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1441}
+  - component: {fileID: 1442}
+  - component: {fileID: 1443}
+  m_Layer: 0
+  m_Name: Franja fachada
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1441
+Transform:
+  m_GameObject: {fileID: 1440}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 14.21, y: 5.52, z: 5.3}
+  m_LocalScale: {x: 0.1, y: 0.19, z: 1.95}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &1442
+MeshFilter:
+  m_GameObject: {fileID: 1440}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1443
+MeshRenderer:
+  m_GameObject: {fileID: 1440}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000023, type: 2}
+--- !u!1 &1450
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1451}
+  m_Layer: 0
+  m_Name: Árbol
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1451
+Transform:
+  m_GameObject: {fileID: 1450}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 6.85, y: 0, z: 5.8}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 1461}
+  - {fileID: 1471}
+  - {fileID: 1481}
+  m_Father: {fileID: 1051}
+--- !u!1 &1460
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1461}
+  - component: {fileID: 1462}
+  - component: {fileID: 1463}
+  m_Layer: 0
+  m_Name: Tronco
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1461
+Transform:
+  m_GameObject: {fileID: 1460}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 1.38, z: 0}
+  m_LocalScale: {x: 0.28, y: 2.76, z: 0.28}
+  m_Children: []
+  m_Father: {fileID: 1451}
+--- !u!33 &1462
+MeshFilter:
+  m_GameObject: {fileID: 1460}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1463
+MeshRenderer:
+  m_GameObject: {fileID: 1460}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c0100000000001f, type: 2}
+--- !u!1 &1470
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1471}
+  - component: {fileID: 1472}
+  - component: {fileID: 1473}
+  m_Layer: 0
+  m_Name: Copa
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1471
+Transform:
+  m_GameObject: {fileID: 1470}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 3.496, z: 0}
+  m_LocalScale: {x: 2.898, y: 2.668, z: 2.944}
+  m_Children: []
+  m_Father: {fileID: 1451}
+--- !u!33 &1472
+MeshFilter:
+  m_GameObject: {fileID: 1470}
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1473
+MeshRenderer:
+  m_GameObject: {fileID: 1470}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c0100000000001d, type: 2}
+--- !u!1 &1480
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1481}
+  - component: {fileID: 1482}
+  - component: {fileID: 1483}
+  m_Layer: 0
+  m_Name: Copa clara
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1481
+Transform:
+  m_GameObject: {fileID: 1480}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.644, y: 4.14, z: 0.22}
+  m_LocalScale: {x: 1.656, y: 1.932, z: 1.886}
+  m_Children: []
+  m_Father: {fileID: 1451}
+--- !u!33 &1482
+MeshFilter:
+  m_GameObject: {fileID: 1480}
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1483
+MeshRenderer:
+  m_GameObject: {fileID: 1480}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c0100000000001e, type: 2}
+--- !u!1 &1490
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1491}
+  - component: {fileID: 1492}
+  - component: {fileID: 1493}
+  m_Layer: 0
+  m_Name: Torre
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1491
+Transform:
+  m_GameObject: {fileID: 1490}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 14, y: 5.7, z: 8.9}
+  m_LocalScale: {x: 2.9, y: 11.4, z: 2.2}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &1492
+MeshFilter:
+  m_GameObject: {fileID: 1490}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1493
+MeshRenderer:
+  m_GameObject: {fileID: 1490}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000022, type: 2}
+--- !u!1 &1500
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1501}
+  - component: {fileID: 1502}
+  - component: {fileID: 1503}
+  m_Layer: 0
+  m_Name: Franja fachada
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1501
+Transform:
+  m_GameObject: {fileID: 1500}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 12.51, y: 2.28, z: 8.9}
+  m_LocalScale: {x: 0.1, y: 0.19, z: 1.95}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &1502
+MeshFilter:
+  m_GameObject: {fileID: 1500}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1503
+MeshRenderer:
+  m_GameObject: {fileID: 1500}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000023, type: 2}
+--- !u!1 &1510
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1511}
+  - component: {fileID: 1512}
+  - component: {fileID: 1513}
+  m_Layer: 0
+  m_Name: Franja fachada
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1511
+Transform:
+  m_GameObject: {fileID: 1510}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 12.51, y: 4.56, z: 8.9}
+  m_LocalScale: {x: 0.1, y: 0.19, z: 1.95}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &1512
+MeshFilter:
+  m_GameObject: {fileID: 1510}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1513
+MeshRenderer:
+  m_GameObject: {fileID: 1510}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000023, type: 2}
+--- !u!1 &1520
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1521}
+  - component: {fileID: 1522}
+  - component: {fileID: 1523}
+  m_Layer: 0
+  m_Name: Franja fachada
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1521
+Transform:
+  m_GameObject: {fileID: 1520}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 12.51, y: 6.84, z: 8.9}
+  m_LocalScale: {x: 0.1, y: 0.19, z: 1.95}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &1522
+MeshFilter:
+  m_GameObject: {fileID: 1520}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1523
+MeshRenderer:
+  m_GameObject: {fileID: 1520}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000023, type: 2}
+--- !u!1 &1530
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1531}
+  m_Layer: 0
+  m_Name: Árbol
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1531
+Transform:
+  m_GameObject: {fileID: 1530}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 7.3, y: 0, z: 9.6}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 1541}
+  - {fileID: 1551}
+  - {fileID: 1561}
+  m_Father: {fileID: 1051}
+--- !u!1 &1540
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1541}
+  - component: {fileID: 1542}
+  - component: {fileID: 1543}
+  m_Layer: 0
+  m_Name: Tronco
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1541
+Transform:
+  m_GameObject: {fileID: 1540}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 1.56, z: 0}
+  m_LocalScale: {x: 0.28, y: 3.12, z: 0.28}
+  m_Children: []
+  m_Father: {fileID: 1531}
+--- !u!33 &1542
+MeshFilter:
+  m_GameObject: {fileID: 1540}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1543
+MeshRenderer:
+  m_GameObject: {fileID: 1540}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c0100000000001f, type: 2}
+--- !u!1 &1550
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1551}
+  - component: {fileID: 1552}
+  - component: {fileID: 1553}
+  m_Layer: 0
+  m_Name: Copa
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1551
+Transform:
+  m_GameObject: {fileID: 1550}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 3.952, z: 0}
+  m_LocalScale: {x: 3.276, y: 3.016, z: 3.328}
+  m_Children: []
+  m_Father: {fileID: 1531}
+--- !u!33 &1552
+MeshFilter:
+  m_GameObject: {fileID: 1550}
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1553
+MeshRenderer:
+  m_GameObject: {fileID: 1550}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c0100000000001d, type: 2}
+--- !u!1 &1560
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1561}
+  - component: {fileID: 1562}
+  - component: {fileID: 1563}
+  m_Layer: 0
+  m_Name: Copa clara
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1561
+Transform:
+  m_GameObject: {fileID: 1560}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.728, y: 4.68, z: 0.22}
+  m_LocalScale: {x: 1.872, y: 2.184, z: 2.132}
+  m_Children: []
+  m_Father: {fileID: 1531}
+--- !u!33 &1562
+MeshFilter:
+  m_GameObject: {fileID: 1560}
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1563
+MeshRenderer:
+  m_GameObject: {fileID: 1560}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c0100000000001e, type: 2}
+--- !u!114 &1004
+MonoBehaviour:
+  m_GameObject: {fileID: 1000}
+  m_Enabled: 1
+  m_Script: {fileID: 11500000, guid: 3f8826bfc28bb5446afc16038ffff0d8, type: 3}
+  artRoot: {fileID: 1031}
+  roadSurface: {fileID: 1063}
+  entry: {fileID: 1011}
+  exit: {fileID: 1021}

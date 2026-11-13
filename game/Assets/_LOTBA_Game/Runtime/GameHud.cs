@@ -174,11 +174,11 @@ namespace Lotba.Game
                 string title = GameIdentity.Title.ToUpperInvariant();
                 int split = title.IndexOf(' ');
                 gameTitle.text = split > 0
-                    ? title.Substring(0, split) + "\n<color=#FFC43D>" + title.Substring(split + 1) + "</color>"
+                    ? title.Substring(0, split) + "\n" + title.Substring(split + 1)
                     : title;
                 gameTitle.enableAutoSizing = true;
                 gameTitle.fontSizeMin = 32;
-                gameTitle.fontSizeMax = 62;
+                gameTitle.fontSizeMax = 82;
             }
             if (developmentLabel != null)
             {
@@ -279,7 +279,15 @@ namespace Lotba.Game
             if (session.State == RunState.Finished)
             {
                 resultTitle.text = session.Ending == RunEnding.Brake ? "VOS MARCASTE\nEL FINAL" : "RECORRIDO\nCOMPLETADO";
-                resultStats.text = $"<size=54><color=#FFD14C>{session.Score}</color></size>\nPUNTOS\n\nGemas: {session.Gems} recogidas · {session.GemsLost} perdidas · {session.GemBalance} saldo\n{session.Distance:0} m · {session.Elapsed:0} s  ·  {SpeedGauge.DisplaySpeed(session.PeakSpeed):0} km/h máx.\n\nMultiplicador: ×{session.Multiplier}\nChoques: {session.Collisions} · {session.BoostCollisions} con impulso\nDecisiones: {session.DecisionsKept} mantener · {session.VoluntaryBoosts} acelerar";
+                string question = session.VoluntaryBoosts > 0
+                    ? "¿Qué buscabas al elegir acelerar?"
+                    : session.DecisionsKept > 0 ? "¿Qué te hizo elegir mantener el ritmo?"
+                    : session.Ending == RunEnding.Brake ? "¿Qué te hizo decidir frenar?" : "¿Qué te motivó a seguir?";
+                resultStats.text = $"<size=42><color=#FFD14C>{session.Score}</color></size> puntos\n" +
+                    $"{session.GemBalance} gemas · {session.Collisions} choques · {session.Distance:0} m\n" +
+                    $"Elegiste acelerar {session.VoluntaryBoosts} · mantener {session.DecisionsKept}\n\n" +
+                    $"{question}\n\nEn las apuestas, la expectativa de ganar puede influir en cuánto decidimos seguir.\n" +
+                    "<b>HABLAR ES GANAR</b>";
             }
         }
     }

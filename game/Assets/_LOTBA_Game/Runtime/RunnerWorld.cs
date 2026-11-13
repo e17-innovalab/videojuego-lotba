@@ -76,6 +76,7 @@ namespace Lotba.Game
         private Material[][] riderMaterials;
         private Material[][] riderWhiteMaterials;
         private bool riderImpactWhite;
+        private bool riderImpactTransparent;
         private ObstacleSet obstacleOverride;
         private readonly HashSet<ObstacleDefinition> registeredObstacles = new HashSet<ObstacleDefinition>();
         private GameSettings settings;
@@ -388,9 +389,11 @@ namespace Lotba.Game
             }
             session.ShowSpeedOffer();
             float protection = session.ProtectionProgress;
-            // Keep the pulses brief and under three per second.
-            float blinkPhase = protection * 3f;
-            SetRiderImpactWhite(!reducedMotion && session.IsProtected && Mathf.Repeat(blinkPhase, 1f) < .14f);
+            const float whiteFlashEnd = .07f;
+            bool showImpact = !reducedMotion && session.IsProtected;
+            SetRiderImpactWhite(showImpact && protection < whiteFlashEnd);
+            float blinkPhase = (protection - whiteFlashEnd) * 3f / (1f - whiteFlashEnd);
+            SetRiderImpactTransparent(showImpact && blinkPhase >= 0f && Mathf.Repeat(blinkPhase, 1f) >= .65f);
             float boostTarget = session.BoostActive && !reducedMotion ? 1f : 0f;
             boostCameraBlend = reducedMotion || !boostCamera ? 0f :
                 Mathf.Lerp(boostCameraBlend, boostTarget, 1f - Mathf.Exp(-settings.BoostCameraBlendRate * dt));
@@ -410,7 +413,19 @@ namespace Lotba.Game
             worldCamera.transform.localPosition = Vector3.SmoothDamp(worldCamera.transform.localPosition, cameraTarget, ref cameraVelocity, settings.CameraFollowTime, Mathf.Infinity, dt);
         }
 
-        public void ClearImpactBlink() => SetRiderImpactWhite(false);
+        public void ClearImpactBlink()
+        {
+            SetRiderImpactWhite(false);
+            SetRiderImpactTransparent(false);
+        }
+
+        private void SetRiderImpactTransparent(bool transparent)
+        {
+            if (riderImpactTransparent == transparent) return;
+            riderImpactTransparent = transparent;
+            foreach (Renderer visual in riderRenderers)
+                visual.forceRenderingOff = transparent;
+        }
 
         private void SetRiderImpactWhite(bool white)
         {

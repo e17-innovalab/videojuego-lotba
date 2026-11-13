@@ -164,7 +164,7 @@ namespace Lotba.Game.Editor
         {
             var preview = (ArtPreviewController)target;
             var root = new VisualElement();
-            root.Add(new HelpBox("Choose Route or Module before entering Play. A single-zone route repeats one neighborhood; a multi-zone route includes its transitions. A/D or arrows: lane; W/up: jump; P: pause. Save prefab edits outside Play. Restart Play after changing the content selection.", HelpBoxMessageType.Info));
+            root.Add(new HelpBox("Choose Module to repeat one piece, Zone to loop its full module list, or Route to review an itinerary and its transitions. A/D or arrows: lane; W/up: jump; P: pause. Save prefab edits outside Play. Restart Play after changing the content selection.", HelpBoxMessageType.Info));
             var mode = new PropertyField(serializedObject.FindProperty("mode")); root.Add(mode);
             var zone = new PropertyField(serializedObject.FindProperty("zone"), "Module Environment"); root.Add(zone);
             var route = new PropertyField(serializedObject.FindProperty("route")); root.Add(route);
@@ -180,6 +180,7 @@ namespace Lotba.Game.Editor
             void Refresh()
             {
                 zone.style.display = preview.Mode == ArtPreviewMode.Route ? DisplayStyle.None : DisplayStyle.Flex;
+                zone.label = preview.Mode == ArtPreviewMode.Module ? "Module Environment" : "Zone";
                 route.style.display = preview.Mode == ArtPreviewMode.Route ? DisplayStyle.Flex : DisplayStyle.None;
                 module.style.display = preview.Mode == ArtPreviewMode.Module ? DisplayStyle.Flex : DisplayStyle.None;
             }

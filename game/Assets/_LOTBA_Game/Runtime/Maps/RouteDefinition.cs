@@ -4,6 +4,7 @@ using UnityEngine;
 namespace Lotba.Game
 {
     public enum TransitionTurn { Straight = 0, Left = -1, Right = 1 }
+    public enum BackdropExitSection { CurrentSection = 0, NextTransition = 1 }
 
     [Serializable]
     public sealed class RouteSection
@@ -14,10 +15,21 @@ namespace Lotba.Game
         [SerializeField] private bool transition;
         [Tooltip("Visual turn when approaching this transition section.")]
         [SerializeField] private TransitionTurn transitionTurn;
+        [Tooltip("Place this section's landmark at a fixed route distance so the rider passes it.")]
+        [SerializeField] private bool passLandmark;
+        [SerializeField] private float landmarkLateralOffset;
+        [Tooltip("Section whose length defines the backdrop exit interval.")]
+        [SerializeField] private BackdropExitSection backdropExitSection;
+        [Tooltip("Normalized start and end of the exit within the selected section.")]
+        [SerializeField] private Vector2 backdropExitRange = new Vector2(0f, 1f);
         public MapDefinition Map => map;
         public int ModuleCount => moduleCount;
         public bool Transition => transition;
         public TransitionTurn Turn => transitionTurn;
+        public bool PassLandmark => passLandmark;
+        public float LandmarkLateralOffset => landmarkLateralOffset;
+        public BackdropExitSection BackdropExit => backdropExitSection;
+        public Vector2 BackdropExitRange => backdropExitRange;
 #if UNITY_EDITOR
         internal void SetPreviewMap(MapDefinition value) => map = value;
 #endif
@@ -42,9 +54,34 @@ namespace Lotba.Game
                     if (i < sections.Length - 1 && section.ModuleCount <= 0) return "Only the final section can use zero (infinite).";
                     if (i == sections.Length - 1 && section.ModuleCount != 0) return "Set the final section to zero (infinite).";
                     if (section.Transition && (i == sections.Length - 1 || section.ModuleCount <= 0)) return "A transition needs a positive length and a destination section.";
+                    if (section.Map.ZoneBackdrop != null && section.ModuleCount > 0)
+                    {
+                        Vector2 range = section.BackdropExitRange;
+                        if (range.x < 0f || range.y > 1f || range.x >= range.y)
+                            return $"Section {i + 1}: backdrop exit must use an increasing range from 0 to 1.";
+                        if (section.BackdropExit == BackdropExitSection.NextTransition &&
+                            (i + 1 >= sections.Length || sections[i + 1] == null ||
+                             !sections[i + 1].Transition || sections[i + 1].ModuleCount <= 0))
+                            return $"Section {i + 1}: backdrop exit needs a finite transition immediately after this section.";
+                    }
                 }
                 return null;
             }
+        }
+
+        internal Vector2 BackdropExitInterval(int sectionIndex, float sectionStart)
+        {
+            RouteSection section = sections[sectionIndex];
+            if (section.ModuleCount == 0)
+                return new Vector2(float.PositiveInfinity, float.PositiveInfinity);
+
+            float length = section.ModuleCount * RoadStandard.ModuleLength;
+            if (section.BackdropExit == BackdropExitSection.NextTransition)
+            {
+                sectionStart += length;
+                length = sections[sectionIndex + 1].ModuleCount * RoadStandard.ModuleLength;
+            }
+            return Vector2.one * sectionStart + section.BackdropExitRange * length;
         }
 #if UNITY_EDITOR
         /// <summary>Creates an unsaved, single-zone route for the artist preview.</summary>

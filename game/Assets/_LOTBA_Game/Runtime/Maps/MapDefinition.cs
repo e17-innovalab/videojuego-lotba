@@ -9,6 +9,7 @@ namespace Lotba.Game
         [Tooltip("Ordered standardized module prefabs. Replace visuals inside their Art child.")]
         [SerializeField] private RoadModule[] modules;
         [SerializeField] private GameObject landmark;
+        [SerializeField] private GameObject zoneBackdrop;
         [SerializeField] private Material roadMaterial;
         [SerializeField] private ObstacleSet obstacles;
         public ObstacleSet Obstacles => obstacles;
@@ -42,6 +43,7 @@ namespace Lotba.Game
         }
 #endif
         public GameObject Landmark => landmark;
+        public GameObject ZoneBackdrop => zoneBackdrop;
         public float LandmarkDistance => landmarkDistance;
         public Color Sky => sky;
         public Color Fog => fog;

@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_Script: {fileID: 11500000, guid: e5900be9a67b901489b9031045efef0e, type: 3}
+  m_Name: Zone_ReservaEcologica
+  displayName: Reserva Ecológica
+  modules:
+  - {fileID: 1004, guid: bdb8c39df2c344ea8c0100000000000f, type: 3}
+  - {fileID: 1004, guid: bdb8c39df2c344ea8c01000000000010, type: 3}
+  - {fileID: 1004, guid: bdb8c39df2c344ea8c01000000000011, type: 3}
+  - {fileID: 1004, guid: bdb8c39df2c344ea8c01000000000012, type: 3}
+  - {fileID: 1004, guid: bdb8c39df2c344ea8c01000000000013, type: 3}
+  - {fileID: 1004, guid: bdb8c39df2c344ea8c01000000000014, type: 3}
+  landmark: {fileID: 0}
+  zoneBackdrop: {fileID: 1000, guid: d1c8628335c34ce1b0f8dd83de0de731, type: 3}
+  roadMaterial: {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000005, type: 2}
+  obstacles: {fileID: 11400000, guid: 19d4c7dae7124084af5beb511c255c4f, type: 2}
+  landmarkDistance: 115
+  sky: {r: 0.37, g: 0.71, b: 0.89, a: 1}
+  fog: {r: 0.64, g: 0.76, b: 0.8, a: 1}
+  fogStart: 65
+  fogEnd: 160

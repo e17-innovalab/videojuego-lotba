@@ -50,7 +50,7 @@ El tramo de enlace actual contiene dos posiciones de salida, ocho de calle arbol
 
 ## Prueba artística y mantenimiento
 
-ArtPreviewController está disponible solo en el Editor. Tiene dos modos: Route utiliza un RouteDefinition elegido, con una o varias zonas; Module crea perfiles temporales en memoria para repetir una pieza usando el ambiente del MapDefinition asignado en Module Environment. Reutiliza RunnerWorld y RoadStreamer, con velocidad fija y sin límite temporal. Su TickPreview no sustituye las reglas de producción de RunSession.
+ArtPreviewController está disponible solo en el Editor. **Route** utiliza un RouteDefinition guardado. **Zone** crea una ruta temporal para repetir la lista completa del MapDefinition elegido. **Module** crea un mapa y una ruta temporales para repetir una sola pieza con el ambiente de Module Environment. Los tres modos reutilizan RunnerWorld y RoadStreamer con velocidad fija, sin límite temporal ni telemetría de partida.
 
 El Inspector presenta modo, selección de contenido, velocidad y visibilidad. El Foldout Referencias internas está cerrado por defecto y agrupa Settings, World y Road Stream: parámetros compartidos, presentación y reciclado de módulos respectivamente. Settings apunta a un asset compartido; modificar sus valores afecta también a Game. Speed es el control de velocidad específico de la revisión.
 

@@ -1,0 +1,1863 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1000
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1001}
+  - component: {fileID: 1004}
+  m_Layer: 0
+  m_Name: Module_ReservaToLaBoca_01_Salida
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1001
+Transform:
+  m_GameObject: {fileID: 1000}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 1011}
+  - {fileID: 1021}
+  - {fileID: 1031}
+  m_Father: {fileID: 0}
+--- !u!1 &1010
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1011}
+  m_Layer: 0
+  m_Name: Entry
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1011
+Transform:
+  m_GameObject: {fileID: 1010}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 1001}
+--- !u!1 &1020
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1021}
+  m_Layer: 0
+  m_Name: Exit
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1021
+Transform:
+  m_GameObject: {fileID: 1020}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 12}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 1001}
+--- !u!1 &1030
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1031}
+  m_Layer: 0
+  m_Name: Art
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1031
+Transform:
+  m_GameObject: {fileID: 1030}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 1041}
+  - {fileID: 1051}
+  m_Father: {fileID: 1001}
+--- !u!1 &1040
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1041}
+  m_Layer: 0
+  m_Name: Terreno
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1041
+Transform:
+  m_GameObject: {fileID: 1040}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 5001}
+  - {fileID: 5071}
+  - {fileID: 1061}
+  - {fileID: 7001}
+  - {fileID: 7011}
+  - {fileID: 7021}
+  - {fileID: 7031}
+  - {fileID: 1071}
+  - {fileID: 1081}
+  m_Father: {fileID: 1031}
+--- !u!1 &1050
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1051}
+  m_Layer: 0
+  m_Name: Elementos
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1051
+Transform:
+  m_GameObject: {fileID: 1050}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 5011}
+  - {fileID: 5021}
+  - {fileID: 5031}
+  - {fileID: 5041}
+  - {fileID: 5051}
+  - {fileID: 5061}
+  - {fileID: 5081}
+  - {fileID: 5091}
+  - {fileID: 5101}
+  - {fileID: 5111}
+  - {fileID: 5121}
+  - {fileID: 5131}
+  - {fileID: 5141}
+  - {fileID: 5151}
+  - {fileID: 5161}
+  - {fileID: 5171}
+  - {fileID: 5181}
+  - {fileID: 5191}
+  - {fileID: 5201}
+  - {fileID: 1091}
+  - {fileID: 1101}
+  - {fileID: 1111}
+  - {fileID: 1121}
+  - {fileID: 1131}
+  - {fileID: 1141}
+  - {fileID: 1151}
+  - {fileID: 1161}
+  - {fileID: 1171}
+  - {fileID: 1211}
+  - {fileID: 1221}
+  - {fileID: 1231}
+  - {fileID: 1241}
+  - {fileID: 1251}
+  - {fileID: 1261}
+  - {fileID: 1271}
+  - {fileID: 1281}
+  - {fileID: 1291}
+  m_Father: {fileID: 1031}
+--- !u!1 &1060
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1061}
+  - component: {fileID: 1062}
+  - component: {fileID: 1063}
+  m_Layer: 0
+  m_Name: Road Surface
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1061
+Transform:
+  m_GameObject: {fileID: 1060}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -0.11, z: 6}
+  m_LocalScale: {x: 9, y: 0.22, z: 12}
+  m_Children: []
+  m_Father: {fileID: 1041}
+--- !u!33 &1062
+MeshFilter:
+  m_GameObject: {fileID: 1060}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1063
+MeshRenderer:
+  m_GameObject: {fileID: 1060}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000005, type: 2}
+--- !u!1 &1070
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1071}
+  - component: {fileID: 1072}
+  - component: {fileID: 1073}
+  m_Layer: 0
+  m_Name: Terreno lateral
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1071
+Transform:
+  m_GameObject: {fileID: 1070}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -11.25, y: -0.22, z: 6}
+  m_LocalScale: {x: 13.5, y: 0.2, z: 12}
+  m_Children: []
+  m_Father: {fileID: 1041}
+--- !u!33 &1072
+MeshFilter:
+  m_GameObject: {fileID: 1070}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1073
+MeshRenderer:
+  m_GameObject: {fileID: 1070}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000006, type: 2}
+--- !u!1 &1080
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1081}
+  - component: {fileID: 1082}
+  - component: {fileID: 1083}
+  m_Layer: 0
+  m_Name: Laguna
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1081
+Transform:
+  m_GameObject: {fileID: 1080}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 11.25, y: -0.254, z: 6}
+  m_LocalScale: {x: 13.5, y: 0.2, z: 12}
+  m_Children: []
+  m_Father: {fileID: 1041}
+--- !u!33 &1082
+MeshFilter:
+  m_GameObject: {fileID: 1080}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1083
+MeshRenderer:
+  m_GameObject: {fileID: 1080}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000007, type: 2}
+--- !u!1 &1090
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1091}
+  - component: {fileID: 1092}
+  - component: {fileID: 1093}
+  m_Layer: 0
+  m_Name: Poste
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1091
+Transform:
+  m_GameObject: {fileID: 1090}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -5.2, y: 0.46, z: 2}
+  m_LocalScale: {x: 0.16, y: 0.93, z: 0.16}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &1092
+MeshFilter:
+  m_GameObject: {fileID: 1090}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1093
+MeshRenderer:
+  m_GameObject: {fileID: 1090}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c0100000000000a, type: 2}
+--- !u!1 &1100
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1101}
+  - component: {fileID: 1102}
+  - component: {fileID: 1103}
+  m_Layer: 0
+  m_Name: Poste
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1101
+Transform:
+  m_GameObject: {fileID: 1100}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -5.2, y: 0.46, z: 4}
+  m_LocalScale: {x: 0.16, y: 0.93, z: 0.16}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &1102
+MeshFilter:
+  m_GameObject: {fileID: 1100}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1103
+MeshRenderer:
+  m_GameObject: {fileID: 1100}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c0100000000000a, type: 2}
+--- !u!1 &1110
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1111}
+  - component: {fileID: 1112}
+  - component: {fileID: 1113}
+  m_Layer: 0
+  m_Name: Poste
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1111
+Transform:
+  m_GameObject: {fileID: 1110}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -5.2, y: 0.46, z: 6}
+  m_LocalScale: {x: 0.16, y: 0.93, z: 0.16}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &1112
+MeshFilter:
+  m_GameObject: {fileID: 1110}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1113
+MeshRenderer:
+  m_GameObject: {fileID: 1110}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c0100000000000a, type: 2}
+--- !u!1 &1120
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1121}
+  - component: {fileID: 1122}
+  - component: {fileID: 1123}
+  m_Layer: 0
+  m_Name: Poste
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1121
+Transform:
+  m_GameObject: {fileID: 1120}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -5.2, y: 0.46, z: 8}
+  m_LocalScale: {x: 0.16, y: 0.93, z: 0.16}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &1122
+MeshFilter:
+  m_GameObject: {fileID: 1120}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1123
+MeshRenderer:
+  m_GameObject: {fileID: 1120}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c0100000000000a, type: 2}
+--- !u!1 &1130
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1131}
+  - component: {fileID: 1132}
+  - component: {fileID: 1133}
+  m_Layer: 0
+  m_Name: Poste
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1131
+Transform:
+  m_GameObject: {fileID: 1130}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -5.2, y: 0.46, z: 10}
+  m_LocalScale: {x: 0.16, y: 0.93, z: 0.16}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &1132
+MeshFilter:
+  m_GameObject: {fileID: 1130}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1133
+MeshRenderer:
+  m_GameObject: {fileID: 1130}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c0100000000000a, type: 2}
+--- !u!1 &1140
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1141}
+  - component: {fileID: 1142}
+  - component: {fileID: 1143}
+  m_Layer: 0
+  m_Name: Baranda
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1141
+Transform:
+  m_GameObject: {fileID: 1140}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -5.2, y: 0.73, z: 6}
+  m_LocalScale: {x: 0.12, y: 0.14, z: 8}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &1142
+MeshFilter:
+  m_GameObject: {fileID: 1140}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1143
+MeshRenderer:
+  m_GameObject: {fileID: 1140}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c0100000000000a, type: 2}
+--- !u!1 &1150
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1151}
+  - component: {fileID: 1152}
+  - component: {fileID: 1153}
+  m_Layer: 0
+  m_Name: Pilar acceso
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1151
+Transform:
+  m_GameObject: {fileID: 1150}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -5.9, y: 1.35, z: 2}
+  m_LocalScale: {x: 0.42, y: 2.7, z: 0.42}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &1152
+MeshFilter:
+  m_GameObject: {fileID: 1150}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1153
+MeshRenderer:
+  m_GameObject: {fileID: 1150}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c0100000000000a, type: 2}
+--- !u!1 &1160
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1161}
+  - component: {fileID: 1162}
+  - component: {fileID: 1163}
+  m_Layer: 0
+  m_Name: Panel informativo
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1161
+Transform:
+  m_GameObject: {fileID: 1160}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -6, y: 1.68, z: 2}
+  m_LocalScale: {x: 1.25, y: 0.8, z: 0.18}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &1162
+MeshFilter:
+  m_GameObject: {fileID: 1160}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1163
+MeshRenderer:
+  m_GameObject: {fileID: 1160}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c0100000000000e, type: 2}
+--- !u!1 &1170
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1171}
+  m_Layer: 0
+  m_Name: Árbol
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1171
+Transform:
+  m_GameObject: {fileID: 1170}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -8.7, y: 0, z: 8}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 1181}
+  - {fileID: 1191}
+  - {fileID: 1201}
+  m_Father: {fileID: 1051}
+--- !u!1 &1180
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1181}
+  - component: {fileID: 1182}
+  - component: {fileID: 1183}
+  m_Layer: 0
+  m_Name: Tronco
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1181
+Transform:
+  m_GameObject: {fileID: 1180}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 1.44, z: 0}
+  m_LocalScale: {x: 0.28, y: 2.88, z: 0.28}
+  m_Children: []
+  m_Father: {fileID: 1171}
+--- !u!33 &1182
+MeshFilter:
+  m_GameObject: {fileID: 1180}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1183
+MeshRenderer:
+  m_GameObject: {fileID: 1180}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c0100000000000a, type: 2}
+--- !u!1 &1190
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1191}
+  - component: {fileID: 1192}
+  - component: {fileID: 1193}
+  m_Layer: 0
+  m_Name: Copa
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1191
+Transform:
+  m_GameObject: {fileID: 1190}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 3.648, z: 0}
+  m_LocalScale: {x: 3.024, y: 2.784, z: 3.072}
+  m_Children: []
+  m_Father: {fileID: 1171}
+--- !u!33 &1192
+MeshFilter:
+  m_GameObject: {fileID: 1190}
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1193
+MeshRenderer:
+  m_GameObject: {fileID: 1190}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000008, type: 2}
+--- !u!1 &1200
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1201}
+  - component: {fileID: 1202}
+  - component: {fileID: 1203}
+  m_Layer: 0
+  m_Name: Copa clara
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1201
+Transform:
+  m_GameObject: {fileID: 1200}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.672, y: 4.32, z: 0.22}
+  m_LocalScale: {x: 1.728, y: 2.016, z: 1.968}
+  m_Children: []
+  m_Father: {fileID: 1171}
+--- !u!33 &1202
+MeshFilter:
+  m_GameObject: {fileID: 1200}
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1203
+MeshRenderer:
+  m_GameObject: {fileID: 1200}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000009, type: 2}
+--- !u!1 &1210
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1211}
+  - component: {fileID: 1212}
+  - component: {fileID: 1213}
+  m_Layer: 0
+  m_Name: Poste
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1211
+Transform:
+  m_GameObject: {fileID: 1210}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 5.2, y: 0.46, z: 2}
+  m_LocalScale: {x: 0.16, y: 0.93, z: 0.16}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &1212
+MeshFilter:
+  m_GameObject: {fileID: 1210}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1213
+MeshRenderer:
+  m_GameObject: {fileID: 1210}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c0100000000000a, type: 2}
+--- !u!1 &1220
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1221}
+  - component: {fileID: 1222}
+  - component: {fileID: 1223}
+  m_Layer: 0
+  m_Name: Poste
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1221
+Transform:
+  m_GameObject: {fileID: 1220}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 5.2, y: 0.46, z: 4}
+  m_LocalScale: {x: 0.16, y: 0.93, z: 0.16}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &1222
+MeshFilter:
+  m_GameObject: {fileID: 1220}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1223
+MeshRenderer:
+  m_GameObject: {fileID: 1220}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c0100000000000a, type: 2}
+--- !u!1 &1230
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1231}
+  - component: {fileID: 1232}
+  - component: {fileID: 1233}
+  m_Layer: 0
+  m_Name: Poste
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1231
+Transform:
+  m_GameObject: {fileID: 1230}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 5.2, y: 0.46, z: 6}
+  m_LocalScale: {x: 0.16, y: 0.93, z: 0.16}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &1232
+MeshFilter:
+  m_GameObject: {fileID: 1230}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1233
+MeshRenderer:
+  m_GameObject: {fileID: 1230}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c0100000000000a, type: 2}
+--- !u!1 &1240
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1241}
+  - component: {fileID: 1242}
+  - component: {fileID: 1243}
+  m_Layer: 0
+  m_Name: Poste
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1241
+Transform:
+  m_GameObject: {fileID: 1240}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 5.2, y: 0.46, z: 8}
+  m_LocalScale: {x: 0.16, y: 0.93, z: 0.16}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &1242
+MeshFilter:
+  m_GameObject: {fileID: 1240}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1243
+MeshRenderer:
+  m_GameObject: {fileID: 1240}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c0100000000000a, type: 2}
+--- !u!1 &1250
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1251}
+  - component: {fileID: 1252}
+  - component: {fileID: 1253}
+  m_Layer: 0
+  m_Name: Poste
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1251
+Transform:
+  m_GameObject: {fileID: 1250}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 5.2, y: 0.46, z: 10}
+  m_LocalScale: {x: 0.16, y: 0.93, z: 0.16}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &1252
+MeshFilter:
+  m_GameObject: {fileID: 1250}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1253
+MeshRenderer:
+  m_GameObject: {fileID: 1250}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c0100000000000a, type: 2}
+--- !u!1 &1260
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1261}
+  - component: {fileID: 1262}
+  - component: {fileID: 1263}
+  m_Layer: 0
+  m_Name: Baranda
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1261
+Transform:
+  m_GameObject: {fileID: 1260}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 5.2, y: 0.73, z: 6}
+  m_LocalScale: {x: 0.12, y: 0.14, z: 8}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &1262
+MeshFilter:
+  m_GameObject: {fileID: 1260}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1263
+MeshRenderer:
+  m_GameObject: {fileID: 1260}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c0100000000000a, type: 2}
+--- !u!1 &1270
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1271}
+  - component: {fileID: 1272}
+  - component: {fileID: 1273}
+  m_Layer: 0
+  m_Name: Pilar acceso
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1271
+Transform:
+  m_GameObject: {fileID: 1270}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 5.9, y: 1.35, z: 2}
+  m_LocalScale: {x: 0.42, y: 2.7, z: 0.42}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &1272
+MeshFilter:
+  m_GameObject: {fileID: 1270}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1273
+MeshRenderer:
+  m_GameObject: {fileID: 1270}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c0100000000000a, type: 2}
+--- !u!1 &1280
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1281}
+  - component: {fileID: 1282}
+  - component: {fileID: 1283}
+  m_Layer: 0
+  m_Name: Panel informativo
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1281
+Transform:
+  m_GameObject: {fileID: 1280}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 6, y: 1.68, z: 2}
+  m_LocalScale: {x: 1.25, y: 0.8, z: 0.18}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &1282
+MeshFilter:
+  m_GameObject: {fileID: 1280}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1283
+MeshRenderer:
+  m_GameObject: {fileID: 1280}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c0100000000000e, type: 2}
+--- !u!1 &1290
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1291}
+  m_Layer: 0
+  m_Name: Árbol
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1291
+Transform:
+  m_GameObject: {fileID: 1290}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 8.7, y: 0, z: 8}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 1301}
+  - {fileID: 1311}
+  - {fileID: 1321}
+  m_Father: {fileID: 1051}
+--- !u!1 &1300
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1301}
+  - component: {fileID: 1302}
+  - component: {fileID: 1303}
+  m_Layer: 0
+  m_Name: Tronco
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1301
+Transform:
+  m_GameObject: {fileID: 1300}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 1.44, z: 0}
+  m_LocalScale: {x: 0.28, y: 2.88, z: 0.28}
+  m_Children: []
+  m_Father: {fileID: 1291}
+--- !u!33 &1302
+MeshFilter:
+  m_GameObject: {fileID: 1300}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1303
+MeshRenderer:
+  m_GameObject: {fileID: 1300}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c0100000000000a, type: 2}
+--- !u!1 &1310
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1311}
+  - component: {fileID: 1312}
+  - component: {fileID: 1313}
+  m_Layer: 0
+  m_Name: Copa
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1311
+Transform:
+  m_GameObject: {fileID: 1310}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 3.648, z: 0}
+  m_LocalScale: {x: 3.024, y: 2.784, z: 3.072}
+  m_Children: []
+  m_Father: {fileID: 1291}
+--- !u!33 &1312
+MeshFilter:
+  m_GameObject: {fileID: 1310}
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1313
+MeshRenderer:
+  m_GameObject: {fileID: 1310}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000008, type: 2}
+--- !u!1 &1320
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1321}
+  - component: {fileID: 1322}
+  - component: {fileID: 1323}
+  m_Layer: 0
+  m_Name: Copa clara
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &1321
+Transform:
+  m_GameObject: {fileID: 1320}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.672, y: 4.32, z: 0.22}
+  m_LocalScale: {x: 1.728, y: 2.016, z: 1.968}
+  m_Children: []
+  m_Father: {fileID: 1291}
+--- !u!33 &1322
+MeshFilter:
+  m_GameObject: {fileID: 1320}
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1323
+MeshRenderer:
+  m_GameObject: {fileID: 1320}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000009, type: 2}
+--- !u!114 &1004
+MonoBehaviour:
+  m_GameObject: {fileID: 1000}
+  m_Enabled: 1
+  m_Script: {fileID: 11500000, guid: 3f8826bfc28bb5446afc16038ffff0d8, type: 3}
+  artRoot: {fileID: 1031}
+  roadSurface: {fileID: 1063}
+  entry: {fileID: 1011}
+  exit: {fileID: 1021}
+--- !u!1 &5000
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5001}
+  - component: {fileID: 5002}
+  - component: {fileID: 5003}
+  m_Layer: 0
+  m_Name: Talud
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &5001
+Transform:
+  m_GameObject: {fileID: 5000}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0.174, w: 0.985}
+  m_LocalPosition: {x: -4.99, y: -0.083, z: 6}
+  m_LocalScale: {x: 1.11, y: 0.07, z: 12}
+  m_Children: []
+  m_Father: {fileID: 1041}
+--- !u!33 &5002
+MeshFilter:
+  m_GameObject: {fileID: 5000}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &5003
+MeshRenderer:
+  m_GameObject: {fileID: 5000}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000006, type: 2}
+--- !u!1 &5010
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5011}
+  - component: {fileID: 5012}
+  - component: {fileID: 5013}
+  m_Layer: 0
+  m_Name: Tronco_alto
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &5011
+Transform:
+  m_GameObject: {fileID: 5010}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -8.35, y: 1.83, z: 3.45}
+  m_LocalScale: {x: 0.48, y: 4, z: 0.48}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &5012
+MeshFilter:
+  m_GameObject: {fileID: 5010}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &5013
+MeshRenderer:
+  m_GameObject: {fileID: 5010}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c0100000000000a, type: 2}
+--- !u!1 &5020
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5021}
+  - component: {fileID: 5022}
+  - component: {fileID: 5023}
+  m_Layer: 0
+  m_Name: Copa_frondosa
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &5021
+Transform:
+  m_GameObject: {fileID: 5020}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -8.35, y: 3.93, z: 3.45}
+  m_LocalScale: {x: 4.4, y: 4.06, z: 3.612}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &5022
+MeshFilter:
+  m_GameObject: {fileID: 5020}
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &5023
+MeshRenderer:
+  m_GameObject: {fileID: 5020}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000008, type: 2}
+--- !u!1 &5030
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5031}
+  - component: {fileID: 5032}
+  - component: {fileID: 5033}
+  m_Layer: 0
+  m_Name: Copa_alta
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &5031
+Transform:
+  m_GameObject: {fileID: 5030}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -9.17, y: 5.18, z: 3.9}
+  m_LocalScale: {x: 3.3, y: 3.364, z: 2.924}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &5032
+MeshFilter:
+  m_GameObject: {fileID: 5030}
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &5033
+MeshRenderer:
+  m_GameObject: {fileID: 5030}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000009, type: 2}
+--- !u!1 &5040
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5041}
+  - component: {fileID: 5042}
+  - component: {fileID: 5043}
+  m_Layer: 0
+  m_Name: Tronco_alto
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &5041
+Transform:
+  m_GameObject: {fileID: 5040}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -8.51, y: 2.03, z: 7.65}
+  m_LocalScale: {x: 0.48, y: 4.4, z: 0.48}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &5042
+MeshFilter:
+  m_GameObject: {fileID: 5040}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &5043
+MeshRenderer:
+  m_GameObject: {fileID: 5040}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c0100000000000a, type: 2}
+--- !u!1 &5050
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5051}
+  - component: {fileID: 5052}
+  - component: {fileID: 5053}
+  m_Layer: 0
+  m_Name: Copa_frondosa
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &5051
+Transform:
+  m_GameObject: {fileID: 5050}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -8.51, y: 4.33, z: 7.65}
+  m_LocalScale: {x: 4.928, y: 2.94, z: 3.612}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &5052
+MeshFilter:
+  m_GameObject: {fileID: 5050}
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &5053
+MeshRenderer:
+  m_GameObject: {fileID: 5050}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000008, type: 2}
+--- !u!1 &5060
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5061}
+  - component: {fileID: 5062}
+  - component: {fileID: 5063}
+  m_Layer: 0
+  m_Name: Copa_alta
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &5061
+Transform:
+  m_GameObject: {fileID: 5060}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -9.33, y: 5.58, z: 8.1}
+  m_LocalScale: {x: 3.696, y: 2.436, z: 2.924}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &5062
+MeshFilter:
+  m_GameObject: {fileID: 5060}
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &5063
+MeshRenderer:
+  m_GameObject: {fileID: 5060}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000009, type: 2}
+--- !u!1 &5070
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5071}
+  - component: {fileID: 5072}
+  - component: {fileID: 5073}
+  m_Layer: 0
+  m_Name: Talud
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &5071
+Transform:
+  m_GameObject: {fileID: 5070}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: -0.174, w: 0.985}
+  m_LocalPosition: {x: 4.99, y: -0.083, z: 6}
+  m_LocalScale: {x: 1.11, y: 0.07, z: 12}
+  m_Children: []
+  m_Father: {fileID: 1041}
+--- !u!33 &5072
+MeshFilter:
+  m_GameObject: {fileID: 5070}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &5073
+MeshRenderer:
+  m_GameObject: {fileID: 5070}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000006, type: 2}
+--- !u!1 &5080
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5081}
+  - component: {fileID: 5082}
+  - component: {fileID: 5083}
+  m_Layer: 0
+  m_Name: Tronco_alto
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &5081
+Transform:
+  m_GameObject: {fileID: 5080}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 9.2, y: 1.7, z: 3}
+  m_LocalScale: {x: 0.48, y: 4, z: 0.48}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &5082
+MeshFilter:
+  m_GameObject: {fileID: 5080}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &5083
+MeshRenderer:
+  m_GameObject: {fileID: 5080}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c0100000000000a, type: 2}
+--- !u!1 &5090
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5091}
+  - component: {fileID: 5092}
+  - component: {fileID: 5093}
+  m_Layer: 0
+  m_Name: Copa_frondosa
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &5091
+Transform:
+  m_GameObject: {fileID: 5090}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 9.2, y: 3.8, z: 3}
+  m_LocalScale: {x: 3.872, y: 3.5, z: 3.612}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &5092
+MeshFilter:
+  m_GameObject: {fileID: 5090}
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &5093
+MeshRenderer:
+  m_GameObject: {fileID: 5090}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000008, type: 2}
+--- !u!1 &5100
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5101}
+  - component: {fileID: 5102}
+  - component: {fileID: 5103}
+  m_Layer: 0
+  m_Name: Copa_alta
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &5101
+Transform:
+  m_GameObject: {fileID: 5100}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 8.02, y: 5.05, z: 2.5}
+  m_LocalScale: {x: 3.3, y: 3.364, z: 2.924}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &5102
+MeshFilter:
+  m_GameObject: {fileID: 5100}
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &5103
+MeshRenderer:
+  m_GameObject: {fileID: 5100}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000009, type: 2}
+--- !u!1 &5110
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5111}
+  - component: {fileID: 5112}
+  - component: {fileID: 5113}
+  m_Layer: 0
+  m_Name: Tronco_alto
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &5111
+Transform:
+  m_GameObject: {fileID: 5110}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 8.05, y: 1.9, z: 8.15}
+  m_LocalScale: {x: 0.48, y: 4.4, z: 0.48}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &5112
+MeshFilter:
+  m_GameObject: {fileID: 5110}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &5113
+MeshRenderer:
+  m_GameObject: {fileID: 5110}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c0100000000000a, type: 2}
+--- !u!1 &5120
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5121}
+  - component: {fileID: 5122}
+  - component: {fileID: 5123}
+  m_Layer: 0
+  m_Name: Copa_frondosa
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &5121
+Transform:
+  m_GameObject: {fileID: 5120}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 8.05, y: 4.2, z: 8.15}
+  m_LocalScale: {x: 4.4, y: 4.06, z: 3.612}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &5122
+MeshFilter:
+  m_GameObject: {fileID: 5120}
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &5123
+MeshRenderer:
+  m_GameObject: {fileID: 5120}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000008, type: 2}
+--- !u!1 &5130
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5131}
+  - component: {fileID: 5132}
+  - component: {fileID: 5133}
+  m_Layer: 0
+  m_Name: Copa_alta
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &5131
+Transform:
+  m_GameObject: {fileID: 5130}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 10.02, y: 5.45, z: 10}
+  m_LocalScale: {x: 3.696, y: 2.436, z: 2.924}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &5132
+MeshFilter:
+  m_GameObject: {fileID: 5130}
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &5133
+MeshRenderer:
+  m_GameObject: {fileID: 5130}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000009, type: 2}
+--- !u!1 &5140
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5141}
+  - component: {fileID: 5142}
+  - component: {fileID: 5143}
+  m_Layer: 0
+  m_Name: Vegetacion_flotante
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &5141
+Transform:
+  m_GameObject: {fileID: 5140}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 7.8, y: -0.14, z: 1.5}
+  m_LocalScale: {x: 3.995, y: 0.105, z: 3.036}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &5142
+MeshFilter:
+  m_GameObject: {fileID: 5140}
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &5143
+MeshRenderer:
+  m_GameObject: {fileID: 5140}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000009, type: 2}
+--- !u!1 &5150
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5151}
+  - component: {fileID: 5152}
+  - component: {fileID: 5153}
+  m_Layer: 0
+  m_Name: Vegetacion_flotante
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &5151
+Transform:
+  m_GameObject: {fileID: 5150}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 10.9, y: -0.14, z: 2.15}
+  m_LocalScale: {x: 3.995, y: 0.105, z: 3.036}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &5152
+MeshFilter:
+  m_GameObject: {fileID: 5150}
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &5153
+MeshRenderer:
+  m_GameObject: {fileID: 5150}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000009, type: 2}
+--- !u!1 &5160
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5161}
+  - component: {fileID: 5162}
+  - component: {fileID: 5163}
+  m_Layer: 0
+  m_Name: Vegetacion_flotante
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &5161
+Transform:
+  m_GameObject: {fileID: 5160}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 14, y: -0.14, z: 2.8}
+  m_LocalScale: {x: 3.995, y: 0.105, z: 3.036}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &5162
+MeshFilter:
+  m_GameObject: {fileID: 5160}
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &5163
+MeshRenderer:
+  m_GameObject: {fileID: 5160}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000009, type: 2}
+--- !u!1 &5170
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5171}
+  - component: {fileID: 5172}
+  - component: {fileID: 5173}
+  m_Layer: 0
+  m_Name: Vegetacion_flotante
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &5171
+Transform:
+  m_GameObject: {fileID: 5170}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 7.8, y: -0.14, z: 5}
+  m_LocalScale: {x: 3.995, y: 0.105, z: 3.036}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &5172
+MeshFilter:
+  m_GameObject: {fileID: 5170}
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &5173
+MeshRenderer:
+  m_GameObject: {fileID: 5170}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000009, type: 2}
+--- !u!1 &5180
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5181}
+  - component: {fileID: 5182}
+  - component: {fileID: 5183}
+  m_Layer: 0
+  m_Name: Vegetacion_flotante
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &5181
+Transform:
+  m_GameObject: {fileID: 5180}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 10.9, y: -0.14, z: 5.65}
+  m_LocalScale: {x: 3.995, y: 0.105, z: 3.036}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &5182
+MeshFilter:
+  m_GameObject: {fileID: 5180}
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &5183
+MeshRenderer:
+  m_GameObject: {fileID: 5180}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000009, type: 2}
+--- !u!1 &5190
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5191}
+  - component: {fileID: 5192}
+  - component: {fileID: 5193}
+  m_Layer: 0
+  m_Name: Vegetacion_flotante
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &5191
+Transform:
+  m_GameObject: {fileID: 5190}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 14, y: -0.14, z: 6.3}
+  m_LocalScale: {x: 3.995, y: 0.105, z: 3.036}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &5192
+MeshFilter:
+  m_GameObject: {fileID: 5190}
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &5193
+MeshRenderer:
+  m_GameObject: {fileID: 5190}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000009, type: 2}
+--- !u!1 &5200
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5201}
+  - component: {fileID: 5202}
+  - component: {fileID: 5203}
+  m_Layer: 0
+  m_Name: Vegetacion_flotante
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &5201
+Transform:
+  m_GameObject: {fileID: 5200}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 7.8, y: -0.14, z: 8.5}
+  m_LocalScale: {x: 3.995, y: 0.105, z: 3.036}
+  m_Children: []
+  m_Father: {fileID: 1051}
+--- !u!33 &5202
+MeshFilter:
+  m_GameObject: {fileID: 5200}
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &5203
+MeshRenderer:
+  m_GameObject: {fileID: 5200}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000009, type: 2}
+--- !u!1 &7000
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7001}
+  - component: {fileID: 7002}
+  - component: {fileID: 7003}
+  m_Layer: 0
+  m_Name: Huella de tierra
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &7001
+Transform:
+  m_GameObject: {fileID: 7000}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -3.65, y: 0.001, z: 8.7}
+  m_LocalScale: {x: 0.13, y: 0.002, z: 2.2}
+  m_Children: []
+  m_Father: {fileID: 1041}
+--- !u!33 &7002
+MeshFilter:
+  m_GameObject: {fileID: 7000}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &7003
+MeshRenderer:
+  m_GameObject: {fileID: 7000}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: 7e28a3c424a745bc92f1918ef45c070a, type: 2}
+--- !u!1 &7010
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7011}
+  - component: {fileID: 7012}
+  - component: {fileID: 7013}
+  m_Layer: 0
+  m_Name: Huella de tierra
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &7011
+Transform:
+  m_GameObject: {fileID: 7010}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 3.65, y: 0.001, z: 5.9}
+  m_LocalScale: {x: 0.13, y: 0.002, z: 2.2}
+  m_Children: []
+  m_Father: {fileID: 1041}
+--- !u!33 &7012
+MeshFilter:
+  m_GameObject: {fileID: 7010}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &7013
+MeshRenderer:
+  m_GameObject: {fileID: 7010}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: 7e28a3c424a745bc92f1918ef45c070a, type: 2}
+--- !u!1 &7020
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7021}
+  - component: {fileID: 7022}
+  - component: {fileID: 7023}
+  m_Layer: 0
+  m_Name: Huella de tierra
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &7021
+Transform:
+  m_GameObject: {fileID: 7020}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -1.15, y: 0.001, z: 10.3}
+  m_LocalScale: {x: 0.13, y: 0.002, z: 2.2}
+  m_Children: []
+  m_Father: {fileID: 1041}
+--- !u!33 &7022
+MeshFilter:
+  m_GameObject: {fileID: 7020}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &7023
+MeshRenderer:
+  m_GameObject: {fileID: 7020}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: 7e28a3c424a745bc92f1918ef45c070a, type: 2}
+--- !u!1 &7030
+GameObject:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7031}
+  - component: {fileID: 7032}
+  - component: {fileID: 7033}
+  m_Layer: 0
+  m_Name: Huella de tierra
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &7031
+Transform:
+  m_GameObject: {fileID: 7030}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.24, y: 0.001, z: 2.6}
+  m_LocalScale: {x: 0.13, y: 0.002, z: 2.2}
+  m_Children: []
+  m_Father: {fileID: 1041}
+--- !u!33 &7032
+MeshFilter:
+  m_GameObject: {fileID: 7030}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &7033
+MeshRenderer:
+  m_GameObject: {fileID: 7030}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_RenderingLayerMask: 1
+  m_Materials:
+  - {fileID: 2100000, guid: 7e28a3c424a745bc92f1918ef45c070a, type: 2}

@@ -4,14 +4,14 @@ using UnityEngine.InputSystem;
 
 namespace Lotba.Game
 {
-    public enum ArtPreviewMode { Route = 1, Module = 2 }
+    public enum ArtPreviewMode { Route = 1, Module = 2, Zone = 3 }
 
     /// <summary>Editor-only artist playback using the production world and obstacle patterns.</summary>
     [DisallowMultipleComponent]
     public sealed class ArtPreviewController : MonoBehaviour
     {
         [SerializeField] private ArtPreviewMode mode = ArtPreviewMode.Route;
-        [Tooltip("Provides the environment and obstacle catalog for Module mode.")]
+        [Tooltip("Zone to preview, or environment and obstacle catalog for Module mode.")]
         [SerializeField] private MapDefinition zone;
         [SerializeField] private RouteDefinition route;
         [SerializeField] private RoadModule module;
@@ -32,6 +32,7 @@ namespace Lotba.Game
                 if (settings == null || world == null || roadStream == null) return "Assign settings, world and road streamer.";
                 if (mode == ArtPreviewMode.Route) return route == null ? "Assign a route." : route.ValidationError;
                 if (zone == null) return "Assign a zone.";
+                if (mode == ArtPreviewMode.Zone) return zone.ValidationError;
                 return module == null ? "Assign a module." : module.ValidationError;
             }
         }
@@ -42,6 +43,8 @@ namespace Lotba.Game
                 Debug.LogError(ValidationError, this); enabled = false; return;
             }
             RouteDefinition selected = route;
+            if (mode == ArtPreviewMode.Zone)
+                selected = temporaryRoute = RouteDefinition.CreatePreview(zone);
             if (mode == ArtPreviewMode.Module)
             {
                 temporaryMap = MapDefinition.CreatePreview(zone, module);

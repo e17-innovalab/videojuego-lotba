@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_Script: {fileID: 11500000, guid: e5900be9a67b901489b9031045efef0e, type: 3}
+  m_Name: Zone_Humedales
+  displayName: Humedales
+  modules:
+  - {fileID: 1004, guid: bdb8c39df2c344ea8c01000000000039, type: 3}
+  - {fileID: 1004, guid: bdb8c39df2c344ea8c0100000000003a, type: 3}
+  - {fileID: 1004, guid: bdb8c39df2c344ea8c0100000000003b, type: 3}
+  - {fileID: 1004, guid: bdb8c39df2c344ea8c0100000000003c, type: 3}
+  - {fileID: 1004, guid: bdb8c39df2c344ea8c0100000000003d, type: 3}
+  - {fileID: 1004, guid: bdb8c39df2c344ea8c0100000000003e, type: 3}
+  landmark: {fileID: 0}
+  roadMaterial: {fileID: 2100000, guid: bdb8c39df2c344ea8c0100000000002f, type: 2}
+  obstacles: {fileID: 0}
+  landmarkDistance: 115
+  sky: {r: 0.47, g: 0.65, b: 0.73, a: 1}
+  fog: {r: 0.59, g: 0.7, b: 0.68, a: 1}
+  fogStart: 65
+  fogEnd: 160

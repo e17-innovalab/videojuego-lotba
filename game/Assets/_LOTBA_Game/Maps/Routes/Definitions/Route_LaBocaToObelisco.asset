@@ -23,3 +23,5 @@ MonoBehaviour:
   - map: {fileID: 11400000, guid: 69af62632a6e1ce4cadd13cb40f11607, type: 2}
     moduleCount: 0
     transition: 0
+    passLandmark: 1
+    landmarkLateralOffset: 9

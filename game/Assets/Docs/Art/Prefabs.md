@@ -98,6 +98,6 @@ El cartel de palabras es una instancia de `Word Banner.prefab` en **Race HUD**. 
 
 Para mirar una unión sin modificar la escena de juego, creá una escena de revisión fuera de la lista de escenas del build. Arrastrá dos o tres módulos y colocalos en Z = 0, 12 y 24, con X/Y = 0 y escala uno.
 
-Revisá desde Scene que el suelo no tenga huecos, que se respeten los carriles, que no haya objetos cortados o duplicados en los bordes y que no aparezcan superficies superpuestas parpadeando. Para observar lectura y escala durante el movimiento, usá [ArtPreview](Preview.md): Route para una zona completa o un recorrido con transiciones; Module para repetir una sola pieza.
+Revisá desde Scene que el suelo no tenga huecos, que se respeten los carriles, que no haya objetos cortados o duplicados en los bordes y que no aparezcan superficies superpuestas parpadeando. Para observar lectura y escala en [ArtPreview](Preview.md), elegí **Module** para una pieza, **Zone** para una zona completa o **Route** para un recorrido con transiciones.
 
 Entregá el prefab, modelos, materiales y texturas necesarios, junto con sus `.meta`, e indicá qué ficha de zona u obstáculo debe usarlos. Para modificar un conjunto visual sin afectar otros usos, entregar sus variantes independientes.

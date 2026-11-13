@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_Script: {fileID: 11500000, guid: e5900be9a67b901489b9031045efef0e, type: 3}
+  m_Name: Zone_Transition_ReservaToLaBoca
+  displayName: Salida de la Reserva
+  modules:
+  - {fileID: 1004, guid: ede554fef1c5496cb0130eb37a21abd6, type: 3}
+  - {fileID: 8082989234701583067, guid: c1a5e0d6f68d48b59c1e3972bdb88dba, type: 3}
+  - {fileID: 388211181428097089, guid: b3b352b0a2774d07928d3005bcad267f, type: 3}
+  landmark: {fileID: 0}
+  roadMaterial: {fileID: 2100000, guid: c3daafb666421d84c9f58508abe22b30, type: 2}
+  obstacles: {fileID: 11400000, guid: 19d4c7dae7124084af5beb511c255c4f, type: 2}
+  landmarkDistance: 115
+  sky: {r: 0.37, g: 0.71, b: 0.89, a: 1}
+  fog: {r: 0.64, g: 0.76, b: 0.8, a: 1}
+  fogStart: 65
+  fogEnd: 160
