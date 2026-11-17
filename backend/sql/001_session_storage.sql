@@ -216,3 +216,7 @@ REVOKE EXECUTE ON FUNCTION ingest_session_report(jsonb) FROM anon;
 REVOKE EXECUTE ON FUNCTION ingest_session_report(jsonb) FROM authenticated;
 
 GRANT EXECUTE ON FUNCTION ingest_session_report(jsonb) TO service_role;
+GRANT USAGE ON SCHEMA public TO service_role;
+GRANT SELECT, INSERT ON TABLE public.sessions TO service_role;
+GRANT SELECT, INSERT ON TABLE public.session_events TO service_role;
+GRANT USAGE, SELECT ON SEQUENCE public.session_events_id_seq TO service_role;
