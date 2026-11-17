@@ -18,6 +18,10 @@ npm install
 
 ## Ejecución local
 
+### 1. Modo local con archivos (por defecto)
+
+Si no se configuran variables de Supabase, las sesiones se guardan en `backend/data/sessions/`:
+
 ```bash
 # Modo normal
 npm start
@@ -25,6 +29,19 @@ npm start
 # Modo desarrollo con watch nativo de Node
 npm run dev
 ```
+
+### 2. Modo Supabase DEV
+
+1. Copiar `backend/.env.example` a `backend/.env` (archivo local ignorado por Git).
+2. Completar `SUPABASE_URL` y `SUPABASE_SECRET_KEY` (`sb_secret_...`) del proyecto DEV (`lotba-dev`).
+3. Ejecutar:
+
+```bash
+npm run dev:supabase
+```
+
+> [!WARNING]
+> `SUPABASE_SECRET_KEY` (formato habitual `sb_secret_...`) es una credencial privilegiada **exclusivamente server-side**. **Nunca** debe enviarse a Unity, subirse a Git ni imprimirse en logs.
 
 Por defecto escucha en `http://localhost:3000` (configurable mediante `PORT`).
 
