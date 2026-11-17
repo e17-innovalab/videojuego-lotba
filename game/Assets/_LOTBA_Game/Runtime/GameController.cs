@@ -13,6 +13,7 @@ namespace Lotba.Game
         [SerializeField] private DeviceFeedbackAndInput devices;
         private RunSession session;
         private bool startRequested, brakeRequested, jumpRequested, pauseRequested, menuRequested, sessionReportSaved;
+        private bool overloadRequested;
         private int laneRequested;
         private bool? speedChoiceRequested;
         private bool muted, trackingSwipe;
@@ -34,23 +35,37 @@ namespace Lotba.Game
             if (IsHighQuality) world.InitializeTurboAura();
             world.ConfigureDepthBend(IsHighQuality);
             world.ConfigurePickupEffects(UseBoostCamera);
+            world.ConfigureGemGlow(IsHighQuality);
             hud.StartRequested += RequestStart; hud.BrakeRequested += RequestBrake;
             hud.PauseRequested += RequestPause; hud.MenuRequested += RequestMenu;
             hud.SoundRequested += ToggleSound; hud.SettingsRequested += OpenSettings;
+            hud.MusicVolumeRequested += audioFeedback.SetMusicLevel;
+            hud.EffectsVolumeRequested += audioFeedback.SetEffectsLevel;
             hud.VibrationRequested += devices.CycleVibrationLevel;
             hud.QualityRequested += CycleQuality;
             hud.SpeedChosen += ChooseSpeed;
             hud.TurboRequested += ActivateTurbo;
             hud.UiClicked += audioFeedback.PlayUiClick;
             world.GemFeedback += OnGem;
+            world.PinkGemMissed += OnPinkGemMissed;
             world.ImpactFeedback += OnImpact;
             world.LetterCollected += OnLetterCollected;
         }
 
-        private void Start() => hud.Render(session, settings, muted, devices, IsHighQuality);
+        private void Start()
+        {
+            hud.SetAudioLevels(audioFeedback.MusicLevel, audioFeedback.EffectsLevel);
+            world.PrepareOpening();
+            hud.Render(session, settings, muted, devices, IsHighQuality);
+        }
         private void Update()
         {
             Keyboard keyboard = Keyboard.current;
+            if (hud.RankingOpen)
+            {
+                if (keyboard != null && keyboard.escapeKey.wasPressedThisFrame) hud.CloseRanking();
+                return;
+            }
             if (hud.TelemetryOpen)
             {
                 if (keyboard != null && keyboard.escapeKey.wasPressedThisFrame) hud.CloseTelemetry();
@@ -68,6 +83,8 @@ namespace Lotba.Game
         }
         private void LateUpdate()
         {
+            bool endForOverload = overloadRequested;
+            overloadRequested = false;
             world.ConfigureDepthBend(IsHighQuality);
             if (menuRequested && (session.State == RunState.Finished || session.State == RunState.Paused))
             {
@@ -86,14 +103,13 @@ namespace Lotba.Game
             {
                 ResetRun(true);
             }
+            bool wasFinished = session.State == RunState.Finished;
+            float speedBeforeBrake = brakeRequested ? session.Speed : 0f;
             if (brakeRequested)
             {
-                RunState previous = session.State;
                 session.Brake();
-                audioFeedback.Stop();
-                if (previous != RunState.Finished && session.State == RunState.Finished) audioFeedback.PlayBrakeButton();
-                devices.CancelFeedback();
             }
+            else if (endForOverload) session.EndForOverload();
             else
             {
                 if (pauseRequested)
@@ -122,7 +138,7 @@ namespace Lotba.Game
                         if (session.State == RunState.Running)
                         {
                             world.SetEncounterIntensity(1f + .35f * session.AccumulatedRisk,
-                                1f + .75f * session.AccumulatedRisk);
+                                settings.BaseObstacleIntensity * (1f + .75f * session.AccumulatedRisk));
                             int previousDecisions = session.DecisionsShown;
                             world.Advance(session, step, false, UseBoostCamera, IsHighQuality);
                             if (session.DecisionsShown > previousDecisions) audioFeedback.PlayDecisionShown();
@@ -131,12 +147,12 @@ namespace Lotba.Game
                     }
                 }
             }
-            if (session.State == RunState.Finished)
+            if (!wasFinished && session.State == RunState.Finished)
             {
-                audioFeedback.Stop();
-                world.ClearImpactBlink();
-                world.ClearTurboAura();
-                world.ClearGemScatter();
+                bool braked = session.Ending == RunEnding.Brake;
+                audioFeedback.EndRun(braked);
+                devices.CancelFeedback();
+                world.EndRun(braked, speedBeforeBrake, UseBoostCamera);
                 if (!sessionReportSaved)
                 {
                     sessionReportSaved = true;
@@ -145,7 +161,7 @@ namespace Lotba.Game
             }
             devices.UpdateBoostFeedback(session.State == RunState.Running
                 ? session.BoostProgress * RunSession.BoostSeconds : 0f);
-            audioFeedback.UpdateMusic(session.State);
+            if (session.State != RunState.Finished) audioFeedback.UpdateMusic(session.State);
             speedChoiceRequested = null;
             startRequested = brakeRequested = jumpRequested = pauseRequested = menuRequested = false; laneRequested = 0;
             hud.Render(session, settings, muted, devices, IsHighQuality);
@@ -155,6 +171,7 @@ namespace Lotba.Game
             sessionReportSaved = false;
             session = new RunSession(settings, world.Route); world.ResetTrack(); hud.ResetView(); audioFeedback.Stop(); devices.CancelFeedback(); trackingSwipe = false;
             if (start) { session.Start(); }
+            else world.PrepareOpening();
         }
         private void ReadSwipe()
         {
@@ -179,9 +196,19 @@ namespace Lotba.Game
             if (turboJustReady) audioFeedback.PlayBoostReady();
             devices.Feedback(false);
         }
-        private void OnImpact(bool duringBoost, int gemsLost)
+        private void OnPinkGemMissed(bool nearMiss, bool streakLost)
+        {
+            if (nearMiss)
+            {
+                hud.ShowPinkGemMiss();
+                audioFeedback.PlayPinkGemMiss();
+            }
+            if (streakLost) audioFeedback.PlayPinkGemStreakLost();
+        }
+        private void OnImpact(bool duringBoost, int gemsLost, bool streakLost)
         {
             audioFeedback.PlayCollision(duringBoost);
+            if (streakLost) audioFeedback.PlayPinkGemStreakLost();
             if (gemsLost > 0) audioFeedback.PlayGemLoss(duringBoost);
             devices.Feedback(true, duringBoost);
         }
@@ -193,6 +220,7 @@ namespace Lotba.Game
         }
         private void RequestStart() => startRequested = true;
         private void RequestBrake() => brakeRequested = true;
+        public void RequestOverloadEnd() => overloadRequested = true;
         private void ActivateTurbo()
         {
             if (!brakeRequested && !hud.SettingsOpen && session.TryActivateTurbo())
@@ -250,6 +278,7 @@ namespace Lotba.Game
             if (session != null)
             {
                 world.ConfigurePickupEffects(UseBoostCamera);
+                world.ConfigureGemGlow(IsHighQuality);
                 if (IsHighQuality) world.InitializeTurboAura();
                 else world.ClearTurboAura();
             }
@@ -266,18 +295,22 @@ namespace Lotba.Game
             session.Pause(); trackingSwipe = false; laneRequested = 0; jumpRequested = false;
             devices.CancelFeedback(); audioFeedback.Stop();
         }
+
         private void OnDestroy()
         {
             if (hud == null) return;
             hud.StartRequested -= RequestStart; hud.BrakeRequested -= RequestBrake;
             hud.PauseRequested -= RequestPause; hud.MenuRequested -= RequestMenu;
             hud.SoundRequested -= ToggleSound; hud.SettingsRequested -= OpenSettings;
+            hud.MusicVolumeRequested -= audioFeedback.SetMusicLevel;
+            hud.EffectsVolumeRequested -= audioFeedback.SetEffectsLevel;
             hud.VibrationRequested -= devices.CycleVibrationLevel;
             hud.QualityRequested -= CycleQuality;
             hud.SpeedChosen -= ChooseSpeed;
             hud.TurboRequested -= ActivateTurbo;
             hud.UiClicked -= audioFeedback.PlayUiClick;
             world.GemFeedback -= OnGem;
+            world.PinkGemMissed -= OnPinkGemMissed;
             world.ImpactFeedback -= OnImpact;
             world.LetterCollected -= OnLetterCollected;
         }

@@ -21,6 +21,7 @@ namespace Lotba.Game
         [SerializeField] private bool enableCollisions;
         [SerializeField, Range(.25f, 4f)] private float gemIntensity = 1f, obstacleIntensity = 1f;
         [SerializeField] private bool testVehicleCourse;
+        [SerializeField] private bool testRoofJumps;
         [SerializeField] private ObstacleDefinition testCar, testBus, testArticulatedBus;
         [SerializeField] private bool showWorldBend = true;
         [SerializeField] private GameSettings settings;
@@ -35,7 +36,8 @@ namespace Lotba.Game
             get
             {
                 if (settings == null || world == null || roadStream == null) return "Assign settings, world and road streamer.";
-                if (testVehicleCourse && (testCar == null || testBus == null || testArticulatedBus == null))
+                if (testRoofJumps && testBus == null) return "Assign a bus for the roof jump course.";
+                if (!testRoofJumps && testVehicleCourse && (testCar == null || testBus == null || testArticulatedBus == null))
                     return "Assign the vehicle course definitions.";
                 if (mode == ArtPreviewMode.Route) return route == null ? "Assign a route." : route.ValidationError;
                 if (zone == null) return "Assign a zone.";
@@ -59,10 +61,14 @@ namespace Lotba.Game
             }
             roadStream.SetRoute(selected);
             world.Initialize(settings);
-            if (testVehicleCourse) world.ConfigureVehicleCourse(testCar, testBus, testArticulatedBus);
+            if (testRoofJumps)
+            {
+                world.ConfigureRoofJumpCourse(testBus);
+                speed = settings.InitialSpeed;
+            }
+            else if (testVehicleCourse) world.ConfigureVehicleCourse(testCar, testBus, testArticulatedBus);
             ApplyPreviewSettings();
-            world.ResetTrack();
-            session = new RunSession(settings); session.Start();
+            ResetPreview();
         }
         private void Update()
         {
@@ -72,6 +78,17 @@ namespace Lotba.Game
             var keyboard = Keyboard.current;
             if (keyboard != null)
             {
+                if (testRoofJumps)
+                {
+                    if (keyboard.digit1Key.wasPressedThisFrame) speed = settings.InitialSpeed;
+                    if (keyboard.digit2Key.wasPressedThisFrame) speed = settings.CruiseSpeed;
+                    if (keyboard.digit3Key.wasPressedThisFrame) speed = settings.CruiseSpeed + RunSession.BoostSpeed;
+                    if (keyboard.rKey.wasPressedThisFrame)
+                    {
+                        ResetPreview();
+                        return;
+                    }
+                }
                 if (keyboard.pKey.wasPressedThisFrame)
                 {
                     if (session.State == RunState.Paused) session.Resume(); else session.Pause();
@@ -89,6 +106,14 @@ namespace Lotba.Game
                 world.Advance(session, step, false); budget -= step;
             }
         }
+
+        private void ResetPreview()
+        {
+            world.ResetTrack();
+            session = new RunSession(settings);
+            session.Start();
+        }
+
         private void ApplyPreviewSettings()
         {
             world.ConfigureArtPreview(showGems, showObstacles, showRider, enableCollisions);

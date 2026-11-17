@@ -11,6 +11,11 @@ namespace Lotba.Game
         private int lastHeight;
         private Rect lastSafeArea;
 
+        private void Awake()
+        {
+            if (worldCamera == null) worldCamera = Camera.main;
+        }
+
         private void LateUpdate()
         {
             if (Screen.width == lastWidth && Screen.height == lastHeight && Screen.safeArea == lastSafeArea) return;
@@ -22,7 +27,7 @@ namespace Lotba.Game
             Rect viewport = screenAspect > targetAspect
                 ? new Rect((1f - targetAspect / screenAspect) * .5f, 0f, targetAspect / screenAspect, 1f)
                 : new Rect(0f, 0f, 1f, 1f);
-            worldCamera.rect = viewport;
+            if (worldCamera != null) worldCamera.rect = viewport;
             // Art preview shares the camera framing without requiring a Canvas.
             if (safeArea == null) return;
             Rect physicalSafeArea = Screen.safeArea;

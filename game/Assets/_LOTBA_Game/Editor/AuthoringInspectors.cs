@@ -173,6 +173,9 @@ namespace Lotba.Game.Editor
             root.Add(module);
             foreach (string name in new[] { "speed", "showRider", "showGems", "showObstacles", "showWorldBend", "enableCollisions", "testVehicleCourse" })
                 root.Add(new PropertyField(serializedObject.FindProperty(name)));
+            root.Add(new PropertyField(serializedObject.FindProperty("testRoofJumps"), "Prueba de saltos entre bondis"));
+            var jumpHelp = new HelpBox("Antes de Play, activá la prueba. En Game: W/↑ salta, R reinicia, 1/2/3 cambia la velocidad. Activá Enable Collisions para probar impactos.", HelpBoxMessageType.Info);
+            root.Add(jumpHelp);
             root.Add(new PropertyField(serializedObject.FindProperty("gemIntensity")));
             root.Add(new PropertyField(serializedObject.FindProperty("obstacleIntensity")));
             var references = new Foldout { text = "Referencias internas", value = false };
@@ -187,6 +190,7 @@ namespace Lotba.Game.Editor
                 route.style.display = preview.Mode == ArtPreviewMode.Route ? DisplayStyle.Flex : DisplayStyle.None;
                 profile.style.display = preview.Mode == ArtPreviewMode.Route ? DisplayStyle.None : DisplayStyle.Flex;
                 module.style.display = preview.Mode == ArtPreviewMode.Module ? DisplayStyle.Flex : DisplayStyle.None;
+                jumpHelp.style.display = serializedObject.FindProperty("testRoofJumps").boolValue ? DisplayStyle.Flex : DisplayStyle.None;
             }
             root.TrackSerializedObjectValue(serializedObject, _ => Refresh()); Refresh();
             AuthoringInspector.AddValidation(root, serializedObject, () => preview.ValidationError);

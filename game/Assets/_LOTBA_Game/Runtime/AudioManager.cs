@@ -1,3 +1,4 @@
+using Unity.Profiling;
 using UnityEngine;
 
 namespace Lotba.Game
@@ -8,6 +9,7 @@ namespace Lotba.Game
     {
         private AudioSource source;
         private AudioSource musicSource, interfaceSource;
+        private static readonly ProfilerMarker StartMusicMarker = new ProfilerMarker("Lotba.Audio.StartMusic");
         [Header("Background music")]
         [SerializeField] private AudioClip backgroundMusic;
         [SerializeField, Range(0f, 1f)] private float backgroundMusicVolume = .35f;
@@ -17,6 +19,10 @@ namespace Lotba.Game
         [Header("Gameplay sounds")]
         private readonly AudioSource[] airborneSources = new AudioSource[4];
         [SerializeField] private AudioClip gemPickup;
+        [SerializeField] private AudioClip pinkGemMiss;
+        [SerializeField, Range(0f, 1f)] private float pinkGemMissVolume = .65f;
+        [SerializeField] private AudioClip pinkGemStreakLost;
+        [SerializeField, Range(0f, 1f)] private float pinkGemStreakLostVolume = .65f;
         [SerializeField, Range(0f, 1f)] private float gemPickupVolume = .7f;
         [SerializeField, Tooltip("Semitone offsets for the four airborne gems, in track order.")]
         private Vector4 airborneGemSemitones = new Vector4(0f, 4f, 7f, 12f);
@@ -46,10 +52,16 @@ namespace Lotba.Game
         [SerializeField] private AudioClip wordCompleted;
         [SerializeField, Range(0f, 1f)] private float wordCompletedVolume = .7f;
         public bool Muted { get; private set; }
+        public float MusicLevel { get; private set; } = 1f;
+        public float EffectsLevel { get; private set; } = 1f;
+        private float effectsSourceVolume;
+        private bool volumePreferencesDirty;
+        private float saveVolumeAt;
 
         private void Awake()
         {
             source = GetComponent<AudioSource>();
+            effectsSourceVolume = source.volume;
             source.playOnAwake = false;
             musicSource = CreateAuxiliarySource();
             musicSource.loop = true;
@@ -62,7 +74,60 @@ namespace Lotba.Game
                 voice.volume = source.volume;
                 airborneSources[i] = voice;
             }
+            MusicLevel = Mathf.Clamp01(PlayerPrefs.GetFloat("Lotba.CityRush.MusicVolume", 1f));
+            EffectsLevel = Mathf.Clamp01(PlayerPrefs.GetFloat("Lotba.CityRush.EffectsVolume", 1f));
+            ApplyLevels();
         }
+
+        public void SetMusicLevel(float value)
+        {
+            MusicLevel = Mathf.Clamp01(value);
+            PlayerPrefs.SetFloat("Lotba.CityRush.MusicVolume", MusicLevel);
+            ScheduleVolumeSave();
+            ApplyLevels();
+        }
+
+        public void SetEffectsLevel(float value)
+        {
+            EffectsLevel = Mathf.Clamp01(value);
+            PlayerPrefs.SetFloat("Lotba.CityRush.EffectsVolume", EffectsLevel);
+            ScheduleVolumeSave();
+            ApplyLevels();
+        }
+
+        private void ApplyLevels()
+        {
+            source.volume = effectsSourceVolume * EffectsLevel;
+            if (musicSource != null) musicSource.volume = backgroundMusicVolume * MusicLevel;
+            if (interfaceSource != null) interfaceSource.volume = EffectsLevel;
+            foreach (var voice in airborneSources)
+                if (voice != null) voice.volume = effectsSourceVolume * EffectsLevel;
+        }
+
+        private void ScheduleVolumeSave()
+        {
+            volumePreferencesDirty = true;
+            saveVolumeAt = Time.unscaledTime + .5f;
+        }
+
+        private void Update()
+        {
+            if (volumePreferencesDirty && Time.unscaledTime >= saveVolumeAt) SaveVolumePreferences();
+        }
+
+        private void SaveVolumePreferences()
+        {
+            if (!volumePreferencesDirty) return;
+            PlayerPrefs.Save();
+            volumePreferencesDirty = false;
+        }
+
+        private void OnApplicationPause(bool paused)
+        {
+            if (paused) SaveVolumePreferences();
+        }
+
+        private void OnDisable() => SaveVolumePreferences();
 
         private AudioSource CreateAuxiliarySource()
         {
@@ -77,6 +142,7 @@ namespace Lotba.Game
         {
             if (backgroundMusic == null || state == RunState.Finished || state == RunState.Ready)
             {
+                if (musicSource.clip == null) return;
                 musicSource.Stop();
                 musicSource.clip = null;
                 return;
@@ -86,12 +152,15 @@ namespace Lotba.Game
                 musicSource.Pause();
                 return;
             }
-            musicSource.volume = backgroundMusicVolume;
+            musicSource.volume = backgroundMusicVolume * MusicLevel;
             if (musicSource.clip == backgroundMusic) musicSource.UnPause();
             else
             {
-                musicSource.clip = backgroundMusic;
-                musicSource.Play();
+                using (StartMusicMarker.Auto())
+                {
+                    musicSource.clip = backgroundMusic;
+                    musicSource.Play();
+                }
             }
         }
 
@@ -130,8 +199,17 @@ namespace Lotba.Game
         }
         public void PlayBoostStart() => Play(boostStart, boostStartVolume);
         public void PlayBoostReady() => Play(boostReady, boostReadyVolume);
+        public void PlayPinkGemMiss() => Play(pinkGemMiss != null ? pinkGemMiss : gemLoss, pinkGemMissVolume);
+        public void PlayPinkGemStreakLost() => Play(pinkGemStreakLost, pinkGemStreakLostVolume);
         public void PlayUiClick() => PlayInterface(uiClick, uiClickVolume);
-        public void PlayBrakeButton() => PlayInterface(brakeButton, brakeButtonVolume);
+        public void EndRun(bool playBrake)
+        {
+            Stop();
+            musicSource.Stop();
+            musicSource.clip = null;
+            interfaceSource.Stop();
+            if (playBrake) PlayInterface(brakeButton, brakeButtonVolume);
+        }
         public void PlayBoostButton() => PlayInterface(boostButton, boostButtonVolume);
 
         private void PlayInterface(AudioClip clip, float volume)

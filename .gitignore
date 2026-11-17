@@ -32,3 +32,5 @@ Thumbs.db
 /.codex/agents/
 /docs/
 *.idea/
+
+**/ProfilerCaptures/**

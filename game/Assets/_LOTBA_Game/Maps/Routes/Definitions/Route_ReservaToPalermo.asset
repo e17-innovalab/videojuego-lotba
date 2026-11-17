@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6e050c9f85bc118419c3d58449819ff6, type: 3}
   m_Name: Route_ReservaToPalermo
   m_EditorClassIdentifier: Lotba.Game::Lotba.Game.RouteDefinition
-  lastLetterFinalSectionModule: 82
-  lastLetterZone: {fileID: 11400000, guid: bdb8c39df2c344ea8c0100000000002a, type: 2}
+  lastLetterFinalSectionModule: 216
+  lastLetterZone: {fileID: 11400000, guid: 69af62632a6e1ce4cadd13cb40f11607, type: 2}
   finalSectionSpeedBonus: 7
   finalSectionAccelerationDistance: 1800
   sections:
@@ -87,6 +87,6 @@ MonoBehaviour:
     moduleCount: 21
     transition: 1
   - map: {fileID: 11400000, guid: bdb8c39df2c344ea8c0100000000003f, type: 2}
-    encounterProfile: {fileID: 11400000, guid: 9ff80235e107435684634dc73f2ff290, type: 2}
+    encounterProfile: {fileID: 11400000, guid: ba465dbf2eaf41aca55db6f18532ddcf, type: 2}
     moduleCount: 0
     transition: 0

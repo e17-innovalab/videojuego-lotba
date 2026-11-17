@@ -12,5 +12,9 @@ MonoBehaviour:
   gemThreads: 1
   gemsPerThread: 6
   gemSpacing: 2.5
+  pinkGemEveryRows: 4
+  pinkGemMinimumSpacing: 110
+  pinkGemDodgeChance: 0.7
+  pinkGemDodgeReactionTime: 0.03
   obstacleInterval: 21
   obstacleClearance: 9

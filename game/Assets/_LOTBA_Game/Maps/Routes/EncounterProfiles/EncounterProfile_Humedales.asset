@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_Script: {fileID: 11500000, guid: 715aafaee0f5451d9d3c310173d4ba27, type: 3}
+  m_Name: EncounterProfile_Humedales
+  gemInterval: 52
+  parallelThreadChance: 0.15
+  laneChangeChance: 0.45
+  gemIntervalVariation: 0.20
+  vehiclePatternInterval: 105
+  gemThreads: 2
+  gemsPerThread: 7
+  gemSpacing: 2.5
+  pinkGemEveryRows: 3
+  pinkGemMinimumSpacing: 110
+  pinkGemDodgeChance: 0.85
+  pinkGemDodgeReactionTime: 0.01
+  obstacleInterval: 12
+  obstacleClearance: 7
+  extraObstacleChance: 0.55

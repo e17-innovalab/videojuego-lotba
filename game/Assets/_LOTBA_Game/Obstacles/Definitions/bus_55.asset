@@ -19,6 +19,7 @@ MonoBehaviour:
   length: 8.8
   jumpable: 0
   jumpClearance: 0
+  rideableRoof: 1
   poolCapacity: 12
   livery:
     lineNumber: 55

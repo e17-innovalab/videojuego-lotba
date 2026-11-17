@@ -162,10 +162,11 @@ MonoBehaviour:
   showRider: 1
   showGems: 1
   showObstacles: 1
-  enableCollisions: 0
+  enableCollisions: 1
   gemIntensity: 1
   obstacleIntensity: 1
   testVehicleCourse: 0
+  testRoofJumps: 1
   testCar: {fileID: 11400000, guid: 1f784360e902f1049bd4a5490ebf8acb, type: 2}
   testBus: {fileID: 11400000, guid: fdca24415f194ca2a0f9ce3bae5e5b68, type: 2}
   testArticulatedBus: {fileID: 11400000, guid: 43eee7099d78418eb5b4d6adcf36c4fd, type: 2}
@@ -328,7 +329,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0.025, z: 0}
-  m_LocalScale: {x: 1.1, y: 1, z: 1.8}
+  m_LocalScale: {x: 0.48, y: 1, z: 1.22}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1708434621}

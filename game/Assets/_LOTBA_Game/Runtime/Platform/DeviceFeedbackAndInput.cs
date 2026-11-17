@@ -49,6 +49,64 @@ namespace Lotba.Game
             nextVibration = 0;
             Feedback(false);
         }
+
+        public string TestVibration()
+        {
+#if UNITY_ANDROID && !UNITY_EDITOR
+            const long duration = 150L;
+            int sdk = 0;
+            string api = "servicio clásico";
+            string step = "leer la versión de Android";
+            AndroidJavaObject testVibrator = null;
+            try
+            {
+                using (var version = new AndroidJavaClass("android.os.Build$VERSION"))
+                    sdk = version.GetStatic<int>("SDK_INT");
+                step = "obtener el servicio";
+                using var player = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
+                using var activity = player.GetStatic<AndroidJavaObject>("currentActivity");
+                if (activity == null) return $"API {sdk} · Actividad de Android no disponible.";
+
+                if (sdk >= 31)
+                {
+                    try
+                    {
+                        using var manager = activity.Call<AndroidJavaObject>("getSystemService", "vibrator_manager");
+                        testVibrator = manager?.Call<AndroidJavaObject>("getDefaultVibrator");
+                        if (testVibrator != null) api = "VibratorManager";
+                    }
+                    catch (AndroidJavaException) { /* Retry through the classic service. */ }
+                }
+                testVibrator ??= activity.Call<AndroidJavaObject>("getSystemService", "vibrator");
+                string details = $"API {sdk} · {api}";
+                if (testVibrator == null) return $"{details}\nServicio de vibración no disponible.";
+                step = "detectar el motor";
+                if (!testVibrator.Call<bool>("hasVibrator")) return $"{details}\nAndroid no detectó un motor.";
+
+                step = "solicitar el pulso";
+                if (sdk >= 26)
+                {
+                    using var effects = new AndroidJavaClass("android.os.VibrationEffect");
+                    using var effect = effects.CallStatic<AndroidJavaObject>("createOneShot", duration, -1);
+                    testVibrator.Call("vibrate", effect);
+                }
+                else testVibrator.Call("vibrate", duration);
+                return $"{details} · Motor detectado\nPulso solicitado (150 ms). ¿Lo sentiste?";
+            }
+            catch (AndroidJavaException error)
+            {
+                Debug.LogWarning($"Vibration test failed at '{step}' ({sdk}, {api}): {error.Message}", this);
+                return $"API {sdk} · {api}\nError al {step}.";
+            }
+            finally
+            {
+                testVibrator?.Dispose();
+            }
+#else
+            return "La prueba requiere una APK en un dispositivo Android.";
+#endif
+        }
+
         public void Feedback(bool impact, bool doubleImpact = false)
         {
             if (!VibrationEnabled || (!impact && (boostVibrating || Time.unscaledTime < nextVibration))) return;

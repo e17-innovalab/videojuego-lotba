@@ -3,7 +3,7 @@ using System;
 namespace Lotba.Game
 {
     public enum RunState { Ready, Running, Paused, Finished }
-    public enum RunEnding { None, Brake, RouteComplete = 3 }
+    public enum RunEnding { None, Brake, RouteComplete = 3, Overload }
 
     /// <summary>Run state only: no cards, menus, physics, or scene object ownership.</summary>
     public sealed class RunSession
@@ -81,7 +81,14 @@ namespace Lotba.Game
             if (State != RunState.Ready) return;
             State = RunState.Running;
             if (telemetryRoute == null) return;
-            Telemetry = new RunTelemetry { route = telemetryRoute.name, seed = settings.Seed, routeDistanceMetres = finishDistance, startedAtUtc = DateTime.UtcNow.ToString("O") };
+            Telemetry = new RunTelemetry
+            {
+                gameVersion = UnityEngine.Application.version,
+                route = telemetryRoute.name,
+                seed = settings.Seed,
+                routeDistanceMetres = finishDistance,
+                startedAtUtc = DateTime.UtcNow.ToString("O")
+            };
             ScheduleNextSpeedOffer();
             Record("run_started");
         }
@@ -101,7 +108,8 @@ namespace Lotba.Game
             float step = dt;
             Elapsed += step;
             float progression = 1f - (float)Math.Exp(-Elapsed / settings.AccelerationTime);
-            float baseSpeed = settings.InitialSpeed + (settings.MaximumSpeed - settings.InitialSpeed) * progression;
+            float baseSpeed = settings.InitialSpeed + (settings.CruiseSpeed - settings.InitialSpeed) * progression +
+                settings.SustainedAcceleration * Elapsed;
             if (telemetryRoute != null) baseSpeed += telemetryRoute.SpeedBonusAt(Distance);
             float sinceImpact = Elapsed - impactTime;
             float recovery = Math.Min(1f, sinceImpact / ImpactRecoverySeconds);
@@ -201,21 +209,59 @@ namespace Lotba.Game
             Record("lane_changed");
             return true;
         }
-        public long CollectGem(int airborneNote = -1)
+        public int PinkGemStreak { get; private set; }
+        public int ScoreMultiplier => Math.Max(1, PinkGemStreak);
+        public int PinkGemsCollected { get; private set; }
+        public int PinkGemsMissed { get; private set; }
+        public int BestPinkGemStreak { get; private set; }
+
+        public int PinkGemNearMisses { get; private set; }
+        public int PinkDodgeCleared { get; private set; }
+        public int PinkDodgeCollisions { get; private set; }
+
+        public bool MissPinkGem(bool nearMiss, int pinkDodgeEncounter = 0)
+        {
+            if (State != RunState.Running) return false;
+            PinkGemsMissed++;
+            if (nearMiss) PinkGemNearMisses++;
+            int lostStreak = PinkGemStreak;
+            PinkGemStreak = 0;
+            Record("pink_gem_missed", streakBefore: lostStreak, pinkGemNearMiss: nearMiss,
+                pinkDodgeEncounter: pinkDodgeEncounter);
+            return lostStreak > 0;
+        }
+
+        public long CollectGem(int airborneNote = -1, bool pink = false, int pinkDodgeEncounter = 0)
         {
             if (State != RunState.Running) return 0;
             int gemCount = BoostActive ? 2 : 1;
             if (!BoostActive && turboCharge < settings.TurboChargeGems) turboCharge++;
-            long reward = 10L * gemCount;
+            if (pink)
+            {
+                PinkGemsCollected++;
+                PinkGemStreak++;
+                BestPinkGemStreak = Math.Max(BestPinkGemStreak, PinkGemStreak);
+            }
+            long reward = 10L * gemCount * ScoreMultiplier;
             Score += reward; Gems += gemCount; BonusGems += gemCount - 1;
             Record("gem_collected", airborneNote >= 0 ? "air" : "ground", reward,
                 gemDelta: gemCount);
             if (gemCount > 1) Record("boost_bonus_gem");
+            if (pink) Record("pink_gem_collected", pinkDodgeEncounter: pinkDodgeEncounter);
             return reward;
         }
-        public long Hit(string obstacleId = null)
+        public void ClearPinkDodge(int encounter)
+        {
+            if (State != RunState.Running) return;
+            PinkDodgeCleared++;
+            Record("pink_dodge_cleared", pinkDodgeEncounter: encounter);
+        }
+
+        public long Hit(string obstacleId = null, int pinkDodgeEncounter = 0)
         {
             if (State != RunState.Running || IsProtected) return 0;
+            int lostStreak = PinkGemStreak;
+            PinkGemStreak = 0;
             turboCharge = 0;
             bool duringBoost = BoostActive;
             int divisor = duringBoost ? 2 : 4;
@@ -230,7 +276,9 @@ namespace Lotba.Game
             }
             impactTime = Elapsed;
             protectedUntil = impactTime + ImpactProtectionSeconds;
-            Record("obstacle_hit", obstacleId, -loss, gemDelta: -gemLoss, duringBoost: duringBoost);
+            if (pinkDodgeEncounter > 0) PinkDodgeCollisions++;
+            Record("obstacle_hit", obstacleId, -loss, gemDelta: -gemLoss, duringBoost: duringBoost,
+                pinkDodgeEncounter: pinkDodgeEncounter, streakBefore: lostStreak);
             return loss;
         }
         public void Pause()
@@ -249,6 +297,12 @@ namespace Lotba.Game
         {
             if (State == RunState.Running || State == RunState.Paused) Finish(RunEnding.Brake);
         }
+
+        public void EndForOverload()
+        {
+            if (State == RunState.Running) Finish(RunEnding.Overload);
+        }
+
         private void Finish(RunEnding ending)
         {
             Ending = ending;
@@ -257,7 +311,12 @@ namespace Lotba.Game
             if (Telemetry != null)
             {
                 Telemetry.finishedAtUtc = DateTime.UtcNow.ToString("O");
-                string reason = ending == RunEnding.Brake ? "brake" : "route_complete";
+                string reason = ending switch
+                {
+                    RunEnding.Brake => "brake",
+                    RunEnding.Overload => "overload",
+                    _ => "route_complete"
+                };
                 Record("run_finished", reason);
                 Telemetry.summary = new RunTelemetrySummary
                 {
@@ -267,6 +326,10 @@ namespace Lotba.Game
                     voluntaryBoosts = VoluntaryBoosts, manualBoosts = ManualBoosts, bonusGems = BonusGems,
                     recoveryAttempts = RecoveryAttempts,
                     gemsLost = GemsLost, gemBalance = GemBalance, boostCollisions = BoostCollisions,
+                    pinkGemsCollected = PinkGemsCollected, pinkGemsMissed = PinkGemsMissed,
+                    pinkGemNearMisses = PinkGemNearMisses,
+                    pinkDodgeCleared = PinkDodgeCleared, pinkDodgeCollisions = PinkDodgeCollisions,
+                    bestPinkGemStreak = BestPinkGemStreak,
                     gemsSpent = GemsSpent, speedUpgrades = SpeedUpgrades, purchasedSpeedKmh = PurchasedSpeed * 3.6f
                 };
             }
@@ -283,7 +346,8 @@ namespace Lotba.Game
         }
 
         private void Record(string type, string detail = null, long delta = 0,
-            int gemDelta = 0, bool duringBoost = false, int decisionNumber = 0)
+            int gemDelta = 0, bool duringBoost = false, int decisionNumber = 0, int streakBefore = 0,
+            bool pinkGemNearMiss = false, int pinkDodgeEncounter = 0)
         {
             if (Telemetry == null) return;
             Telemetry.events.Add(new RunTelemetryEvent
@@ -294,6 +358,9 @@ namespace Lotba.Game
                 lane = Lane, score = Score, scoreDelta = delta,
                 gemsCollected = Gems, gemBalance = GemBalance, gemDelta = gemDelta, duringBoost = duringBoost,
                 decisionNumber = decisionNumber,
+                pinkGemStreak = PinkGemStreak, scoreMultiplier = ScoreMultiplier, pinkGemStreakBefore = streakBefore,
+                pinkGemNearMiss = pinkGemNearMiss,
+                pinkDodgeEncounter = pinkDodgeEncounter,
                 purchasedSpeedKmh = PurchasedSpeed * 3.6f
             });
         }

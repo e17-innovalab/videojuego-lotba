@@ -60,6 +60,14 @@ Para probar autos y techos, activá **Test Vehicle Course** antes de entrar en P
 
 Para comparar el encuadre, usar Game en orientación vertical. La cámara mantiene la misma zona de juego 9:16 que la partida. El movimiento y la cámara se comparten con el juego.
 
+### Saltos entre bondis
+
+En **Art preview - configure here**, activá **Prueba de saltos entre bondis** antes de entrar en Play. Los tres saltos despegan desde el carril central. El de **12 m** aterriza en el centro, el de **17 m** a la derecha y el de **22 m** a la izquierda. Las gemas marcan el techo de llegada. Saltá desde la franja y cambiá de carril en el aire con **A/D** o las flechas. Volvé al centro después de bajar para tomar la siguiente rampa. Activá **Enable Collisions** para comprobar si un intento termina en choque.
+
+En la vista Game, **1** usa la velocidad inicial de Game Settings, **2** la de crucero y **3** la de crucero más el aumento del turbo. Son velocidades fijas de prueba. **Speed** permite elegir un valor manual. Usá **R** para reiniciar el circuito a la misma velocidad. Los huecos más largos requieren más velocidad o un despegue más cerca del borde.
+
+Durante Play, seleccioná el objeto **Game world** y activá **Gizmos**. Los volúmenes de choque aparecen en rojo y las superficies transitables en cian. Con **Log Obstacle Collisions** activado, el último contacto con penalización se marca en amarillo y la Console muestra la altura en el punto del contacto.
+
 ## Qué se guarda y qué no
 
 Guardar los **prefabs y perfiles**, fuera de Play. Los objetos que aparecen durante la revisión son instancias recicladas: moverlos no cambia el archivo original. Los cambios hechos en la escena o en componentes durante Play normalmente se pierden al salir.
