@@ -12,6 +12,8 @@ namespace Lotba.Game
         [SerializeField] private AudioManager audioFeedback;
         [SerializeField] private DeviceFeedbackAndInput devices;
         private RunSession session;
+        private SessionReportTransport reportTransport;
+        private float nextReportSaveAttempt;
         private bool startRequested, brakeRequested, jumpRequested, pauseRequested, menuRequested, sessionReportSaved;
         private bool overloadRequested;
         private int laneRequested;
@@ -27,6 +29,7 @@ namespace Lotba.Game
         private Vector2 swipeOrigin;
         private void Awake()
         {
+            reportTransport = gameObject.AddComponent<SessionReportTransport>();
             Application.targetFrameRate = Application.platform == RuntimePlatform.WebGLPlayer ? -1 : 60;
             muted = PlayerPrefs.GetInt("Lotba.CityRush.Muted", 0) != 0;
             InitializeQuality();
@@ -61,6 +64,11 @@ namespace Lotba.Game
         private void Update()
         {
             Keyboard keyboard = Keyboard.current;
+            if (hud.DevelopmentOpen)
+            {
+                if (keyboard != null && keyboard.escapeKey.wasPressedThisFrame) hud.CloseDevelopment();
+                return;
+            }
             if (hud.RankingOpen)
             {
                 if (keyboard != null && keyboard.escapeKey.wasPressedThisFrame) hud.CloseRanking();
@@ -153,11 +161,13 @@ namespace Lotba.Game
                 audioFeedback.EndRun(braked);
                 devices.CancelFeedback();
                 world.EndRun(braked, speedBeforeBrake, UseBoostCamera);
-                if (!sessionReportSaved)
-                {
-                    sessionReportSaved = true;
-                    SessionReportWriter.Save(session.Telemetry);
-                }
+            }
+            if (session.State == RunState.Finished && !sessionReportSaved && Time.unscaledTime >= nextReportSaveAttempt)
+            {
+                nextReportSaveAttempt = Time.unscaledTime + 5f;
+                string reportPath = SessionReportWriter.Save(session.Telemetry);
+                sessionReportSaved = reportPath != null;
+                if (sessionReportSaved) reportTransport.TrackSaved(reportPath);
             }
             devices.UpdateBoostFeedback(session.State == RunState.Running
                 ? session.BoostProgress * RunSession.BoostSeconds : 0f);
@@ -169,6 +179,7 @@ namespace Lotba.Game
         private void ResetRun(bool start)
         {
             sessionReportSaved = false;
+            nextReportSaveAttempt = 0f;
             session = new RunSession(settings, world.Route); world.ResetTrack(); hud.ResetView(); audioFeedback.Stop(); devices.CancelFeedback(); trackingSwipe = false;
             if (start) { session.Start(); }
             else world.PrepareOpening();

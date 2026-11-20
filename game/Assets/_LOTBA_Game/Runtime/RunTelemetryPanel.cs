@@ -18,17 +18,16 @@ namespace Lotba.Game
 
         public void Bind()
         {
-            openButton.onClick.AddListener(Open);
-            copyButton.onClick.AddListener(Copy);
-            closeButton.onClick.AddListener(Close);
+            // Technical reports are centralized in DevelopmentToolsPanel.
+            openButton.gameObject.SetActive(false);
+            Close();
         }
 
         public void SetReport(RunTelemetry value)
         {
             report = value;
-            bool available = report?.summary != null;
-            if (openButton.gameObject.activeSelf != available) openButton.gameObject.SetActive(available);
-            if (!available) Close();
+            openButton.gameObject.SetActive(false);
+            Close();
         }
 
         public void Close()
@@ -88,7 +87,7 @@ namespace Lotba.Game
             string routeLength = report.schemaVersion < 7 ? $"Tiempo previsto: {report.durationSeconds:0} s" :
                 report.routeDistanceMetres > 0f ? $"Distancia de ruta: {report.routeDistanceMetres:0} m" : "Ruta continua";
             technicalBody.text = $"Ruta: {report.route} · Semilla: {report.seed}\n" +
-                $"Versión: {report.gameVersion} · Esquema: {report.schemaVersion} · {routeLength}\nID partida: {report.runId}";
+                $"Versión: {report.gameVersion} · {RunTelemetry.SchemaLabel(report.schemaVersion)} · {routeLength}\nID partida: {report.runId}";
         }
 
         private static string Highlight(object value) => $"<color=#FFD870><b>{value}</b></color>";

@@ -1,12 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using UnityEngine;
 
 namespace Lotba.Game
 {
-    /// <summary>Builds and persists local offline SessionReport v1 JSON files without blocking gameplay.</summary>
+    /// <summary>Builds and atomically persists local offline SessionReport v1 JSON files.</summary>
     public static class SessionReportWriter
     {
         public const string ReportVersion = "1.0";
@@ -59,7 +58,7 @@ namespace Lotba.Game
                 }
 
                 string json = JsonUtility.ToJson(report, true);
-                File.WriteAllText(filePath, json, new UTF8Encoding(false));
+                SessionDeliveryStore.WriteAtomic(filePath, json);
                 return filePath;
             }
             catch (Exception ex)
