@@ -1,0 +1,19 @@
+{
+  "name": "lotba-game-backend",
+  "version": "0.1.0",
+  "description": "Local MVP backend for LOTBA game SessionReport v1 ingestion",
+  "main": "src/server.js",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "dev:supabase": "node --env-file=.env --watch src/server.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.109.0",
+    "express": "^4.21.2"
+  }
+}
