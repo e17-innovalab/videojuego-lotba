@@ -30,14 +30,14 @@ Material:
     m_Ints: []
     m_Floats:
     - _AspectRatio: 1
-    - _CenterFade: 0.18
-    - _CenterFadeEdge: 0.16
+    - _CenterFade: 0.2
+    - _CenterFadeEdge: 0.25
     - _ColorMask: 15
-    - _LineDensity: 0.72
-    - _LineFalloff: 0.08
-    - _LineScaleX: 0.35
+    - _LineDensity: 0.6
+    - _LineFalloff: 0.01
+    - _LineScaleX: 2
     - _LineScaleY: 220
-    - _LineSpeedX: -3
+    - _LineSpeedX: -5
     - _LineSpeedY: 0
     - _Opacity: 0
     - _Stencil: 0
@@ -45,7 +45,7 @@ Material:
     - _StencilOp: 0
     - _StencilReadMask: 255
     - _StencilWriteMask: 255
-    - _SteppedFPS: 12
+    - _SteppedFPS: 24
     - _UseUIAlphaClip: 0
     m_Colors:
     - _Center: {r: 0.5, g: 0.5, b: 0, a: 0}

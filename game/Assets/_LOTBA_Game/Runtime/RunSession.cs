@@ -94,6 +94,13 @@ namespace Lotba.Game
             Record("run_started");
         }
 #if UNITY_EDITOR
+        /// <summary>Held turbo for artist playback only; never changes a tracked run.</summary>
+        public void SetPreviewTurbo(bool active)
+        {
+            if (Telemetry != null) return;
+            boostUntil = active ? Elapsed + BoostSeconds : 0f;
+        }
+
         /// <summary>Artist preview advances without a time limit or progression curve.</summary>
         public void TickPreview(float dt, float speed)
         {

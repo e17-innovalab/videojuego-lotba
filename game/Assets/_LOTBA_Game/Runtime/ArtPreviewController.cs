@@ -17,6 +17,7 @@ namespace Lotba.Game
         [SerializeField] private EncounterProfile encounterProfile;
         [SerializeField] private RoadModule module;
         [SerializeField, Min(1)] private float speed = 22;
+        [SerializeField] private bool showTurbo;
         [SerializeField] private bool showRider = true, showGems = true, showObstacles = true;
         [SerializeField] private bool enableCollisions;
         [SerializeField, Range(.25f, 4f)] private float gemIntensity = 1f, obstacleIntensity = 1f;
@@ -30,6 +31,8 @@ namespace Lotba.Game
         private RouteDefinition temporaryRoute;
         private MapDefinition temporaryMap;
         private RunSession session;
+        private BoostSpeedLines turboLines;
+        private GameObject turboCanvas;
         public ArtPreviewMode Mode => mode;
         public string ValidationError
         {
@@ -75,6 +78,11 @@ namespace Lotba.Game
             if (session == null) return;
             // Apply Inspector visibility changes even while playback is paused.
             ApplyPreviewSettings();
+            if (turboLines != null)
+            {
+                turboLines.SetScreenOrigin(world.RiderScreenPosition);
+                turboLines.Render(settings, session, showTurbo);
+            }
             var keyboard = Keyboard.current;
             if (keyboard != null)
             {
@@ -102,8 +110,8 @@ namespace Lotba.Game
             while (budget > 0)
             {
                 float step = Mathf.Min(.02f, budget);
-                session.TickPreview(step, Mathf.Max(1, speed));
-                world.Advance(session, step, false); budget -= step;
+                session.TickPreview(step, Mathf.Max(1, speed) + (showTurbo ? RunSession.BoostSpeed : 0f));
+                world.Advance(session, step, false, showTurbo, showTurbo); budget -= step;
             }
         }
 
@@ -112,6 +120,7 @@ namespace Lotba.Game
             world.ResetTrack();
             session = new RunSession(settings);
             session.Start();
+            session.SetPreviewTurbo(showTurbo);
         }
 
         private void ApplyPreviewSettings()
@@ -119,9 +128,30 @@ namespace Lotba.Game
             world.ConfigureArtPreview(showGems, showObstacles, showRider, enableCollisions);
             world.SetEncounterIntensity(gemIntensity, obstacleIntensity);
             world.ConfigureDepthBend(showWorldBend);
+            session?.SetPreviewTurbo(showTurbo);
+            if (showTurbo && turboLines == null) CreateTurboOverlay();
+        }
+
+        private void CreateTurboOverlay()
+        {
+            // Reuse the production UI effect without loading GameHud or starting a tracked game.
+            var prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(
+                "Assets/_LOTBA_Game/Prefabs/UI/Líneas de velocidad.prefab");
+            if (prefab == null) return;
+            turboCanvas = new GameObject("Art Preview Turbo", typeof(RectTransform), typeof(Canvas),
+                typeof(UnityEngine.UI.CanvasScaler));
+            turboCanvas.transform.SetParent(transform, false);
+            turboCanvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
+            var scaler = turboCanvas.GetComponent<UnityEngine.UI.CanvasScaler>();
+            scaler.uiScaleMode = UnityEngine.UI.CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(540f, 960f);
+            scaler.matchWidthOrHeight = .5f;
+            turboLines = Instantiate(prefab, turboCanvas.transform, false).GetComponent<BoostSpeedLines>();
+            world.InitializeTurboAura();
         }
         private void OnDestroy()
         {
+            if (turboCanvas != null) Destroy(turboCanvas);
             if (temporaryRoute != null) Destroy(temporaryRoute);
             if (temporaryMap != null) Destroy(temporaryMap);
         }

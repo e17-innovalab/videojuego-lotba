@@ -1691,6 +1691,10 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: -717.68
       objectReference: {fileID: 0}
+    - target: {fileID: 619492811423543261, guid: f0b10b17edb6a2948a61becb1af1e219, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 651041234182829066, guid: f0b10b17edb6a2948a61becb1af1e219, type: 3}
       propertyPath: m_AnchorMax.x
       value: 0
@@ -1946,6 +1950,10 @@ PrefabInstance:
     - target: {fileID: 1419233734768018698, guid: f0b10b17edb6a2948a61becb1af1e219, type: 3}
       propertyPath: m_TextStyleHashCode
       value: -1183493901
+      objectReference: {fileID: 0}
+    - target: {fileID: 1502480948736556826, guid: f0b10b17edb6a2948a61becb1af1e219, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1518315188071140269, guid: f0b10b17edb6a2948a61becb1af1e219, type: 3}
       propertyPath: m_isOrthographic
@@ -3145,7 +3153,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6002033664560379141, guid: f0b10b17edb6a2948a61becb1af1e219, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6048834257935752024, guid: f0b10b17edb6a2948a61becb1af1e219, type: 3}
       propertyPath: m_IsActive
@@ -3286,6 +3294,14 @@ PrefabInstance:
     - target: {fileID: 6877080939769999133, guid: f0b10b17edb6a2948a61becb1af1e219, type: 3}
       propertyPath: m_TextStyleHashCode
       value: -1183493901
+      objectReference: {fileID: 0}
+    - target: {fileID: 6927764376072106941, guid: f0b10b17edb6a2948a61becb1af1e219, type: 3}
+      propertyPath: m_isOrthographic
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6927764376072106941, guid: f0b10b17edb6a2948a61becb1af1e219, type: 3}
+      propertyPath: m_ActiveFontFeatures.Array.size
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6942823464618440136, guid: f0b10b17edb6a2948a61becb1af1e219, type: 3}
       propertyPath: m_TextStyleHashCode

@@ -107,10 +107,20 @@ Shader "LOTBA/UI/Radial Speed Lines"
                 float fps = max(_SteppedFPS,1.0);
                 float time = floor(_Time.y * fps) / fps;
                 float period = max(floor(_LineScaleY + 0.5),1.0);
+                float angularPosition = angle * period + time * _LineSpeedY;
+                // Each angular cell has a stable spine. Noise varies along its length,
+                // rather than moving the two edges independently and making blunt ends.
                 half noise = ValueNoise(float2(dist * max(_LineScaleX,0.001) + time * _LineSpeedX,
-                    angle * period + time * _LineSpeedY), period);
-                half lines = smoothstep(_LineDensity,_LineDensity + max(_LineFalloff,0.001h),noise);
-                half centerMask = saturate(((half)dist - _CenterFadeEdge) / max(_CenterFade,0.001h));
+                    floor(angularPosition) + 0.5), period);
+                half centerMask = saturate((half)(dist - _CenterFadeEdge) / max(_CenterFade,0.001h));
+                // Width starts at zero at the current clear-center radius, not at UV origin.
+                // Changing that radius therefore moves the pointed tips along with it.
+                half width = centerMask * lerp(0.15h,0.85h,noise);
+                half across = (half)abs(frac(angularPosition) - 0.5) * 2.0h;
+                half softness = max((half)fwidth(across),max(_LineFalloff * width,0.001h));
+                half shape = saturate((width - across) / softness + 0.5h);
+                half density = smoothstep(_LineDensity,_LineDensity + max(_LineFalloff,0.001h),noise);
+                half lines = shape * density;
                 half4 result = input.color;
                 result.a *= lines * centerMask * _Opacity * tex2D(_MainTex,input.uv).a;
                 #ifdef UNITY_UI_CLIP_RECT

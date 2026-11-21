@@ -173,6 +173,7 @@ namespace Lotba.Game.Editor
             root.Add(module);
             foreach (string name in new[] { "speed", "showRider", "showGems", "showObstacles", "showWorldBend", "enableCollisions", "testVehicleCourse" })
                 root.Add(new PropertyField(serializedObject.FindProperty(name)));
+            root.Add(new PropertyField(serializedObject.FindProperty("showTurbo"), "Turbo"));
             root.Add(new PropertyField(serializedObject.FindProperty("testRoofJumps"), "Prueba de saltos entre bondis"));
             var jumpHelp = new HelpBox("Antes de Play, activá la prueba. En Game: W/↑ salta, R reinicia, 1/2/3 cambia la velocidad. Activá Enable Collisions para probar impactos.", HelpBoxMessageType.Info);
             root.Add(jumpHelp);
