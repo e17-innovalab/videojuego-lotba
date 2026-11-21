@@ -7,7 +7,7 @@ namespace Lotba.Game
     [Serializable]
     public sealed class RunTelemetry
     {
-        public const int CurrentSchemaVersion = 19;
+        public const int CurrentSchemaVersion = 20;
         public int schemaVersion = CurrentSchemaVersion;
         public static string SchemaLabel(int version) => $"Datos v{version}";
         public string runId = Guid.NewGuid().ToString("N");
@@ -57,7 +57,7 @@ namespace Lotba.Game
         public int manualBoosts;
         public int recoveryAttempts;
         public int decisionsShown, decisionsKept;
-        public int gemsLost, gemBalance, boostCollisions;
+        public int gemsLost, gemsRecovered, gemBalance, boostCollisions;
         public int gemsSpent, speedUpgrades;
         public int pinkGemsCollected, pinkGemsMissed, pinkGemNearMisses, bestPinkGemStreak;
         public int pinkDodgeCleared, pinkDodgeCollisions;

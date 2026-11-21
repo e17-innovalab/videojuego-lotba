@@ -18,6 +18,7 @@ namespace Lotba.Game
         private bool overloadRequested;
         private int laneRequested;
         private bool? speedChoiceRequested;
+        private bool? recoveryChoiceRequested;
         private bool muted, trackingSwipe;
         private const string QualityPreference = "Lotba.CityRush.Quality";
         private static readonly string[] QualityNames = { "Low", "Medium", "High" };
@@ -47,6 +48,7 @@ namespace Lotba.Game
             hud.VibrationRequested += devices.CycleVibrationLevel;
             hud.QualityRequested += CycleQuality;
             hud.SpeedChosen += ChooseSpeed;
+            hud.RecoveryChosen += ChooseRecovery;
             hud.TurboRequested += ActivateTurbo;
             hud.UiClicked += audioFeedback.PlayUiClick;
             world.GemFeedback += OnGem;
@@ -99,6 +101,7 @@ namespace Lotba.Game
                 ResetRun(false);
                 audioFeedback.UpdateMusic(session.State);
                 speedChoiceRequested = null;
+                recoveryChoiceRequested = null;
                 startRequested = brakeRequested = jumpRequested = pauseRequested = menuRequested = false; laneRequested = 0;
                 hud.Render(session, settings, muted, devices, IsHighQuality);
                 return;
@@ -131,6 +134,7 @@ namespace Lotba.Game
                     session.ChooseSpeed(speedChoiceRequested.Value);
                     if (session.VoluntaryBoosts > previousBoosts) audioFeedback.PlayBoostStart();
                 }
+                if (recoveryChoiceRequested.HasValue) session.ChooseRecovery(recoveryChoiceRequested.Value);
                 if (session.State == RunState.Running && !session.OfferPending)
                 {
                     if (laneRequested != 0 && session.Move(laneRequested)) audioFeedback.PlayLaneSlide();
@@ -173,7 +177,9 @@ namespace Lotba.Game
                 ? session.BoostProgress * RunSession.BoostSeconds : 0f);
             if (session.State != RunState.Finished) audioFeedback.UpdateMusic(session.State);
             speedChoiceRequested = null;
+            recoveryChoiceRequested = null;
             startRequested = brakeRequested = jumpRequested = pauseRequested = menuRequested = false; laneRequested = 0;
+            hud.SetSpeedLinesOrigin(world.RiderScreenPosition);
             hud.Render(session, settings, muted, devices, IsHighQuality);
         }
         private void ResetRun(bool start)
@@ -195,7 +201,9 @@ namespace Lotba.Game
             if (!trackingSwipe) return;
             if (session.State != RunState.Running) { trackingSwipe = false; return; }
             Vector2 delta = pointer.position.ReadValue() - swipeOrigin;
-            if (delta.magnitude < Mathf.Max(18, Screen.width * .055f))
+            // A wider tablet must not require a proportionally longer swipe.
+            float gestureWidth = Mathf.Min(Screen.width, Screen.height * (9f / 16f));
+            if (delta.magnitude < Mathf.Clamp(gestureWidth * .055f, 18f, 48f))
             { if (pointer.press.wasReleasedThisFrame) trackingSwipe = false; return; }
             trackingSwipe = false;
             if (Mathf.Abs(delta.x) > Mathf.Abs(delta.y)) RequestLane(delta.x > 0 ? 1 : -1);
@@ -243,6 +251,10 @@ namespace Lotba.Game
         private void ChooseSpeed(bool accelerate)
         {
             if (session.OfferPending && !speedChoiceRequested.HasValue) speedChoiceRequested = accelerate;
+        }
+        private void ChooseRecovery(bool accept)
+        {
+            if (session.RecoveryOfferPending && !recoveryChoiceRequested.HasValue) recoveryChoiceRequested = accept;
         }
         private void RequestPause() { if (!hud.SettingsOpen) pauseRequested = true; }
         private void RequestMenu() => menuRequested = true;
@@ -318,6 +330,7 @@ namespace Lotba.Game
             hud.VibrationRequested -= devices.CycleVibrationLevel;
             hud.QualityRequested -= CycleQuality;
             hud.SpeedChosen -= ChooseSpeed;
+            hud.RecoveryChosen -= ChooseRecovery;
             hud.TurboRequested -= ActivateTurbo;
             hud.UiClicked -= audioFeedback.PlayUiClick;
             world.GemFeedback -= OnGem;

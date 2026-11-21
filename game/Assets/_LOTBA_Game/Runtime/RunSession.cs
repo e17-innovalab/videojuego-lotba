@@ -6,7 +6,7 @@ namespace Lotba.Game
     public enum RunEnding { None, Brake, RouteComplete = 3, Overload }
 
     /// <summary>Run state only: no cards, menus, physics, or scene object ownership.</summary>
-    public sealed class RunSession
+    public sealed partial class RunSession
     {
         private readonly GameSettings settings;
         private readonly RouteDefinition telemetryRoute;
@@ -27,10 +27,11 @@ namespace Lotba.Game
         private int turboCharge;
         public float TurboChargeProgress => (float)turboCharge / settings.TurboChargeGems;
         public bool CanActivateTurbo => State == RunState.Running && !OfferPending &&
-            !BoostActive && TurboChargeProgress >= 1f;
+            !BoostActive && !RecoveryActive && TurboChargeProgress >= 1f;
         public int ManualBoosts { get; private set; }
         public int RecoveryAttempts { get; private set; }
-        public bool OfferPending { get; private set; }
+        private bool speedOfferPending;
+        public bool OfferPending => speedOfferPending || RecoveryOfferPending;
         public bool BoostActive => Elapsed < boostUntil;
         public float BoostProgress => BoostActive ? (boostUntil - Elapsed) / BoostSeconds : 0f;
         public int VoluntaryBoosts { get; private set; }
@@ -59,7 +60,7 @@ namespace Lotba.Game
         public long Score { get; private set; }
         public int Gems { get; private set; }
         public int GemsLost { get; private set; }
-        public int GemBalance => Gems - GemsLost - GemsSpent;
+        public int GemBalance => Gems - GemsLost - GemsSpent + GemsRecovered;
         public int BoostCollisions { get; private set; }
         public int Collisions { get; private set; }
         public int Lane { get; private set; } = 1;
@@ -114,7 +115,7 @@ namespace Lotba.Game
             float sinceImpact = Elapsed - impactTime;
             float recovery = Math.Min(1f, sinceImpact / ImpactRecoverySeconds);
             Speed = Math.Max(0f, baseSpeed + PurchasedSpeed + DecisionBoostSpeed +
-                (BoostActive ? BoostSpeed : 0f) - ImpactSpeedLoss * (1f - recovery));
+                (BoostActive ? BoostSpeed : 0f) + (RecoveryActive ? RecoverySpeed : 0f) - ImpactSpeedLoss * (1f - recovery));
             PeakSpeed = Math.Max(PeakSpeed, Speed);
             Distance += Speed * step;
             if (Telemetry != null)
@@ -134,9 +135,9 @@ namespace Lotba.Game
         }
         public void ShowSpeedOffer()
         {
-            if (Telemetry == null || State != RunState.Running || OfferPending ||
+            if (Telemetry == null || State != RunState.Running || OfferPending || RecoveryActive ||
                 !HasDecisionProgress || Distance < OfferDistance) return;
-            OfferPending = true;
+            speedOfferPending = true;
             DecisionsShown++;
             Record("speed_offer_shown", decisionNumber: DecisionsShown);
         }
@@ -162,9 +163,9 @@ namespace Lotba.Game
 
         public void ChooseSpeed(bool accelerate)
         {
-            if (!OfferPending || State != RunState.Running) return;
+            if (!speedOfferPending || State != RunState.Running) return;
             if (accelerate && UpgradeCost > 0 && !CanBuySpeed) return;
-            OfferPending = false;
+            speedOfferPending = false;
             previousOfferDistance = Distance;
             OfferDistance = 0f;
             if (!accelerate)
@@ -279,6 +280,7 @@ namespace Lotba.Game
             if (pinkDodgeEncounter > 0) PinkDodgeCollisions++;
             Record("obstacle_hit", obstacleId, -loss, gemDelta: -gemLoss, duringBoost: duringBoost,
                 pinkDodgeEncounter: pinkDodgeEncounter, streakBefore: lostStreak);
+            OnRecoveryImpact(gemLoss);
             return loss;
         }
         public void Pause()
@@ -305,9 +307,10 @@ namespace Lotba.Game
 
         private void Finish(RunEnding ending)
         {
+            InterruptRecovery(ending);
             Ending = ending;
             State = RunState.Finished;
-            OfferPending = false;
+            speedOfferPending = false;
             if (Telemetry != null)
             {
                 Telemetry.finishedAtUtc = DateTime.UtcNow.ToString("O");
@@ -325,7 +328,7 @@ namespace Lotba.Game
                     decisionsShown = DecisionsShown, decisionsKept = DecisionsKept,
                     voluntaryBoosts = VoluntaryBoosts, manualBoosts = ManualBoosts, bonusGems = BonusGems,
                     recoveryAttempts = RecoveryAttempts,
-                    gemsLost = GemsLost, gemBalance = GemBalance, boostCollisions = BoostCollisions,
+                    gemsLost = GemsLost, gemsRecovered = GemsRecovered, gemBalance = GemBalance, boostCollisions = BoostCollisions,
                     pinkGemsCollected = PinkGemsCollected, pinkGemsMissed = PinkGemsMissed,
                     pinkGemNearMisses = PinkGemNearMisses,
                     pinkDodgeCleared = PinkDodgeCleared, pinkDodgeCollisions = PinkDodgeCollisions,

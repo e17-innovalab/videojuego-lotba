@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace Lotba.Game
 {
-    /// <summary>Keeps a portrait play area and safe touch bounds on phones and wide desktop windows.</summary>
+    /// <summary>Uses the full camera surface and keeps UI inside the device's physical safe area.</summary>
     public sealed class PortraitViewport : MonoBehaviour
     {
         [SerializeField] private Camera worldCamera;
@@ -22,17 +22,13 @@ namespace Lotba.Game
             lastWidth = Screen.width;
             lastHeight = Screen.height;
             lastSafeArea = Screen.safeArea;
-            float screenAspect = Screen.width / (float)Mathf.Max(1, Screen.height);
-            const float targetAspect = 9f / 16f;
-            Rect viewport = screenAspect > targetAspect
-                ? new Rect((1f - targetAspect / screenAspect) * .5f, 0f, targetAspect / screenAspect, 1f)
-                : new Rect(0f, 0f, 1f, 1f);
-            if (worldCamera != null) worldCamera.rect = viewport;
+            if (worldCamera != null) worldCamera.rect = new Rect(0f, 0f, 1f, 1f);
             // Art preview shares the camera framing without requiring a Canvas.
             if (safeArea == null) return;
             Rect physicalSafeArea = Screen.safeArea;
-            safeArea.anchorMin = new Vector2(Mathf.Max(viewport.xMin, physicalSafeArea.xMin / Screen.width), physicalSafeArea.yMin / Screen.height);
-            safeArea.anchorMax = new Vector2(Mathf.Min(viewport.xMax, physicalSafeArea.xMax / Screen.width), physicalSafeArea.yMax / Screen.height);
+            float width = Mathf.Max(1, Screen.width), height = Mathf.Max(1, Screen.height);
+            safeArea.anchorMin = new Vector2(physicalSafeArea.xMin / width, physicalSafeArea.yMin / height);
+            safeArea.anchorMax = new Vector2(physicalSafeArea.xMax / width, physicalSafeArea.yMax / height);
             safeArea.offsetMin = safeArea.offsetMax = Vector2.zero;
         }
     }

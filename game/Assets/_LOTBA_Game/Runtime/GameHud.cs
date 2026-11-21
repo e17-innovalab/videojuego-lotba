@@ -60,6 +60,7 @@ namespace Lotba.Game
         [SerializeField] private TMPro.TMP_Text increaseSpeedDetail, increaseSpeedPrice;
         [SerializeField] private RectTransform increaseSpeedPriceBadge;
         [SerializeField] private BoostSpeedLines boostSpeedLines;
+        public void SetSpeedLinesOrigin(Vector2 screenPosition) => boostSpeedLines?.SetScreenOrigin(screenPosition);
         [SerializeField] private RectTransform milestoneBar, milestoneFill, milestoneRider;
         private Vector2 milestoneFillEnd, milestoneRiderMin, milestoneRiderMax;
         [SerializeField] private UnityEngine.UI.Button turboButton;
@@ -77,6 +78,7 @@ namespace Lotba.Game
         public event Action<bool> SpeedChosen;
         private void Awake()
         {
+            BindResponsiveWidths();
             ApplyIdentity();
             wordBannerVisiblePosition = wordBanner.anchoredPosition;
             wordBanner.gameObject.SetActive(false);
@@ -119,6 +121,19 @@ namespace Lotba.Game
             foreach (var button in GetComponentsInChildren<UnityEngine.UI.Button>(true))
                 if (button != brake && button != turboButton)
                     button.onClick.AddListener(() => UiClicked?.Invoke());
+        }
+
+        private void BindResponsiveWidths()
+        {
+            ReadablePanelWidth.Wrap(speedOffer);
+            ReadablePanelWidth.Wrap(wordBanner);
+            ReadablePanelWidth.Wrap(pausePanel != null ? pausePanel.transform as RectTransform : null);
+            ReadablePanelWidth.Wrap(resultPanel != null ? resultPanel.transform as RectTransform : null);
+            ReadablePanelWidth.Wrap(endingMessage != null ? endingMessage.transform as RectTransform : null);
+            ReadablePanelWidth.Wrap(settingsPanel != null ? settingsPanel.transform.Find("Marco") as RectTransform : null);
+            ReadablePanelWidth.Wrap(rankingCard);
+            if (developmentOverlay != null)
+                ReadablePanelWidth.Wrap(developmentOverlay.transform.Find("Card") as RectTransform);
         }
 
         public void SetAudioLevels(float music, float effects)
@@ -324,7 +339,7 @@ namespace Lotba.Game
             pause.interactable = !SettingsOpen && !session.OfferPending;
             if (speedOffer != null)
             {
-                speedOffer.gameObject.SetActive(showOffer);
+                speedOffer.gameObject.SetActive(showOffer && !session.RecoveryOfferPending);
                 if (speedOffer.gameObject.activeSelf)
                 {
                     bool upgrade = session.UpgradeCost > 0;
@@ -367,6 +382,7 @@ namespace Lotba.Game
                 milestoneRider.anchorMin = new Vector2(milestoneRiderMin.x, milestoneRiderMin.y + progress);
                 milestoneRider.anchorMax = new Vector2(milestoneRiderMax.x, milestoneRiderMax.y + progress);
             }
+            RenderRecovery(session, settings);
             float hudWidth = ((RectTransform)raceHud.transform).rect.width;
             bool hudResized = !Mathf.Approximately(hudWidth, previousHudWidth);
             previousHudWidth = hudWidth;
@@ -413,7 +429,14 @@ namespace Lotba.Game
                 resultRows[0].text = $"Recorriste {ResultHighlight($"{session.Distance / 1000f:0.0#} km", settings.Brand.White)}";
                 resultRows[1].text = $"Recolectaste {ResultHighlight($"{session.Gems} gemas", settings.Brand.Pink)}";
                 resultRows[2].text = $"Chocaste {ResultHighlight(Times(session.Collisions), settings.Brand.Red)}";
-                resultRows[3].text = $"Trataste de recuperarte {ResultHighlight(Times(session.RecoveryAttempts), settings.Brand.Green)}";
+                resultRows[3].text = session.RecoveryOutcome switch
+                {
+                    "succeeded" => $"Recuperaste {ResultHighlight($"{session.GemsRecovered} gemas", settings.Brand.Green)}",
+                    "failed" => "Intentaste recuperar y chocaste",
+                    "interrupted" => "Recupero interrumpido al terminar",
+                    "declined" => "Elegiste seguir sin intentar recuperar",
+                    _ => $"Intentos de recupero: {session.RecoveryAttempts}"
+                };
                 resultRows[4].text = $"Aceleraste {ResultHighlight(Times(session.VoluntaryBoosts + session.SpeedUpgrades), settings.Brand.Yellow)}";
                 if (resultRows.Length > 5 && resultRows[5] != null)
                     resultRows[5].text = $"Racha máxima {ResultHighlight($"×{session.BestPinkGemStreak}", settings.Brand.Yellow)}";

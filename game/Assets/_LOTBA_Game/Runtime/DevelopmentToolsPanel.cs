@@ -40,6 +40,12 @@ namespace Lotba.Game
 
         private void BindExisting()
         {
+            if (availableMetrics != null)
+                foreach (var label in availableMetrics.GetComponentsInChildren<TMP_Text>(true))
+                    if (label.text.StartsWith("Datos v"))
+                        label.text = RunTelemetry.SchemaLabel(RunTelemetry.CurrentSchemaVersion) +
+                            "\nDecisiones · aceleraciones · compras\nChoques · puntos · gemas · rosas / CASI\nLetras · final de partida" +
+                            "\nRecupero: intentos, resultados y gemas devueltas.\nSin datos personales.";
             if (launcher == null || closeButton == null || endpoint == null)
             {
                 Debug.LogError("Development tools hierarchy is not fully assigned in the Game UI prefab.", this);

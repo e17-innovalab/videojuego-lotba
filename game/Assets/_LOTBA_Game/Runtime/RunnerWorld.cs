@@ -15,6 +15,7 @@ namespace Lotba.Game
         [SerializeField] private Transform[] pedals;
         [SerializeField] private RoadStreamer roadStream;
         [SerializeField] private Camera worldCamera;
+        public Vector2 RiderScreenPosition => worldCamera.WorldToScreenPoint(rider.position + Vector3.up * 1.2f);
         private float riderDistance;
         internal const float BrakeSlideSeconds = .50f;
         private float brakeSlideStarted = float.NegativeInfinity;
@@ -1173,6 +1174,13 @@ namespace Lotba.Game
             AdvanceLetter(travel, step, session, dt);
             using (PopulateAheadMarker.Auto())
                 PopulateAhead(session.Distance, session.Speed);
+            bool safeForRecovery = jump.HeightAt(session.Elapsed) <= 0f && courseFallSpeed == 0f;
+            foreach (TrackItem item in items)
+                if (item.Active && item.Definition != null && Mathf.Abs(item.LaneX - x) < .83f &&
+                    item.View.localPosition.z > -item.Definition.Length * .5f &&
+                    item.View.localPosition.z < session.Speed * 1.5f + item.Definition.Length * .5f)
+                    safeForRecovery = false;
+            session.UpdateRecovery(safeForRecovery);
             session.ShowSpeedOffer();
             float protection = session.ProtectionProgress;
             const float whiteFlashEnd = .07f;
