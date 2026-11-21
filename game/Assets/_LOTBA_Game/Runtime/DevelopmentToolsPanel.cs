@@ -11,15 +11,13 @@ namespace Lotba.Game
     public sealed class DevelopmentToolsPanel : MonoBehaviour
     {
         private SessionReportTransport transport;
-        private TMP_FontAsset font;
-        private GameObject overlay, confirmation;
-        private GameObject pagination, detailSection, emptyState, sessionsSection;
-        private UnityEngine.UI.Button previousPage, nextPage, sendPending, resend, deleteLocal, saveEndpoint, testConnection;
-        private UnityEngine.UI.ScrollRect bodyScroll;
-        private RectTransform saveIcon;
-        private RectTransform rows;
-        private TMP_InputField endpoint;
-        private TMP_Text status, details, confirmText, pageLabel, reportCount, savedState, connectionResult, recordedMetrics, actionStatus;
+        [SerializeField] private TMP_FontAsset font;
+        [SerializeField] private GameObject overlay, confirmation, pagination, detailSection, emptyState, sessionsSection, availableMetrics;
+        [SerializeField] private UnityEngine.UI.Button launcher, closeButton, previousPage, nextPage, sendPending, resend, deleteLocal, saveEndpoint, testConnection, backToReports, copySelected, confirmButton, cancelButton, recordedMetricsButton, availableMetricsButton;
+        [SerializeField] private UnityEngine.UI.ScrollRect bodyScroll;
+        [SerializeField] private RectTransform saveIcon, rows;
+        [SerializeField] private TMP_InputField endpoint;
+        [SerializeField] private TMP_Text status, details, confirmText, pageLabel, reportCount, savedState, connectionResult, recordedMetrics, actionStatus;
         private string selected;
         private int page;
         private Action confirmed;
@@ -28,115 +26,51 @@ namespace Lotba.Game
         private readonly Color muted = new Color32(156, 180, 193, 255);
         private readonly Color accent = new Color32(103, 215, 202, 255);
 
-        public void Initialize(Transform menu, TMP_FontAsset fontAsset, SessionReportTransport sender, Sprite icon)
+        public void Initialize(SessionReportTransport sender)
         {
-            font = fontAsset; transport = sender;
+            transport = sender;
             if (transport == null) return;
-            var launcher = Button(menu, "", Open);
-            launcher.name = "DevelopmentToolsButton";
-            var launchRect = (RectTransform)launcher.transform;
-            launchRect.anchorMin = launchRect.anchorMax = launchRect.pivot = Vector2.one;
-            launchRect.sizeDelta = new Vector2(56, 56); launchRect.anchoredPosition = new Vector2(-18, -18);
-            launcher.GetComponent<UnityEngine.UI.Image>().color = new Color(0.05f, .10f, .14f, .65f);
-            var glyph = Rect("Icon", launchRect);
-            glyph.anchorMin = glyph.anchorMax = new Vector2(.5f, .5f); glyph.sizeDelta = new Vector2(30, 30);
-            var symbol = glyph.gameObject.AddComponent<UnityEngine.UI.Image>();
-            symbol.sprite = icon; symbol.preserveAspect = true; symbol.color = muted; symbol.raycastTarget = false;
+            if (overlay == null)
+            {
+                Debug.LogError("Development tools hierarchy is missing from the Game UI prefab.", this);
+                return;
+            }
+            BindExisting();
+        }
 
-            var canvas = GetComponentInParent<Canvas>();
-            var root = Rect("DevelopmentTools", canvas.transform);
-            root.anchorMin = Vector2.zero; root.anchorMax = Vector2.one;
-            root.offsetMin = root.offsetMax = Vector2.zero;
-            overlay = root.gameObject;
-            root.gameObject.AddComponent<UnityEngine.UI.Image>().color = background;
-            var layer = root.gameObject.AddComponent<Canvas>(); layer.overrideSorting = true; layer.sortingOrder = 200;
-            root.gameObject.AddComponent<UnityEngine.UI.GraphicRaycaster>();
-            var card = Rect("Card", root);
-            card.anchorMin = new Vector2(.04f, .04f); card.anchorMax = new Vector2(.96f, .96f);
-            card.offsetMin = card.offsetMax = Vector2.zero;
-            var layout = card.gameObject.AddComponent<UnityEngine.UI.VerticalLayoutGroup>();
-            layout.spacing = 18; layout.childControlHeight = true; layout.childControlWidth = true;
-            layout.childForceExpandHeight = false;
-            var header = Row(card);
-            var heading = Rect("Heading", header);
-            var headingLayout = heading.gameObject.AddComponent<UnityEngine.UI.VerticalLayoutGroup>();
-            headingLayout.childControlHeight = true; headingLayout.childControlWidth = true; headingLayout.childForceExpandHeight = false;
-            heading.gameObject.AddComponent<UnityEngine.UI.LayoutElement>().flexibleWidth = 1;
-            Text(heading, "Desarrollo", 32);
-            Text(heading, "USO INTERNO", 16).color = muted;
-            var close = Button(header, "Cerrar", Close);
-            var closeSize = close.GetComponent<UnityEngine.UI.LayoutElement>(); closeSize.preferredWidth = 95; closeSize.flexibleWidth = 0;
-            var scrollRoot = Rect("Scroll", card);
-            var sizing = scrollRoot.gameObject.AddComponent<UnityEngine.UI.LayoutElement>(); sizing.flexibleHeight = 1; sizing.minHeight = 200;
-            var scroll = scrollRoot.gameObject.AddComponent<UnityEngine.UI.ScrollRect>();
-            bodyScroll = scroll;
-            var viewport = Rect("Viewport", scrollRoot); Stretch(viewport);
-            viewport.gameObject.AddComponent<UnityEngine.UI.Image>().color = background;
-            viewport.gameObject.AddComponent<UnityEngine.UI.Mask>().showMaskGraphic = false;
-            var content = Rect("Content", viewport);
-            content.anchorMin = new Vector2(0, 1); content.anchorMax = Vector2.one;
-            content.pivot = new Vector2(.5f, 1); content.sizeDelta = Vector2.zero;
-            var vertical = content.gameObject.AddComponent<UnityEngine.UI.VerticalLayoutGroup>();
-            vertical.spacing = 18; vertical.childControlWidth = true; vertical.childControlHeight = true; vertical.childForceExpandHeight = false;
-            vertical.padding = new RectOffset(0, 0, 0, 24);
-            content.gameObject.AddComponent<UnityEngine.UI.ContentSizeFitter>().verticalFit = UnityEngine.UI.ContentSizeFitter.FitMode.PreferredSize;
-            scroll.viewport = viewport; scroll.content = content; scroll.horizontal = false;
-            var connection = Section(content, "Conexión");
-            Text(connection, "Dirección del backend", 19).color = muted;
-            endpoint = Input(connection);
-            var savedRow = Row(connection);
-            saveIcon = Rect("SaveStateIcon", savedRow);
-            var iconSize = saveIcon.gameObject.AddComponent<UnityEngine.UI.LayoutElement>();
-            iconSize.preferredWidth = 20; iconSize.minHeight = 22;
-            savedState = Text(savedRow, "", 17);
+        private void BindExisting()
+        {
+            if (launcher == null || closeButton == null || endpoint == null)
+            {
+                Debug.LogError("Development tools hierarchy is not fully assigned in the Game UI prefab.", this);
+                return;
+            }
+            endpoint.keyboardType = TouchScreenKeyboardType.Default;
+            endpoint.shouldHideMobileInput = false;
+            launcher.onClick.AddListener(Open);
+            closeButton.onClick.AddListener(Close);
             endpoint.onValueChanged.AddListener(_ => UpdateEndpointState());
-            var connectionActions = Row(connection);
-            saveEndpoint = Button(connectionActions, "Guardar", () => { CancelConfirmation(); if (transport.Configure(endpoint.text)) endpoint.text = transport.BaseUrl; UpdateEndpointState(); }, true);
-            testConnection = Link(connectionActions, "Probar conexión", () => transport.TestConnection(endpoint.text));
-            connectionResult = Text(connection, "", 18);
-            connectionResult.gameObject.SetActive(false);
-
-            var sessions = Section(content, "Partidas guardadas");
-            sessionsSection = sessions.gameObject;
-            reportCount = Text(sessions, "", 19); reportCount.color = muted;
-            status = Text(sessions, "", 18); status.color = muted;
-            sendPending = Button(sessions, "Enviar pendientes", transport.SendPending, true);
-            emptyState = Text(sessions, "Todavía no hay partidas guardadas.\nAparecerán al terminar una partida.", 21).gameObject;
-            emptyState.GetComponent<TMP_Text>().color = muted;
-            rows = Rect("Reports", sessions);
-            var rowLayout = rows.gameObject.AddComponent<UnityEngine.UI.VerticalLayoutGroup>();
-            rowLayout.spacing = 8; rowLayout.childControlHeight = true; rowLayout.childControlWidth = true; rowLayout.childForceExpandHeight = false;
-            var pages = Row(sessions); pagination = pages.gameObject;
-            previousPage = Button(pages, "Anterior", () => { page = Math.Max(0, page - 1); Refresh(); });
-            pageLabel = Text(pages, "", 19); pageLabel.alignment = TextAlignmentOptions.Center;
-            nextPage = Button(pages, "Siguiente", () => { page++; Refresh(); });
-            var detail = Section(content, "Detalle de partida"); detailSection = detail.gameObject;
-            Link(detail, "< Volver a partidas", () => { selected = null; CancelConfirmation(); Refresh(); ResetScroll(); });
-            var actions = Row(detail);
-            Button(actions, "Copiar JSON", CopySelected);
-            resend = Button(actions, "Reenviar", () => ConfirmSelected(false));
-            deleteLocal = Button(actions, "Borrar", () => ConfirmSelected(true));
-            deleteLocal.GetComponent<UnityEngine.UI.Image>().color = new Color32(91, 47, 56, 255);
-            actionStatus = Text(detail, "", 18); actionStatus.color = muted;
-            var confirm = Rect("Confirmation", root); confirmation = confirm.gameObject;
-            Stretch(confirm); confirm.gameObject.AddComponent<UnityEngine.UI.Image>().color = new Color(0, 0, 0, .8f);
-            var confirmCard = Section(confirm, "Confirmar acción");
-            confirmCard.anchorMin = new Vector2(.08f, .5f); confirmCard.anchorMax = new Vector2(.92f, .5f);
-            confirmCard.sizeDelta = new Vector2(0, 300);
-            confirmText = Text(confirmCard, "", 21);
-            var confirmActions = Row(confirmCard);
-            Button(confirmActions, "Confirmar", () => { var action = confirmed; CancelConfirmation(); action?.Invoke(); });
-            Button(confirmActions, "Cancelar", CancelConfirmation);
-            confirmation.SetActive(false);
-            details = Text(detail, "", 20); details.color = muted;
-            recordedMetrics = Text(detail, "", 18); recordedMetrics.color = muted; recordedMetrics.gameObject.SetActive(false);
-            Link(detail, "Ver métricas de la partida", () => recordedMetrics.gameObject.SetActive(!recordedMetrics.gameObject.activeSelf));
-            var measured = Section(content, "Instrumentación");
-            var metrics = Text(measured, $"Datos v{RunTelemetry.CurrentSchemaVersion}\nDecisiones · aceleraciones · compras\nChoques · puntos · gemas · rosas / CASI\nLetras · final de partida\n\nRecupero: pendiente de implementar.", 19);
-            metrics.color = muted; metrics.gameObject.SetActive(false);
-            Button(measured, "Ver métricas disponibles", () => metrics.gameObject.SetActive(!metrics.gameObject.activeSelf));
-            overlay.SetActive(false);
+            saveEndpoint.onClick.AddListener(() =>
+            {
+                CancelConfirmation();
+                if (transport.Configure(endpoint.text)) endpoint.text = transport.BaseUrl;
+                UpdateEndpointState();
+            });
+            testConnection.onClick.AddListener(() => transport.TestConnection(endpoint.text));
+            sendPending.onClick.AddListener(transport.SendPending);
+            previousPage.onClick.AddListener(() => { page = Math.Max(0, page - 1); Refresh(); });
+            nextPage.onClick.AddListener(() => { page++; Refresh(); });
+            backToReports.onClick.AddListener(() => { selected = null; CancelConfirmation(); Refresh(); ResetScroll(); });
+            copySelected.onClick.AddListener(CopySelected);
+            resend.onClick.AddListener(() => ConfirmSelected(false));
+            deleteLocal.onClick.AddListener(() => ConfirmSelected(true));
+            confirmButton.onClick.AddListener(() => { var action = confirmed; CancelConfirmation(); action?.Invoke(); });
+            cancelButton.onClick.AddListener(CancelConfirmation);
+            recordedMetricsButton.onClick.AddListener(() => recordedMetrics.gameObject.SetActive(!recordedMetrics.gameObject.activeSelf));
+            availableMetricsButton.onClick.AddListener(() => availableMetrics.SetActive(!availableMetrics.activeSelf));
+            if (transport != null) transport.Changed -= Refresh;
             transport.Changed += Refresh;
+            overlay.SetActive(false);
         }
 
         private void Open()
@@ -410,7 +344,17 @@ namespace Lotba.Game
             input.keyboardType = TouchScreenKeyboardType.URL; input.richText = false;
             return input;
         }
-        private void OnDestroy() { if (transport != null) transport.Changed -= Refresh; if (overlay != null) Destroy(overlay); }
+        private void OnDestroy() { if (transport != null) transport.Changed -= Refresh; }
+    }
+}
+#else
+namespace Lotba.Game
+{
+    /// <summary>Empty release-build counterpart so the serialized prefab has no missing script.</summary>
+    public sealed class DevelopmentToolsPanel : UnityEngine.MonoBehaviour
+    {
+        public bool IsOpen => false;
+        public void Close() { }
     }
 }
 #endif
