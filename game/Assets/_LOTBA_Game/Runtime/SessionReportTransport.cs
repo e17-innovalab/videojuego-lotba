@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using UnityEngine;
@@ -25,6 +26,16 @@ namespace Lotba.Game
         public bool ConnectionTestInProgress => healthCheck;
         public event Action Changed;
         private bool healthCheck;
+        private bool draining;
+        private readonly Queue<DeliveryRequest> requests = new Queue<DeliveryRequest>();
+        private readonly HashSet<string> queued = new HashSet<string>();
+        private readonly HashSet<string> unavailableDestinations = new HashSet<string>();
+
+        private sealed class DeliveryRequest
+        {
+            public string path, destination;
+            public string Key => path + "\n" + destination;
+        }
 
         [Serializable] private sealed class Receipt { public string status, runId; }
 
@@ -36,7 +47,25 @@ namespace Lotba.Game
             string configured = PlayerPrefs.GetString(EndpointPreference, DefaultBaseUrl);
             if (TryNormalize(configured, out string normalized, out _)) BaseUrl = normalized;
 #endif
-            StartCoroutine(Pump());
+        }
+
+        private void Start() => QueueStartupPending();
+
+        private void QueueStartupPending()
+        {
+            try
+            {
+                foreach (string path in Store.Reports())
+                {
+                    try
+                    {
+                        foreach (var delivery in Store.Read(path).deliveries)
+                            if (delivery.status == "pending") Enqueue(path, delivery.destination);
+                    }
+                    catch (Exception ex) { Debug.LogWarning("[Telemetry] " + ex.Message); }
+                }
+            }
+            catch (Exception ex) { Notify("No se pudo leer la cola: " + ex.Message); }
         }
 
         public static bool TryNormalize(string value, out string normalized, out string error)
@@ -69,7 +98,19 @@ namespace Lotba.Game
 
         public void TrackSaved(string path)
         {
-            try { Store.Register(path, BaseUrl); Notify("Partida guardada localmente."); }
+            try
+            {
+                Store.Register(path, BaseUrl);
+                var record = Store.Read(path);
+                var delivery = record.deliveries.Find(item => item.status == "pending" && item.destination == record.originalDestination);
+                Notify("Partida guardada localmente.");
+                if (delivery != null)
+                {
+                    if (unavailableDestinations.Contains(delivery.destination))
+                        Notify("Partida pendiente. Reintento al abrir la app o por acción manual.");
+                    else Enqueue(path, delivery.destination);
+                }
+            }
             catch (Exception ex) { Notify("Reporte guardado, estado pendiente de reparar: " + ex.Message); }
         }
 
@@ -79,8 +120,10 @@ namespace Lotba.Game
             if (string.IsNullOrEmpty(BaseUrl)) { Notify("Configurá primero el destino."); return; }
             try
             {
+                unavailableDestinations.Remove(BaseUrl);
                 foreach (string path in Store.Reports())
                 {
+                    if (ActiveReport == path) continue;
                     var record = Store.Read(path);
                     if (string.IsNullOrEmpty(record.originalDestination) && record.deliveries.Count == 0)
                         record.originalDestination = BaseUrl;
@@ -89,8 +132,8 @@ namespace Lotba.Game
                     var delivery = SessionDeliveryStore.GetOrAdd(record, BaseUrl);
                     if (delivery.status == "delivered") continue;
                     delivery.status = "pending";
-                    delivery.retryAfterUtcTicks = 0;
                     Store.Write(path, record);
+                    Enqueue(path, BaseUrl);
                 }
                 Notify("Pendientes habilitados para el destino seleccionado.");
             }
@@ -105,9 +148,10 @@ namespace Lotba.Game
                 var record = Store.Read(path);
                 var delivery = SessionDeliveryStore.GetOrAdd(record, BaseUrl);
                 delivery.status = "pending";
-                delivery.retryAfterUtcTicks = 0;
                 if (string.IsNullOrEmpty(record.originalDestination)) record.originalDestination = BaseUrl;
                 Store.Write(path, record);
+                unavailableDestinations.Remove(BaseUrl);
+                Enqueue(path, BaseUrl);
                 Notify("Envío solicitado al destino seleccionado; runId conservado.");
             }
             catch (Exception ex) { Notify(ex.Message); }
@@ -153,32 +197,39 @@ namespace Lotba.Game
             Changed?.Invoke();
         }
 
-        private IEnumerator Pump()
+        private void Enqueue(string path, string destination)
         {
-            while (true)
+            if (string.IsNullOrEmpty(destination) || unavailableDestinations.Contains(destination)) return;
+            var request = new DeliveryRequest { path = path, destination = destination };
+            if (!queued.Add(request.Key)) return;
+            requests.Enqueue(request);
+            if (draining) return;
+            draining = true;
+            StartCoroutine(Drain());
+        }
+
+        // Finite work queue: startup, a new report or an explicit manual action.
+        // A failed destination stays suspended for this app session; no timer retries.
+        private IEnumerator Drain()
+        {
+            while (requests.Count > 0)
             {
-                string candidate = null;
+                var work = requests.Dequeue();
                 SessionDeliveryRecord record = null;
                 SessionDelivery delivery = null;
-                try
+                if (!unavailableDestinations.Contains(work.destination) && File.Exists(work.path))
                 {
-                    foreach (string path in Store.Reports())
+                    try
                     {
-                        try
-                        {
-                            var current = Store.Read(path);
-                            var pending = current.deliveries.Find(item => item.status == "pending" &&
-                                item.retryAfterUtcTicks <= DateTime.UtcNow.Ticks);
-                            if (pending == null) continue;
-                            candidate = path; record = current; delivery = pending; break;
-                        }
-                        catch (Exception ex) { Debug.LogWarning("[Telemetry] " + ex.Message); }
+                        record = Store.Read(work.path);
+                        delivery = record.deliveries.Find(item => item.destination == work.destination && item.status == "pending");
                     }
+                    catch (Exception ex) { Notify("No se pudo leer la partida: " + ex.Message); }
                 }
-                catch (Exception ex) { Notify("No se pudo leer la cola: " + ex.Message); }
-                if (candidate != null) yield return Upload(candidate, record, delivery);
-                yield return new WaitForSecondsRealtime(2f);
+                if (delivery != null) yield return Upload(work.path, record, delivery);
+                queued.Remove(work.Key);
             }
+            draining = false;
         }
 
         private IEnumerator Upload(string path, SessionDeliveryRecord record, SessionDelivery delivery)
@@ -195,7 +246,6 @@ namespace Lotba.Game
                     throw new IOException(error ?? "Destino vacío.");
                 delivery.attempts++;
                 // Persist before network; a killed APK safely retries the same payload.
-                delivery.retryAfterUtcTicks = DateTime.UtcNow.AddSeconds(30).Ticks;
                 Store.Write(path, record);
             }
             catch (Exception ex)
@@ -235,14 +285,15 @@ namespace Lotba.Game
                     delivery.status = !string.IsNullOrEmpty(delivery.deliveredAtUtc) ? "delivered" : retry ? "pending" : "rejected";
                     delivery.lastError = "HTTP " + code + ": " +
                         (failure ?? request.error ?? "Respuesta sin confirmación válida para este runId.");
-                    delivery.retryAfterUtcTicks = DateTime.UtcNow.AddSeconds(
-                        Math.Min(300, 15 * Math.Pow(2, Math.Min(delivery.attempts, 5)))).Ticks;
+                    if (retry) unavailableDestinations.Add(delivery.destination);
                 }
                 TryWrite(path, record);
             }
             ActiveReport = null;
             Notify(delivery.status == "delivered" && string.IsNullOrEmpty(delivery.lastError)
-                ? "Entrega confirmada: " + record.runId : delivery.lastError);
+                ? "Entrega confirmada: " + record.runId : delivery.lastError +
+                  (unavailableDestinations.Contains(delivery.destination)
+                      ? " · Destino pausado hasta próxima apertura o reintento manual." : ""));
         }
 
         private void TryWrite(string path, SessionDeliveryRecord record)

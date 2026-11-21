@@ -11,7 +11,6 @@ namespace Lotba.Game
     {
         public string destination, status = "pending", deliveredAtUtc, lastError;
         public int attempts;
-        public long retryAfterUtcTicks;
     }
 
     [Serializable]
