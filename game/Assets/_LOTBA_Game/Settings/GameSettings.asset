@@ -19,7 +19,7 @@ MonoBehaviour:
   riderImpactShader: {fileID: 4800000, guid: d0754c08401847a0b4258c29d03d1d75, type: 3}
   braking:
     progressiveEnabled: 1
-    deceleration: 24
+    deceleration: 50
     releaseAcceleration: 12
   brakeEffectsPrefab: {fileID: 1516136291399072021, guid: abbfa796a49aaca40b066fdd92ea2a4a, type: 3}
   manualTurbo:
