@@ -81,6 +81,14 @@ namespace Lotba.Game
                 events.AppendLine($"Choques con impulso: {Highlight(result.boostCollisions)}");
             if (report.schemaVersion >= 13)
                 events.AppendLine($"Intentos de recuperación: {Highlight(result.recoveryAttempts)}");
+            if (report.schemaVersion >= 20)
+            {
+                if (report.braking != null)
+                    events.AppendLine($"Freno: {report.braking.mode} · Pulsaciones: {result.brakePresses} · Soltadas: {result.brakeReleases} · Mantenido: {result.brakeHeldSeconds:0.#} s");
+                foreach (var entry in report.events)
+                    if (entry.type == "boost_activated" && entry.turboConfiguration != null)
+                        events.AppendLine($"Turbo · {entry.timeSeconds:0.#} s: {entry.turboConfiguration.Display()}");
+            }
             eventsBody.transform.parent.gameObject.SetActive(events.Length > 0);
             eventsBody.text = events.ToString().TrimEnd();
 

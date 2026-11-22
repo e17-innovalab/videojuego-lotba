@@ -17,6 +17,26 @@ MonoBehaviour:
   accelerationTime: 95
   sustainedAcceleration: 0.02
   riderImpactShader: {fileID: 4800000, guid: d0754c08401847a0b4258c29d03d1d75, type: 3}
+  braking:
+    progressiveEnabled: 1
+    deceleration: 24
+    releaseAcceleration: 12
+  brakeEffectsPrefab: {fileID: 1516136291399072021, guid: abbfa796a49aaca40b066fdd92ea2a4a, type: 3}
+  manualTurbo:
+    durationSeconds: 6
+    speedBonus: 6
+    gemMultiplier: 2
+    pointMultiplier: 2
+  speedOfferTurbo:
+    durationSeconds: 6
+    speedBonus: 6
+    gemMultiplier: 2
+    pointMultiplier: 2
+  recoveryTurbo:
+    durationSeconds: 6
+    speedBonus: 6
+    gemMultiplier: 2
+    pointMultiplier: 2
   turboAuraShader: {fileID: 4800000, guid: c60303daed4c47cbba59a4efa5c969c3, type: 3}
   turboAuraTexture: {fileID: 2800000, guid: cf4b287221636c642a8d4fcb4284a493, type: 3}
   turboAuraIntensity: 0
@@ -29,7 +49,12 @@ MonoBehaviour:
   boostLineSpeed: 4.8
   boostLineLength: 0.3
   boostLineWidth: 5
-  laneChangeTime: 0.11
+  recoveryCurtainPrefab: {fileID: 4904403769921249031, guid: a5f95583c13225049a16ec99428ce6ff, type: 3}
+  recoveryFogDifficulty:
+    closestZ: 20
+    referenceGems: 20
+    referenceMetres: 5000
+  laneChangeTime: 0.2
   initialPatternSpacing: 28
   finalPatternSpacing: 26
   patternRampDistance: 1100

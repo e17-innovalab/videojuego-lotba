@@ -3,7 +3,7 @@ using UnityEngine.InputSystem;
 
 namespace Lotba.Game
 {
-    /// <summary>Input ordering, capability-gated devices and scene composition. Braking preempts simulation.</summary>
+    /// <summary>Input ordering, capability-gated devices and scene composition. Completed braking preempts simulation.</summary>
     public sealed class GameController : MonoBehaviour
     {
         [SerializeField] private GameSettings settings;
@@ -115,13 +115,18 @@ namespace Lotba.Game
                 ResetRun(true);
             }
             bool wasFinished = session.State == RunState.Finished;
-            float speedBeforeBrake = brakeRequested ? session.Speed : 0f;
-            if (brakeRequested)
+            float speedBeforeBrake = session.Speed;
+            bool heldBrake = Application.isFocused && !hud.SettingsOpen &&
+                (hud.BrakeHeld || (Keyboard.current != null && Keyboard.current.spaceKey.isPressed));
+            bool wasBrakeHeld = session.BrakeHeld;
+            session.UpdateBrakeInput(heldBrake, brakeRequested, Mathf.Min(Time.unscaledDeltaTime, .15f));
+            if (session.BrakeMode == BrakingMode.HoldToStop)
             {
-                session.Brake();
+                if (!wasBrakeHeld && session.BrakeHeld) audioFeedback.PlayBrakePress();
+                else if (wasBrakeHeld && !session.BrakeHeld) audioFeedback.StopBrakePress();
             }
-            else if (endForOverload) session.EndForOverload();
-            else
+            if (session.State != RunState.Finished && endForOverload) session.EndForOverload();
+            else if (session.State != RunState.Finished)
             {
                 if (pauseRequested)
                 {
@@ -134,7 +139,13 @@ namespace Lotba.Game
                     session.ChooseSpeed(speedChoiceRequested.Value);
                     if (session.VoluntaryBoosts > previousBoosts) audioFeedback.PlayBoostStart();
                 }
-                if (recoveryChoiceRequested.HasValue) session.ChooseRecovery(recoveryChoiceRequested.Value);
+                if (session.RecoveryImpactPending && session.State == RunState.Running && world.RecoveryImpactComplete)
+                    session.ShowRecoveryOffer();
+                if (recoveryChoiceRequested.HasValue && session.RecoveryOfferPending && session.State == RunState.Running)
+                {
+                    int cleared = world.PrepareRecoveryResume(session);
+                    session.ChooseRecovery(recoveryChoiceRequested.Value, cleared, world.SelectRecoveryFogZ(session));
+                }
                 if (session.State == RunState.Running && !session.OfferPending)
                 {
                     if (laneRequested != 0 && session.Move(laneRequested)) audioFeedback.PlayLaneSlide();
@@ -146,7 +157,9 @@ namespace Lotba.Game
                     float budget = Mathf.Min(Time.unscaledDeltaTime, .15f);
                     while (budget > 0 && session.State == RunState.Running && !session.OfferPending)
                     {
+                        int previousRecoveryBoosts = session.RecoveryBoosts;
                         float step = Mathf.Min(.02f, budget); session.Tick(step);
+                        if (session.RecoveryBoosts > previousRecoveryBoosts) audioFeedback.PlayBoostStart();
                         if (session.State == RunState.Running)
                         {
                             world.SetEncounterIntensity(1f + .35f * session.AccumulatedRisk,
@@ -162,9 +175,11 @@ namespace Lotba.Game
             if (!wasFinished && session.State == RunState.Finished)
             {
                 bool braked = session.Ending == RunEnding.Brake;
-                audioFeedback.EndRun(braked);
+                bool progressiveBrake = braked && session.BrakeMode == BrakingMode.HoldToStop;
+                audioFeedback.EndRun(braked && !progressiveBrake, progressiveBrake);
                 devices.CancelFeedback();
-                world.EndRun(braked, speedBeforeBrake, UseBoostCamera);
+                world.EndRun(braked, speedBeforeBrake, UseBoostCamera,
+                    braked && session.BrakeMode == BrakingMode.HoldToStop);
             }
             if (session.State == RunState.Finished && !sessionReportSaved && Time.unscaledTime >= nextReportSaveAttempt)
             {
@@ -173,8 +188,13 @@ namespace Lotba.Game
                 sessionReportSaved = reportPath != null;
                 if (sessionReportSaved) reportTransport.TrackSaved(reportPath);
             }
+            world.RenderRecoveryCurtain(session);
+            world.RenderHeldBrake(session.BrakeMode == BrakingMode.HoldToStop && session.BrakeHeld &&
+                (session.State == RunState.Running || session.State == RunState.Paused),
+                session.State == RunState.Running && !session.OfferPending,
+                UseBoostCamera, session.Speed, !session.BrakingSpeedRestricted);
             devices.UpdateBoostFeedback(session.State == RunState.Running
-                ? session.BoostProgress * RunSession.BoostSeconds : 0f);
+                ? session.BoostTimeLeft : 0f);
             if (session.State != RunState.Finished) audioFeedback.UpdateMusic(session.State);
             speedChoiceRequested = null;
             recoveryChoiceRequested = null;
@@ -184,6 +204,7 @@ namespace Lotba.Game
         }
         private void ResetRun(bool start)
         {
+            hud.ClearBrakeHold();
             sessionReportSaved = false;
             nextReportSaveAttempt = 0f;
             session = new RunSession(settings, world.Route); world.ResetTrack(); hud.ResetView(); audioFeedback.Stop(); devices.CancelFeedback(); trackingSwipe = false;

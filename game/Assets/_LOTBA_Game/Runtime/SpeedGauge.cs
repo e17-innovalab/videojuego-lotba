@@ -22,18 +22,20 @@ namespace Lotba.Game
             normalUnitsColor = speedUnits.color;
         }
 
-        public void SetSpeed(float speed, float initialSpeed, float purchasedSpeed, float elapsed,
+        public void SetSpeed(float speed, float purchasedSpeed, float elapsed,
             LotbaBrandSettings brand, bool animate)
         {
             // Compress the simulated pace for the HUD while showing the full bonus from each purchase.
-            float upgrade = Mathf.Min(speed, purchasedSpeed);
+            speed = Mathf.Max(0f, speed);
+            float upgrade = Mathf.Min(speed, Mathf.Max(0f, purchasedSpeed));
             float kmh = (speed - upgrade) * ArcadeSpeedScale + upgrade * 3.6f;
             bool overloaded = kmh > OverloadKmh;
             speedLabel.SetText("{0:0}", kmh);
             speedLabel.color = overloaded ? brand.Red : normalLabelColor;
             speedUnits.color = overloaded ? brand.Red : normalUnitsColor;
 
-            float progress = Mathf.InverseLerp((initialSpeed - 3f) * ArcadeSpeedScale, OverloadKmh, kmh);
+            // The left endpoint means zero, including speeds below the starting pace while braking.
+            float progress = Mathf.InverseLerp(0f, OverloadKmh, kmh);
             progress *= .94f;
             if (overloaded) progress += .04f * Mathf.InverseLerp(OverloadKmh, OverloadKmh + 10f, kmh);
             float needleAngle = Mathf.Lerp(minimumNeedleAngle, maximumNeedleAngle, progress);

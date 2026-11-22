@@ -20,20 +20,26 @@ namespace Lotba.Game
         private int nextDecisionSection;
         private float decisionSectionStart;
         private float previousOfferDistance;
-        public const float BoostSeconds = 6f;
-        public const float BoostSpeed = 6f;
+        public TurboParameters ManualTurbo { get; }
+        public TurboParameters SpeedOfferTurbo { get; }
+        public TurboParameters RecoveryTurbo { get; }
+        private TurboParameters activeTurbo;
+        public float BoostSpeedBonus => BoostActive ? activeTurbo.SpeedBonus : 0f;
+        public float BoostTimeLeft => turbo.TimeLeft(Elapsed);
+        public int BoostGemMultiplier => BoostActive ? activeTurbo.GemMultiplier : 1;
+        public int BoostPointMultiplier => BoostActive ? activeTurbo.PointMultiplier : 1;
         public const float RiskSpeedForFullIntensity = 5f;
-        private float boostUntil;
-        private int turboCharge;
-        public float TurboChargeProgress => (float)turboCharge / settings.TurboChargeGems;
+        private readonly TurboState turbo = new TurboState();
+        public float TurboChargeProgress => turbo.ChargeProgress(settings.TurboChargeGems);
         public bool CanActivateTurbo => State == RunState.Running && !OfferPending &&
-            !BoostActive && !RecoveryActive && TurboChargeProgress >= 1f;
+            !BoostActive && !RecoveryActive && !RecoveryPreparing && !RecoveryRejoining && TurboChargeProgress >= 1f;
         public int ManualBoosts { get; private set; }
+        public int RecoveryBoosts { get; private set; }
         public int RecoveryAttempts { get; private set; }
         private bool speedOfferPending;
-        public bool OfferPending => speedOfferPending || RecoveryOfferPending;
-        public bool BoostActive => Elapsed < boostUntil;
-        public float BoostProgress => BoostActive ? (boostUntil - Elapsed) / BoostSeconds : 0f;
+        public bool OfferPending => speedOfferPending || RecoveryOfferPending || RecoveryImpactPending;
+        public bool BoostActive => turbo.IsActive(Elapsed);
+        public float BoostProgress => turbo.Progress(Elapsed);
         public int VoluntaryBoosts { get; private set; }
         public int SpeedUpgrades { get; private set; }
         public int GemsSpent { get; private set; }
@@ -74,12 +80,19 @@ namespace Lotba.Game
         {
             this.settings = settings ?? throw new ArgumentNullException(nameof(settings));
             this.telemetryRoute = telemetryRoute;
+            BrakingConfiguration = settings.Braking.Capture();
+            braking = new BrakingState(BrakingConfiguration);
+            ManualTurbo = settings.ManualTurbo.Capture();
+            SpeedOfferTurbo = settings.SpeedOfferTurbo.Capture();
+            RecoveryTurbo = settings.RecoveryTurbo.Capture();
             finishDistance = telemetryRoute?.FinishDistance ?? 0f;
             Speed = PeakSpeed = settings.InitialSpeed;
         }
         public void Start()
         {
             if (State != RunState.Ready) return;
+            BrakingConfiguration = settings.Braking.Capture();
+            braking = new BrakingState(BrakingConfiguration);
             State = RunState.Running;
             if (telemetryRoute == null) return;
             Telemetry = new RunTelemetry
@@ -88,6 +101,7 @@ namespace Lotba.Game
                 route = telemetryRoute.name,
                 seed = settings.Seed,
                 routeDistanceMetres = finishDistance,
+                braking = RunBrakingConfiguration.From(BrakingConfiguration),
                 startedAtUtc = DateTime.UtcNow.ToString("O")
             };
             ScheduleNextSpeedOffer();
@@ -98,7 +112,12 @@ namespace Lotba.Game
         public void SetPreviewTurbo(bool active)
         {
             if (Telemetry != null) return;
-            boostUntil = active ? Elapsed + BoostSeconds : 0f;
+            if (active)
+            {
+                activeTurbo = ManualTurbo;
+                turbo.Activate(Elapsed, activeTurbo.DurationSeconds);
+            }
+            else turbo.Stop();
         }
 
         /// <summary>Artist preview advances without a time limit or progression curve.</summary>
@@ -115,14 +134,9 @@ namespace Lotba.Game
             if (State != RunState.Running || OfferPending) return;
             float step = dt;
             Elapsed += step;
-            float progression = 1f - (float)Math.Exp(-Elapsed / settings.AccelerationTime);
-            float baseSpeed = settings.InitialSpeed + (settings.CruiseSpeed - settings.InitialSpeed) * progression +
-                settings.SustainedAcceleration * Elapsed;
-            if (telemetryRoute != null) baseSpeed += telemetryRoute.SpeedBonusAt(Distance);
-            float sinceImpact = Elapsed - impactTime;
-            float recovery = Math.Min(1f, sinceImpact / ImpactRecoverySeconds);
-            Speed = Math.Max(0f, baseSpeed + PurchasedSpeed + DecisionBoostSpeed +
-                (BoostActive ? BoostSpeed : 0f) + (RecoveryActive ? RecoverySpeed : 0f) - ImpactSpeedLoss * (1f - recovery));
+            BeginRecoveryChallengeIfReady();
+            float desiredSpeed = CalculateUnbrakedSpeed();
+            Speed = braking.IsRestricting ? Math.Min(desiredSpeed, braking.SpeedLimit) : desiredSpeed;
             PeakSpeed = Math.Max(PeakSpeed, Speed);
             Distance += Speed * step;
             if (Telemetry != null)
@@ -142,7 +156,7 @@ namespace Lotba.Game
         }
         public void ShowSpeedOffer()
         {
-            if (Telemetry == null || State != RunState.Running || OfferPending || RecoveryActive ||
+            if (Telemetry == null || State != RunState.Running || OfferPending || RecoveryActive || RecoveryPreparing || RecoveryRejoining ||
                 !HasDecisionProgress || Distance < OfferDistance) return;
             speedOfferPending = true;
             DecisionsShown++;
@@ -189,10 +203,7 @@ namespace Lotba.Game
             }
             else
             {
-                boostUntil = Elapsed + BoostSeconds;
-                turboCharge = 0;
-                VoluntaryBoosts++;
-                Record("boost_activated", decisionNumber: DecisionsShown);
+                ActivateBoost(null, DecisionsShown);
             }
             ScheduleNextSpeedOffer();
         }
@@ -200,12 +211,19 @@ namespace Lotba.Game
         public bool TryActivateTurbo()
         {
             if (!CanActivateTurbo) return false;
-            turboCharge = 0;
-            boostUntil = Elapsed + BoostSeconds;
-            VoluntaryBoosts++;
-            ManualBoosts++;
-            Record("boost_activated", "manual_button");
+            ActivateBoost("manual_button");
             return true;
+        }
+
+        private void ActivateBoost(string source, int decisionNumber = 0, bool recovery = false)
+        {
+            turbo.ClearCharge();
+            activeTurbo = recovery ? RecoveryTurbo : source == "manual_button" ? ManualTurbo : SpeedOfferTurbo;
+            turbo.Activate(Elapsed, activeTurbo.DurationSeconds, requiresExplicitStop: recovery);
+            if (recovery) RecoveryBoosts++;
+            else VoluntaryBoosts++;
+            if (source == "manual_button") ManualBoosts++;
+            Record("boost_activated", source, decisionNumber: decisionNumber);
         }
 
         public bool Move(int direction)
@@ -242,15 +260,15 @@ namespace Lotba.Game
         public long CollectGem(int airborneNote = -1, bool pink = false, int pinkDodgeEncounter = 0)
         {
             if (State != RunState.Running) return 0;
-            int gemCount = BoostActive ? 2 : 1;
-            if (!BoostActive && turboCharge < settings.TurboChargeGems) turboCharge++;
+            int gemCount = BoostGemMultiplier;
+            if (!BoostActive) turbo.AddCharge(settings.TurboChargeGems);
             if (pink)
             {
                 PinkGemsCollected++;
                 PinkGemStreak++;
                 BestPinkGemStreak = Math.Max(BestPinkGemStreak, PinkGemStreak);
             }
-            long reward = 10L * gemCount * ScoreMultiplier;
+            long reward = 10L * BoostPointMultiplier * ScoreMultiplier;
             Score += reward; Gems += gemCount; BonusGems += gemCount - 1;
             Record("gem_collected", airborneNote >= 0 ? "air" : "ground", reward,
                 gemDelta: gemCount);
@@ -270,7 +288,7 @@ namespace Lotba.Game
             if (State != RunState.Running || IsProtected) return 0;
             int lostStreak = PinkGemStreak;
             PinkGemStreak = 0;
-            turboCharge = 0;
+            turbo.ClearCharge();
             bool duringBoost = BoostActive;
             int divisor = duringBoost ? 2 : 4;
             int gemLoss = GemBalance / divisor + (GemBalance % divisor == 0 ? 0 : 1);
@@ -280,7 +298,7 @@ namespace Lotba.Game
             if (duringBoost)
             {
                 BoostCollisions++;
-                boostUntil = Elapsed;
+                turbo.Stop();
             }
             impactTime = Elapsed;
             protectedUntil = impactTime + ImpactProtectionSeconds;
@@ -333,8 +351,9 @@ namespace Lotba.Game
                     ending = reason, timeSeconds = Elapsed, distanceMetres = Distance, peakSpeedKmh = PeakSpeed * 3.6f,
                     score = Score, gems = Gems, collisions = Collisions,
                     decisionsShown = DecisionsShown, decisionsKept = DecisionsKept,
-                    voluntaryBoosts = VoluntaryBoosts, manualBoosts = ManualBoosts, bonusGems = BonusGems,
+                    voluntaryBoosts = VoluntaryBoosts, manualBoosts = ManualBoosts, recoveryBoosts = RecoveryBoosts, bonusGems = BonusGems,
                     recoveryAttempts = RecoveryAttempts,
+                    brakePresses = BrakePresses, brakeReleases = BrakeReleases, brakeHeldSeconds = BrakeHeldSeconds,
                     gemsLost = GemsLost, gemsRecovered = GemsRecovered, gemBalance = GemBalance, boostCollisions = BoostCollisions,
                     pinkGemsCollected = PinkGemsCollected, pinkGemsMissed = PinkGemsMissed,
                     pinkGemNearMisses = PinkGemNearMisses,
@@ -371,7 +390,8 @@ namespace Lotba.Game
                 pinkGemStreak = PinkGemStreak, scoreMultiplier = ScoreMultiplier, pinkGemStreakBefore = streakBefore,
                 pinkGemNearMiss = pinkGemNearMiss,
                 pinkDodgeEncounter = pinkDodgeEncounter,
-                purchasedSpeedKmh = PurchasedSpeed * 3.6f
+                purchasedSpeedKmh = PurchasedSpeed * 3.6f,
+                turboConfiguration = type == "boost_activated" ? RunTurboConfiguration.From(activeTurbo) : null
             });
         }
     }

@@ -16,6 +16,20 @@ namespace Lotba.Game
         private float sustainedAcceleration = .02f;
         [SerializeField] private Shader riderImpactShader;
         public Shader RiderImpactShader => riderImpactShader;
+        [Header("Desarrollo · frenado")]
+        [SerializeField] private BrakingSettings braking = new BrakingSettings();
+        public BrakingSettings Braking => braking;
+        [SerializeField] private BrakeHoldEffects brakeEffectsPrefab;
+        public BrakeHoldEffects BrakeEffectsPrefab => brakeEffectsPrefab;
+        [Header("Turbo · reglas independientes")]
+        [SerializeField, InspectorName("Turbo manual")] private TurboProfile manualTurbo = new TurboProfile();
+        [SerializeField, InspectorName("Turbo de oferta gratis")] private TurboProfile speedOfferTurbo = new TurboProfile();
+        [SerializeField, InspectorName("Turbo de recupero")] private TurboProfile recoveryTurbo = new TurboProfile();
+        public TurboProfile ManualTurbo => manualTurbo;
+        public TurboProfile SpeedOfferTurbo => speedOfferTurbo;
+        public TurboProfile RecoveryTurbo => recoveryTurbo;
+        public float MaximumTurboSpeedBonus => Mathf.Max(manualTurbo.Capture().SpeedBonus,
+            Mathf.Max(speedOfferTurbo.Capture().SpeedBonus, recoveryTurbo.Capture().SpeedBonus));
         [Header("Boost effects")]
         [SerializeField] private Shader turboAuraShader;
         [SerializeField] private Texture2D turboAuraTexture;
@@ -41,6 +55,11 @@ namespace Lotba.Game
         public float BoostLineSpeed => boostLineSpeed;
         public float BoostLineLength => boostLineLength;
         public float BoostLineWidth => boostLineWidth;
+        [Header("Recovery · front curtain")]
+        [SerializeField] private RecoveryCurtain recoveryCurtainPrefab;
+        public RecoveryCurtain RecoveryCurtainPrefab => recoveryCurtainPrefab;
+        [SerializeField, InspectorName("Dificultad de niebla")] private RecoveryFogDifficulty recoveryFogDifficulty = new RecoveryFogDifficulty();
+        public RecoveryFogDifficulty RecoveryFogDifficulty => recoveryFogDifficulty;
         [SerializeField, Range(.07f, .25f)] private float laneChangeTime = .11f;
         [Header("Track patterns (metres)")]
         [SerializeField, Min(1f)] private float initialPatternSpacing = 28f;

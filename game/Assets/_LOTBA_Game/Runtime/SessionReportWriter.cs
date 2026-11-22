@@ -30,7 +30,8 @@ namespace Lotba.Game
                     finishedAtUtc = telemetry.finishedAtUtc,
                     route = telemetry.route,
                     seed = telemetry.seed,
-                    routeDistanceMetres = telemetry.routeDistanceMetres
+                    routeDistanceMetres = telemetry.routeDistanceMetres,
+                    braking = telemetry.braking
                 },
                 summary = telemetry.summary,
                 events = telemetry.events != null

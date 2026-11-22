@@ -7,7 +7,7 @@ namespace Lotba.Game
 {
     /// <summary>Pooled runner presentation and swept encounters. Scenery never decides run state.</summary>
     [DefaultExecutionOrder(100)]
-    public sealed class RunnerWorld : MonoBehaviour
+    public sealed partial class RunnerWorld : MonoBehaviour
     {
         public const float LaneSpacing = RoadStandard.LaneSpacing;
         [SerializeField] private Transform rider;
@@ -26,15 +26,9 @@ namespace Lotba.Game
         private Vector3 brakeStartScale;
         private float brakeStartHeight, brakeTravel;
         private Vector3 brakeCameraPosition;
-        private float brakeCameraFov, brakeInitialSpeed, nextBrakeParticle;
+        private float brakeCameraFov, brakeInitialSpeed;
         private bool brakeCameraEffects, brakeGroundEffects;
-        private ParticleSystem brakeDust;
-        private Material brakeDustMaterial;
-        private Mesh brakeDustMesh;
-        private LineRenderer brakeMark;
-        private int brakeMarkPoints;
-        private float brakeMarkStarted = float.NegativeInfinity;
-        private static readonly Color BrakeMarkColor = new Color32(40, 42, 45, 175);
+        private BrakeHoldEffects brakeEffects;
         private static readonly ProfilerMarker PrepareOpeningMarker = new ProfilerMarker("Lotba.Track.PrepareOpening");
         private static readonly ProfilerMarker PopulateAheadMarker = new ProfilerMarker("Lotba.Track.PopulateAhead");
 
@@ -162,21 +156,14 @@ namespace Lotba.Game
         private Quaternion[] wheelOrigins;
         private Vector3 cameraOrigin;
         private Quaternion cameraRotation;
-        private Vector3 cameraVelocity;
-        private float boostCameraBlend;
+        private readonly RunnerCameraPresentation cameraPresentation = new RunnerCameraPresentation();
+        private RunSession cameraSession;
+        private bool cameraReducedMotion, cameraBoostEnabled;
         private const float GemSpinDegreesPerSecond = 120f;
         private bool pickupEffectsEnabled = true;
         private bool gemGlowEnabled;
         private Material[] regularGemMaterials, pinkGemMaterials;
-        private const int NormalImpactScatterLimit = 5;
-        private const int TurboImpactScatterLimit = 12;
-        private readonly Transform[] scatteredGems = new Transform[TurboImpactScatterLimit];
-        private readonly Vector3[] scatterTrajectories = new Vector3[TurboImpactScatterLimit];
-        private readonly Vector3[] scatterSpins = new Vector3[TurboImpactScatterLimit];
-        private readonly System.Random scatterRandom = new System.Random();
-        private Vector3 gemScatterOrigin;
-        private float gemScatterTime;
-        private int scatteredGemCount;
+        private readonly ImpactPresentation impactPresentation = new ImpactPresentation();
         private TurboAuraController turboAura;
         private float referenceFieldOfView;
         private Renderer[] riderRenderers;
@@ -294,7 +281,7 @@ namespace Lotba.Game
                     PlaceCourseBus(bus, landingLane, busStart);
                     if (i == 2) continue;
                     float joint = busStart + bus.Length - rampStart;
-                    CreateCourseSurface("Unión de techos", landingX, joint, joint + connector,
+                    CreateCourseSurface("UniÃ³n de techos", landingX, joint, joint + connector,
                         bus.Height, bus.Height, bus.Width, bus, scenery, roofBridge: true);
                     encounter.Surfaces.Add(new VehicleSurface(joint + rampStart, joint + rampStart + connector,
                         landingX, bus.Width * .5f, bus.Height, bus.Height));
@@ -452,7 +439,7 @@ namespace Lotba.Game
             float roofGap = Mathf.Max(8f, speed * .42f);
             float landing = takeoff + roofGap;
             int extraLandingBuses = Mathf.Max(1, Mathf.CeilToInt(
-                ((speed + RunSession.BoostSpeed) * JumpArc.Duration - roofGap + 3f - articulatedLength) /
+                ((speed + settings.MaximumTurboSpeedBonus) * JumpArc.Duration - roofGap + 3f - articulatedLength) /
                 (bus.Length + joint)));
             float laneSwitchGap = VehicleLaneSwitchGap(speed, catalog);
             float convoyGap = Mathf.Max(6f, speed * .25f);
@@ -902,11 +889,11 @@ namespace Lotba.Game
 #if UNITY_EDITOR
             lastDebugContact = null;
 #endif
+            brakeEffects?.Clear();
             brakeSlideStarted = float.NegativeInfinity;
-            brakeMarkStarted = float.NegativeInfinity;
-            if (brakeMark != null) brakeMark.positionCount = 0;
-            if (brakeDust != null) brakeDust.Stop(false, ParticleSystemStopBehavior.StopEmittingAndClear);
             riderVisual.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
+            impactPresentation.ResetImpactReaction();
+            if (recoveryCurtain != null) recoveryCurtain.Clear();
             riderVisual.localScale = Vector3.one;
             steeringPivot.localRotation = Quaternion.identity;
             hips.Reset(); torso.Reset(); head.Reset();
@@ -944,8 +931,10 @@ namespace Lotba.Game
             UpdateRiderShadow(0f, 0f, 0f);
             roadStream.ResetRoad();
             for (int i = 0; i < wheels.Length; i++) wheels[i].localRotation = wheelOrigins[i];
-            cameraVelocity = Vector3.zero;
-            boostCameraBlend = 0f;
+            ResetProgressiveBrakePresentation();
+            cameraPresentation.Reset();
+            cameraSession = null;
+            curtainSession = null;
             worldCamera.transform.SetLocalPositionAndRotation(cameraOrigin, cameraRotation);
             if (gemFlash != null) gemFlash.enabled = false;
 #if UNITY_EDITOR
@@ -972,54 +961,13 @@ namespace Lotba.Game
 
         public void ClearTurboAura() => turboAura?.Clear();
 
-        public void ClearGemScatter()
-        {
-            for (int i = 0; i < scatteredGemCount; i++)
-                scatteredGems[i].gameObject.SetActive(false);
-            scatteredGemCount = 0;
-        }
+        public void ClearGemScatter() => impactPresentation.ClearGemScatter();
 
         private void ScatterGems(int count, bool duringBoost)
         {
-            ClearGemScatter();
             if (!pickupEffectsEnabled) return;
-            count = Mathf.Min(count, duringBoost ? TurboImpactScatterLimit : NormalImpactScatterLimit);
-            gemScatterOrigin = rider.localPosition + Vector3.up * .9f;
-            gemScatterTime = 0f;
-            for (int i = 0; i < count; i++)
-            {
-                // Jitter each sector of the burst so trajectories spread without forming rows.
-                float angle = 2f * Mathf.PI * (i + (float)scatterRandom.NextDouble()) / count;
-                float reach = Mathf.Lerp(1.4f, 4f, (float)scatterRandom.NextDouble());
-                scatterTrajectories[i] = new Vector3(Mathf.Cos(angle) * reach,
-                    Mathf.Lerp(.8f, 1.8f, (float)scatterRandom.NextDouble()), Mathf.Sin(angle) * reach - .8f);
-                scatterSpins[i] = new Vector3(scatterRandom.Next(-300, 301),
-                    scatterRandom.Next(-540, 541), scatterRandom.Next(-180, 181));
-                if (scatteredGems[i] == null) scatteredGems[i] = Instantiate(gemPrefab, transform).transform;
-                scatteredGems[i].SetLocalPositionAndRotation(gemScatterOrigin, Quaternion.identity);
-                scatteredGems[i].gameObject.SetActive(true);
-            }
-            scatteredGemCount = count;
-        }
-
-        private void AdvanceGemScatter(float dt)
-        {
-            if (scatteredGemCount == 0) return;
-            gemScatterTime += dt;
-            if (gemScatterTime >= .8f)
-            {
-                ClearGemScatter();
-                return;
-            }
-
-            float t = gemScatterTime / .8f;
-            float hop = Mathf.Abs(Mathf.Sin(t * 2f * Mathf.PI)) * (1f - t);
-            for (int i = 0; i < scatteredGemCount; i++)
-            {
-                Vector3 trajectory = scatterTrajectories[i];
-                Vector3 offset = new Vector3(trajectory.x * t, trajectory.y * hop - .7f * t, trajectory.z * t);
-                scatteredGems[i].SetLocalPositionAndRotation(gemScatterOrigin + offset, Quaternion.Euler(scatterSpins[i] * t));
-            }
+            impactPresentation.ScatterGems(Mathf.Min(count, duringBoost ? 12 : 5), gemPrefab,
+                transform, rider.localPosition + Vector3.up * .9f, Time.unscaledTime);
         }
 
         public bool TryJump(float time)
@@ -1030,7 +978,9 @@ namespace Lotba.Game
         }
         public void Advance(RunSession session, float dt, bool reducedMotion, bool boostCamera = false, bool boostAura = false)
         {
-            AdvanceGemScatter(dt);
+            cameraSession = session;
+            cameraReducedMotion = reducedMotion;
+            cameraBoostEnabled = boostCamera;
             if (boostAura) turboAura?.Advance(session.BoostActive, reducedMotion, dt, settings);
             else turboAura?.Clear();
             riderDistance = session.Distance;
@@ -1049,8 +999,10 @@ namespace Lotba.Game
             float travel = session.Speed * dt;
             TrackContact step = UpdateVehicleCourse(session.Distance, travel, oldX, x, session.Elapsed, dt);
             rider.localPosition = new Vector3(x, step.EndHeight, 0);
+            RestoreRidingPose();
             AnimateRider(session.BoostActive, jump.HeightAt(session.Elapsed) > 0f || courseFallSpeed > 0f,
                 (step.EndHeight - step.StartHeight) / dt, travel, reducedMotion, dt);
+            CaptureRidingPose();
             UpdateRiderShadow(x, step.EndHeight, 0f);
             roadStream.Advance(session.Distance);
             crossings.Clear();
@@ -1089,7 +1041,7 @@ namespace Lotba.Game
             crossings.Sort(CrossingOrder);
             foreach (Crossing crossing in crossings)
             {
-                if (session.State != RunState.Running) break;
+                if (session.State != RunState.Running || session.OfferPending) break;
                 TrackItem item = crossing.Item;
                 float fraction = crossing.Fraction;
                 float crossingX = step.XAt(fraction);
@@ -1130,6 +1082,7 @@ namespace Lotba.Game
                     int previousGemsLost = session.GemsLost;
                     bool streakLost = session.PinkGemStreak > 0;
                     session.Hit(item.Definition.Id, item.PinkDodgeEncounter);
+                    impactPresentation.StartImpactReaction(impactVisualRoot, reducedMotion, session.Lane == 0 ? 1f : -1f, RunSession.RecoveryImpactSeconds, Time.unscaledTime);
                     int gemsLost = session.GemsLost - previousGemsLost;
                     if (settings.LogObstacleCollisions)
                     {
@@ -1139,26 +1092,25 @@ namespace Lotba.Game
 #endif
                         string zone = roadStream.Route.MapAtDistance(contactDistance).DisplayName;
                         int obstacleLane = Mathf.RoundToInt(item.LaneX / LaneSpacing) + 2;
-                        Debug.Log($"[Choque] Ciclista → {item.Definition.Id} · {zone} · {contactDistance:F1} m · " +
-                            $"carril destino {session.Lane + 1}, obstáculo {obstacleLane} · " +
-                            $"altura al contacto {crossingHeight:F2} m, volumen {item.Definition.CollisionHeight:F2} m · " +
-                            $"techo transitable {hasRoofSupport} · altura en el paso {step.StartHeight:F2} → {step.EndHeight:F2} m · " +
-                            $"desfase lateral {crossingX - item.LaneX:F2} m · " +
-                            $"velocidad {session.Speed:F1} m/s · turbo {duringBoost} · gemas perdidas {gemsLost}", item.View);
+                        Debug.Log($"[Choque] Ciclista â†’ {item.Definition.Id} Â· {zone} Â· {contactDistance:F1} m Â· " +
+                            $"carril destino {session.Lane + 1}, obstÃ¡culo {obstacleLane} Â· " +
+                            $"altura al contacto {crossingHeight:F2} m, volumen {item.Definition.CollisionHeight:F2} m Â· " +
+                            $"techo transitable {hasRoofSupport} Â· altura en el paso {step.StartHeight:F2} â†’ {step.EndHeight:F2} m Â· " +
+                            $"desfase lateral {crossingX - item.LaneX:F2} m Â· " +
+                            $"velocidad {session.Speed:F1} m/s Â· turbo {duringBoost} Â· gemas perdidas {gemsLost}", item.View);
                     }
                     if (duringBoost)
                     {
                         turboAura?.Clear();
-                        var position = worldCamera.transform.localPosition;
-                        position.z = cameraOrigin.z;
-                        worldCamera.transform.localPosition = position;
-                        cameraVelocity.z = 0f;
-                        SetFieldOfView(Mathf.Max(60f, referenceFieldOfView - settings.BoostCameraFieldOfView * boostCameraBlend));
-                        boostCameraBlend = 0f;
                     }
                     if (gemsLost > 0) ScatterGems(gemsLost, duringBoost);
                     ImpactFeedback?.Invoke(duringBoost, gemsLost, streakLost);
                 }
+            }
+            if (session.RecoveryImpactPending || session.RecoveryOfferPending)
+            {
+                ClearImpactBlink();
+                return;
             }
             foreach (TrackItem item in items)
             {
@@ -1174,13 +1126,7 @@ namespace Lotba.Game
             AdvanceLetter(travel, step, session, dt);
             using (PopulateAheadMarker.Auto())
                 PopulateAhead(session.Distance, session.Speed);
-            bool safeForRecovery = jump.HeightAt(session.Elapsed) <= 0f && courseFallSpeed == 0f;
-            foreach (TrackItem item in items)
-                if (item.Active && item.Definition != null && Mathf.Abs(item.LaneX - x) < .83f &&
-                    item.View.localPosition.z > -item.Definition.Length * .5f &&
-                    item.View.localPosition.z < session.Speed * 1.5f + item.Definition.Length * .5f)
-                    safeForRecovery = false;
-            session.UpdateRecovery(safeForRecovery);
+            session.UpdateRecovery();
             session.ShowSpeedOffer();
             float protection = session.ProtectionProgress;
             const float whiteFlashEnd = .07f;
@@ -1188,16 +1134,6 @@ namespace Lotba.Game
             SetRiderImpactWhite(showImpact && protection < whiteFlashEnd);
             float blinkPhase = (protection - whiteFlashEnd) * 3f / (1f - whiteFlashEnd);
             SetRiderImpactTransparent(showImpact && blinkPhase >= 0f && Mathf.Repeat(blinkPhase, 1f) >= .65f);
-            float boostTarget = session.BoostActive && !reducedMotion ? 1f : 0f;
-            boostCameraBlend = reducedMotion || !boostCamera ? 0f :
-                Mathf.Lerp(boostCameraBlend, boostTarget, 1f - Mathf.Exp(-settings.BoostCameraBlendRate * dt));
-            FollowRider(x, reducedMotion, dt);
-            if (session.IsProtected && !reducedMotion) return;
-            float pace = session.Speed - (session.BoostActive ? RunSession.BoostSpeed : 0f);
-            float intensity = Mathf.InverseLerp(settings.InitialSpeed, settings.CruiseSpeed, pace);
-            float targetFieldOfView = reducedMotion ? 60f : Mathf.Lerp(60f, 68f, intensity) +
-                settings.BoostCameraFieldOfView * boostCameraBlend;
-            SetFieldOfView(Mathf.Lerp(referenceFieldOfView, targetFieldOfView, 1f - Mathf.Exp(-10f * dt)));
         }
 
         internal void PrepareOpening()
@@ -1259,12 +1195,24 @@ namespace Lotba.Game
             riderShadow.localScale = new Vector3(riderShadowScale.x * size, riderShadowScale.y, riderShadowScale.z * size);
         }
 
-        private void FollowRider(float x, bool reducedMotion, float dt)
+        private void UpdateCameraPresentation(float dt)
         {
-            Vector3 cameraTarget = cameraOrigin + (reducedMotion ? Vector3.zero : Vector3.right * (x * settings.CameraFollowStrength));
-            cameraTarget.y += courseFallSpeed > 0f ? rider.localPosition.y : courseJumpBase;
-            cameraTarget += Vector3.back * (settings.BoostCameraPullback * boostCameraBlend);
-            worldCamera.transform.localPosition = Vector3.SmoothDamp(worldCamera.transform.localPosition, cameraTarget, ref cameraVelocity, settings.CameraFollowTime, Mathf.Infinity, dt);
+            // Adapt game state here; the reusable camera owns no session or simulation clock.
+            // Finished runs relinquish ownership to the brake-slide presentation.
+            if (cameraSession == null || cameraSession.State == RunState.Finished || worldCamera == null) return;
+            cameraPresentation.FollowStrength = settings.CameraFollowStrength;
+            cameraPresentation.FollowTime = settings.CameraFollowTime;
+            cameraPresentation.BoostPullback = settings.BoostCameraPullback;
+            cameraPresentation.BoostBlendRate = settings.BoostCameraBlendRate;
+            cameraPresentation.BoostFieldOfView = settings.BoostCameraFieldOfView;
+            float pace = cameraSession.Speed - cameraSession.BoostSpeedBonus;
+            cameraPresentation.Step(worldCamera.transform.localPosition, cameraOrigin, rider.localPosition.x,
+                courseFallSpeed > 0f ? rider.localPosition.y : courseJumpBase, referenceFieldOfView,
+                Mathf.InverseLerp(settings.InitialSpeed, settings.CruiseSpeed, pace), cameraReducedMotion,
+                cameraBoostEnabled, cameraSession.BoostActive && !cameraSession.OfferPending, dt,
+                out Vector3 position, out float fov);
+            worldCamera.transform.localPosition = position;
+            SetFieldOfView(fov);
         }
 
         public void ClearImpactBlink()
@@ -1297,8 +1245,6 @@ namespace Lotba.Game
 
         private void OnDestroy()
         {
-            if (brakeDustMaterial != null) Destroy(brakeDustMaterial);
-            if (brakeDustMesh != null) Destroy(brakeDustMesh);
             if (riderImpactMaterial != null) Destroy(riderImpactMaterial);
             foreach (Material fade in riderFadeCopies.Values) Destroy(fade);
             if (pinkGemMaterials != null)
@@ -1457,7 +1403,7 @@ namespace Lotba.Game
 
             RouteDefinition route = roadStream.Route;
             float boostedSpeed = Mathf.Max(speed, settings.CruiseSpeed + route.SpeedBonusAt(rowEnd)) +
-                RunSession.BoostSpeed + 2f;
+                settings.MaximumTurboSpeedBonus + 2f;
             float front = rowEnd + boostedSpeed * (settings.LaneChangeTime + profile.PinkGemDodgeReactionTime);
             float length = vehicle.Length + 2f * vehicle.ContactPadding;
             float vehicleEnd = front + length;
@@ -1478,7 +1424,7 @@ namespace Lotba.Game
         private float VehicleLaneSwitchGap(float speed, ObstacleSet catalog = null)
         {
             // Budget for a turbo activation while approaching an encounter already on the track.
-            float approachSpeed = Mathf.Max(speed, settings.InitialSpeed) + RunSession.BoostSpeed;
+            float approachSpeed = Mathf.Max(speed, settings.InitialSpeed) + settings.MaximumTurboSpeedBonus;
             // Allow time to read the second row and make up to two lane changes.
             return approachSpeed * (settings.LaneChangeTime * 2f +
                 (catalog?.ElevatedBus?.Id == "wood_container" ? .8f : .25f)) + 1.2f;
@@ -1939,8 +1885,12 @@ namespace Lotba.Game
             gemFlashStarted = Time.unscaledTime;
         }
 
-        public void EndRun(bool braked, float speedBeforeBrake, bool cameraAndParticles)
+        public void EndRun(bool braked, float speedBeforeBrake, bool cameraAndParticles, bool progressiveBrake = false)
         {
+            brakeEffects?.StopHold();
+            cameraSession = null;
+            impactPresentation.ResetImpactReaction();
+            if (recoveryCurtain != null) recoveryCurtain.Clear();
             ClearImpactBlink();
             ClearTurboAura();
             ClearGemScatter();
@@ -1948,6 +1898,12 @@ namespace Lotba.Game
             if (letterBeam != null) letterBeam.enabled = false;
             UpdateLetterMotes(null, 0f);
             if (!braked) return;
+            if (progressiveBrake)
+            {
+                completedProgressiveBrake = true;
+                brakeSlideStarted = float.NegativeInfinity;
+                return;
+            }
 
             brakeSlideStarted = Time.unscaledTime;
             brakeInitialSpeed = Mathf.Max(0f, speedBeforeBrake);
@@ -1959,16 +1915,11 @@ namespace Lotba.Game
             brakeCameraPosition = worldCamera.transform.localPosition;
             brakeCameraFov = referenceFieldOfView;
             brakeCameraEffects = cameraAndParticles;
-            brakeGroundEffects = cameraAndParticles && rearWheel != null && brakeDust != null &&
-                rider.localPosition.y <= .06f;
-            nextBrakeParticle = 0f;
-            brakeMarkPoints = 0;
+            brakeGroundEffects = cameraAndParticles && rearWheel != null && brakeEffects != null &&
+                brakeEffects.HasGroundEffects && rider.localPosition.y <= .06f;
             if (!brakeGroundEffects) return;
-            brakeMark.positionCount = 0;
-            brakeMark.startColor = brakeMark.endColor = BrakeMarkColor;
-            brakeMarkStarted = brakeSlideStarted;
-            brakeDust.Play();
-            if (brakeInitialSpeed > 0f) AddBrakeContact(0f, brakeInitialSpeed);
+            brakeEffects.BeginSkid(brakeSlideStarted);
+            if (brakeInitialSpeed > 0f) AddBrakeContact(brakeInitialSpeed);
         }
 
         private void PrepareRiderVisuals()
@@ -1981,10 +1932,13 @@ namespace Lotba.Game
                 if (part.GetComponentInChildren<Collider>(true) == null)
                     part.SetParent(riderVisual, false);
             }
+            impactVisualRoot = new GameObject("ReacciÃ³n de choque").transform;
+            impactVisualRoot.SetParent(rider, false);
+            riderVisual.SetParent(impactVisualRoot, false);
 
             var bars = riderVisual.Find("Handlebars");
             var fork = riderVisual.Find("Fork");
-            steeringPivot = CreateVisualPivot("Dirección", riderVisual, bars != null ? bars.localPosition : Vector3.zero);
+            steeringPivot = CreateVisualPivot("DirecciÃ³n", riderVisual, bars != null ? bars.localPosition : Vector3.zero);
             if (bars != null) bars.SetParent(steeringPivot, true);
             if (fork != null) fork.SetParent(steeringPivot, true);
             foreach (Transform wheel in wheels)
@@ -2189,88 +2143,22 @@ namespace Lotba.Game
 
         private void CreateBrakeGroundEffects()
         {
-            Shader shader = Shader.Find("Sprites/Default");
-            if (shader == null) return;
-            brakeDustMaterial = new Material(shader) { mainTexture = Texture2D.whiteTexture };
-            var emitter = new GameObject("Partículas de frenada");
-            emitter.transform.SetParent(transform, false);
-            brakeDust = emitter.AddComponent<ParticleSystem>();
-            brakeDust.Stop(false, ParticleSystemStopBehavior.StopEmittingAndClear);
-            var main = brakeDust.main;
-            main.playOnAwake = false;
-            main.loop = false;
-            main.useUnscaledTime = true;
-            main.simulationSpace = ParticleSystemSimulationSpace.World;
-            main.maxParticles = 32;
-            main.startLifetime = new ParticleSystem.MinMaxCurve(.18f, .36f);
-            main.startRotation3D = true;
-            main.startRotationX = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f);
-            main.startRotationY = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f);
-            main.startRotationZ = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f);
-            var emission = brakeDust.emission;
-            emission.enabled = false;
-            var shape = brakeDust.shape;
-            shape.enabled = false;
-            var colorOverLifetime = brakeDust.colorOverLifetime;
-            colorOverLifetime.enabled = true;
-            var fade = new Gradient();
-            fade.SetKeys(
-                new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
-                new[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(0f, 1f) });
-            colorOverLifetime.color = new ParticleSystem.MinMaxGradient(fade);
-
-            brakeDustMesh = new Mesh { name = "Polvo low poly" };
-            brakeDustMesh.vertices = new[]
+            if (brakeEffects != null) return;
+            if (settings.BrakeEffectsPrefab == null)
             {
-                new Vector3(-.5f, -.35f, -.35f), new Vector3(.5f, -.35f, -.35f),
-                new Vector3(0f, -.35f, .55f), new Vector3(0f, .6f, 0f)
-            };
-            brakeDustMesh.triangles = new[] { 0, 1, 2, 0, 3, 1, 1, 3, 2, 2, 3, 0 };
-            brakeDustMesh.RecalculateNormals();
-            var dustRenderer = emitter.GetComponent<ParticleSystemRenderer>();
-            dustRenderer.renderMode = ParticleSystemRenderMode.Mesh;
-            dustRenderer.mesh = brakeDustMesh;
-            dustRenderer.sharedMaterial = brakeDustMaterial;
-
-            var mark = new GameObject("Marca de frenada");
-            mark.transform.SetParent(transform, false);
-            mark.transform.localRotation = Quaternion.Euler(-90f, 0f, 0f);
-            brakeMark = mark.AddComponent<LineRenderer>();
-            brakeMark.sharedMaterial = brakeDustMaterial;
-            brakeMark.useWorldSpace = true;
-            brakeMark.alignment = LineAlignment.TransformZ;
-            brakeMark.startWidth = .10f;
-            brakeMark.endWidth = .06f;
-            brakeMark.positionCount = 0;
+                Debug.LogError("Assign the brake effects prefab in GameSettings.", this);
+                return;
+            }
+            brakeEffects = Instantiate(settings.BrakeEffectsPrefab, transform, false);
         }
 
-        private void AddBrakeContact(float age, float visualSpeed)
+        private void AddBrakeContact(float visualSpeed)
         {
             Vector3 contact = rearWheel.position;
             contact.y = riderShadow.position.y + .009f;
-            brakeMark.positionCount = ++brakeMarkPoints;
-            brakeMark.SetPosition(brakeMarkPoints - 1, contact);
-            if (visualSpeed <= 0f || age < nextBrakeParticle) return;
-
             Vector3 velocity = transform.TransformDirection(new Vector3(-.65f, .65f, -.35f)) *
                 Mathf.Clamp(visualSpeed, .35f, 2f);
-            var particle = new ParticleSystem.EmitParams
-            {
-                position = contact,
-                velocity = velocity,
-                startColor = new Color32(218, 217, 210, 175),
-                startSize = .17f
-            };
-            brakeDust.Emit(particle, 2);
-            if (age < .14f)
-            {
-                particle.velocity = velocity * 1.8f;
-                particle.startColor = new Color32(255, 215, 134, 235);
-                particle.startSize = .045f;
-                particle.startLifetime = .10f;
-                brakeDust.Emit(particle, 1);
-            }
-            nextBrakeParticle = age + .035f;
+            brakeEffects.AddSkidContact(contact, velocity, visualSpeed, Time.unscaledTime);
         }
 
         private void UpdateBrakeSlide()
@@ -2319,25 +2207,20 @@ namespace Lotba.Game
                     SetFieldOfView(brakeCameraFov - 3f * envelope);
                 }
                 worldCamera.transform.localPosition = cameraPosition;
-                if (brakeGroundEffects && brakeInitialSpeed > 0f) AddBrakeContact(age, visualSpeed);
+                if (brakeGroundEffects && brakeInitialSpeed > 0f) AddBrakeContact(visualSpeed);
                 if (progress >= 1f) brakeSlideStarted = float.NegativeInfinity;
             }
 
-            if (float.IsNegativeInfinity(brakeMarkStarted)) return;
-            float markAge = Time.unscaledTime - brakeMarkStarted;
-            Color color = BrakeMarkColor;
-            color.a *= 1f - Mathf.InverseLerp(.55f, 2.5f, markAge);
-            brakeMark.startColor = brakeMark.endColor = color;
-            if (markAge >= 2.5f)
-            {
-                brakeMark.positionCount = 0;
-                brakeMarkStarted = float.NegativeInfinity;
-            }
+            brakeEffects?.UpdatePresentation(Time.unscaledTime);
         }
 
         private void LateUpdate()
         {
+            impactPresentation.UpdatePresentation(Time.unscaledTime);
+            UpdateProgressiveBrakePresentation();
+            UpdateCameraPresentation(Mathf.Min(Time.unscaledDeltaTime, .15f));
             UpdateBrakeSlide();
+            UpdateRecoveryCurtainPresentation();
             UpdateDepthBend();
             if (refreshDepthBend)
             {

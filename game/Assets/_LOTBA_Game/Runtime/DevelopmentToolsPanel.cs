@@ -45,7 +45,7 @@ namespace Lotba.Game
                     if (label.text.StartsWith("Datos v"))
                         label.text = RunTelemetry.SchemaLabel(RunTelemetry.CurrentSchemaVersion) +
                             "\nDecisiones · aceleraciones · compras\nChoques · puntos · gemas · rosas / CASI\nLetras · final de partida" +
-                            "\nRecupero: intentos, resultados y gemas devueltas.\nSin datos personales.";
+                            "\nRecupero: intentos, turbo automático, resultados y gemas devueltas.\nSin datos personales.";
             if (launcher == null || closeButton == null || endpoint == null)
             {
                 Debug.LogError("Development tools hierarchy is not fully assigned in the Game UI prefab.", this);
@@ -211,6 +211,10 @@ namespace Lotba.Game
                 .AppendLine($"{report.summary.score} puntos · {report.summary.gems} gemas · {report.summary.collisions} choques")
                 .AppendLine($"Final: {Ending(report.summary.ending)}").AppendLine();
             if (record.deliveries.Count == 0) text.AppendLine("Sin destino asignado.");
+            if (report.metadata.braking != null)
+                text.AppendLine(report.metadata.braking.mode == "hold_to_stop"
+                    ? $"Freno: progresivo · {report.metadata.braking.decelerationMetresPerSecondSquared:0.#} m/s²"
+                    : "Freno: inmediato");
             foreach (var delivery in record.deliveries)
             {
                 text.AppendLine(delivery.destination).AppendLine($"{DeliveryStatus(delivery.status)} · {delivery.attempts} intentos");
@@ -222,6 +226,10 @@ namespace Lotba.Game
             var measured = new StringBuilder();
             foreach (var field in typeof(RunTelemetrySummary).GetFields())
                 measured.AppendLine(field.Name + ": " + field.GetValue(report.summary));
+            if (report.metadata.schemaVersion >= 20)
+                foreach (var entry in report.events)
+                    if (entry.type == "boost_activated" && entry.turboConfiguration != null)
+                        measured.AppendLine($"Turbo · {entry.timeSeconds:0.#} s · {entry.detail ?? "oferta gratis"}: {entry.turboConfiguration.Display()}");
             recordedMetrics.text = measured.ToString();
         }
 

@@ -67,6 +67,10 @@ namespace Lotba.Game
         [SerializeField] private UnityEngine.UI.Image turboFill;
         [SerializeField] private UnityEngine.UI.Image turboBolt;
         private Vector3 scoreRestScale;
+        private HeldButtonInput brakeHoldInput;
+        private BrakeProgressView brakeProgressView;
+        public bool BrakeHeld => brakeHoldInput != null && brakeHoldInput.IsHeld && brake.isActiveAndEnabled && brake.IsInteractable();
+        public void ClearBrakeHold() => brakeHoldInput?.Clear();
         public bool SettingsOpen { get; private set; }
         [SerializeField] private RunTelemetryPanel telemetryPanel;
         public bool TelemetryOpen => telemetryPanel != null && telemetryPanel.IsOpen;
@@ -78,6 +82,8 @@ namespace Lotba.Game
         public event Action<bool> SpeedChosen;
         private void Awake()
         {
+            brakeHoldInput = brake.GetComponent<HeldButtonInput>();
+            brakeProgressView = brake.GetComponentInChildren<BrakeProgressView>(true);
             BindResponsiveWidths();
             ApplyIdentity();
             wordBannerVisiblePosition = wordBanner.anchoredPosition;
@@ -142,7 +148,7 @@ namespace Lotba.Game
             effectsVolumeSlider.SetValueWithoutNotify(effects);
         }
 
-        private void RenderEnding(RunEnding ending, bool opening, GameSettings settings)
+        private void RenderEnding(RunEnding ending, bool opening, GameSettings settings, BrakingMode brakingMode)
         {
             if (opening)
             {
@@ -169,6 +175,8 @@ namespace Lotba.Game
             }
             float age = Time.unscaledTime - endingStarted;
             float fadeStart = ending == RunEnding.Brake ? RunnerWorld.BrakeSlideSeconds : 0f;
+            if (ending == RunEnding.Brake && brakingMode == BrakingMode.HoldToStop && settings.BrakeEffectsPrefab != null)
+                fadeStart = settings.BrakeEffectsPrefab.SettleSeconds;
             float fadeDuration = ending == RunEnding.Brake ? settings.EndingBrakeFadeSeconds : 0f;
             float blackoutAt = fadeStart + fadeDuration;
             float blackout = fadeDuration > 0f
@@ -321,14 +329,16 @@ namespace Lotba.Game
             if (finished) SettingsOpen = false;
             readyPanel.SetActive(session.State == RunState.Ready && !SettingsOpen && !RankingOpen);
             bool showPause = session.State == RunState.Paused && !SettingsOpen;
-            bool showOffer = running && session.OfferPending;
+            bool showOffer = running && session.OfferPending && !session.RecoveryImpactPending;
             pausePanel.SetActive(showPause);
             if (modalShade != null) modalShade.SetActive(showPause || showOffer);
             settingsPanel.SetActive(SettingsOpen);
             telemetryPanel?.SetReport(finished ? session.Telemetry : null);
-            if (finished) RenderEnding(session.Ending, openingEnding, settings);
+            if (finished) RenderEnding(session.Ending, openingEnding, settings, session.BrakeMode);
             else resultPanel.SetActive(false);
             raceHud.SetActive(active); controls.SetActive(active);
+            if (brakeProgressView != null)
+                brakeProgressView.Render(active && !SettingsOpen && session.BrakeMode == BrakingMode.HoldToStop, session.BrakeProgress);
             turboButton.interactable = running && !SettingsOpen && session.CanActivateTurbo;
             turboFill.fillAmount = session.TurboChargeProgress;
             turboBolt.enabled = turboButton.interactable && turboBolt.sprite != null;
@@ -374,9 +384,11 @@ namespace Lotba.Game
                     }
                     increaseSpeedDetail.text = upgrade
                         ? session.GemBalance < session.UpgradeCost ? $"Te faltan {session.UpgradeCost - session.GemBalance}" : ""
-                        : $"Gratis · {RunSession.BoostSeconds:0} s\nGemas ×2";
+                        : $"Gratis · {session.SpeedOfferTurbo.DurationSeconds:0.#} s\nGemas ×{session.SpeedOfferTurbo.GemMultiplier} · Puntos ×{session.SpeedOfferTurbo.PointMultiplier}";
                 }
-                milestoneBar.gameObject.SetActive(active && session.HasDecisionProgress);
+                milestoneBar.gameObject.SetActive(active && session.HasDecisionProgress &&
+                    !session.RecoveryImpactPending && !session.RecoveryOfferPending &&
+                    !session.RecoveryPreparing && !session.RecoveryActive && !session.RecoveryRejoining);
                 float progress = Mathf.Lerp(milestoneFill.anchorMin.y, milestoneFillEnd.y, session.OfferProgress);
                 milestoneFill.anchorMax = new Vector2(milestoneFillEnd.x, progress);
                 milestoneRider.anchorMin = new Vector2(milestoneRiderMin.x, milestoneRiderMin.y + progress);
@@ -404,7 +416,7 @@ namespace Lotba.Game
             float scoreScale = 1f + Mathf.Sin(scorePulse * Mathf.PI) * .18f;
             score.rectTransform.localScale = scoreRestScale * scoreScale;
             if (pinkGemBadge != null) pinkGemBadge.localScale = pinkGemBadgeRestScale * scoreScale;
-            gauge.SetSpeed(session.Speed, settings.InitialSpeed, session.PurchasedSpeed, session.Elapsed, settings.Brand,
+            gauge.SetSpeed(session.Speed, session.PurchasedSpeed, session.Elapsed, settings.Brand,
                 running && !session.OfferPending);
             if (SettingsOpen)
             {

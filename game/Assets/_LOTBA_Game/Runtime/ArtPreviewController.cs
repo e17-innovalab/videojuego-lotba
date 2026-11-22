@@ -90,7 +90,7 @@ namespace Lotba.Game
                 {
                     if (keyboard.digit1Key.wasPressedThisFrame) speed = settings.InitialSpeed;
                     if (keyboard.digit2Key.wasPressedThisFrame) speed = settings.CruiseSpeed;
-                    if (keyboard.digit3Key.wasPressedThisFrame) speed = settings.CruiseSpeed + RunSession.BoostSpeed;
+                    if (keyboard.digit3Key.wasPressedThisFrame) speed = settings.CruiseSpeed + session.ManualTurbo.SpeedBonus;
                     if (keyboard.rKey.wasPressedThisFrame)
                     {
                         ResetPreview();
@@ -110,7 +110,7 @@ namespace Lotba.Game
             while (budget > 0)
             {
                 float step = Mathf.Min(.02f, budget);
-                session.TickPreview(step, Mathf.Max(1, speed) + (showTurbo ? RunSession.BoostSpeed : 0f));
+                session.TickPreview(step, Mathf.Max(1, speed) + (showTurbo ? session.ManualTurbo.SpeedBonus : 0f));
                 world.Advance(session, step, false, showTurbo, showTurbo); budget -= step;
             }
         }

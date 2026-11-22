@@ -8,7 +8,7 @@ namespace Lotba.Game
     public sealed class AudioManager : MonoBehaviour
     {
         private AudioSource source;
-        private AudioSource musicSource, interfaceSource;
+        private AudioSource musicSource, interfaceSource, brakeSource;
         private static readonly ProfilerMarker StartMusicMarker = new ProfilerMarker("Lotba.Audio.StartMusic");
         [Header("Background music")]
         [SerializeField] private AudioClip backgroundMusic;
@@ -66,6 +66,7 @@ namespace Lotba.Game
             musicSource = CreateAuxiliarySource();
             musicSource.loop = true;
             interfaceSource = CreateAuxiliarySource();
+            brakeSource = CreateAuxiliarySource();
             for (int i = 0; i < airborneSources.Length; i++)
             {
                 AudioSource voice = gameObject.AddComponent<AudioSource>();
@@ -100,6 +101,7 @@ namespace Lotba.Game
             source.volume = effectsSourceVolume * EffectsLevel;
             if (musicSource != null) musicSource.volume = backgroundMusicVolume * MusicLevel;
             if (interfaceSource != null) interfaceSource.volume = EffectsLevel;
+            if (brakeSource != null) brakeSource.volume = brakeButtonVolume * EffectsLevel;
             foreach (var voice in airborneSources)
                 if (voice != null) voice.volume = effectsSourceVolume * EffectsLevel;
         }
@@ -170,6 +172,7 @@ namespace Lotba.Game
             Muted = muted;
             source.mute = muted;
             if (musicSource != null) musicSource.mute = muted;
+            if (brakeSource != null) brakeSource.mute = muted;
             if (interfaceSource != null)
             {
                 interfaceSource.mute = muted;
@@ -202,9 +205,20 @@ namespace Lotba.Game
         public void PlayPinkGemMiss() => Play(pinkGemMiss != null ? pinkGemMiss : gemLoss, pinkGemMissVolume);
         public void PlayPinkGemStreakLost() => Play(pinkGemStreakLost, pinkGemStreakLostVolume);
         public void PlayUiClick() => PlayInterface(uiClick, uiClickVolume);
-        public void EndRun(bool playBrake)
+        public void PlayBrakePress()
         {
-            Stop();
+            if (Muted || brakeButton == null) return;
+            brakeSource.Stop();
+            brakeSource.clip = brakeButton;
+            brakeSource.loop = false;
+            brakeSource.volume = brakeButtonVolume * EffectsLevel;
+            brakeSource.Play();
+        }
+        public void StopBrakePress() => brakeSource?.Stop();
+
+        public void EndRun(bool playBrake, bool preserveBrakePress = false)
+        {
+            StopSources(preserveBrakePress);
             musicSource.Stop();
             musicSource.clip = null;
             interfaceSource.Stop();
@@ -226,7 +240,13 @@ namespace Lotba.Game
 
         public void Stop()
         {
+            StopSources(false);
+        }
+
+        private void StopSources(bool preserveBrakePress)
+        {
             source.Stop();
+            if (!preserveBrakePress) StopBrakePress();
             foreach (AudioSource voice in airborneSources)
                 if (voice != null) voice.Stop();
         }
