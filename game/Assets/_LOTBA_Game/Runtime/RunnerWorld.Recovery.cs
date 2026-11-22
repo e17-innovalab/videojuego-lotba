@@ -52,33 +52,5 @@ namespace Lotba.Game
                     session.State != RunState.Running || session.OfferPending);
         }
 
-        /// <summary>Common obstacle-free rejoin for either answer; does not award pickups or clears.</summary>
-        public int PrepareRecoveryResume(RunSession session)
-        {
-            float expectedSpeed = Mathf.Max(session.Speed,
-                settings.CruiseSpeed + session.PurchasedSpeed + roadStream.Route.SpeedBonusAt(session.Distance)) +
-                session.RecoverySpeed + RunSession.RiskSpeedForFullIntensity;
-            float clearDistance = expectedSpeed * (RunSession.RecoveryResumeSeconds + .75f);
-            int cleared = 0;
-            foreach (TrackItem item in items)
-            {
-                if (!item.Active || item.Definition == null) continue;
-                float halfLength = item.Definition.Length * .5f + item.Definition.ContactPadding;
-                float front = item.View.localPosition.z - halfLength;
-                float rear = item.View.localPosition.z + halfLength;
-                if (rear <= 0f || front >= clearDistance) continue;
-                // Keep roofs already beneath the rider instead of deleting their support.
-                if (item.Definition.RideableRoof && front <= 0f) continue;
-                Hide(item);
-                cleared++;
-            }
-            // Prevent the generator from immediately filling the reserved exit again.
-            float exit = session.Distance + clearDistance;
-            nextVehicleSafeDistance = Mathf.Max(nextVehicleSafeDistance, exit);
-            nextProfileObstacle = Mathf.Max(nextProfileObstacle, exit);
-            ClearImpactBlink();
-            return cleared;
-        }
-
     }
 }

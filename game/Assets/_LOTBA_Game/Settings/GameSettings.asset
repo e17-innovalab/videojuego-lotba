@@ -23,20 +23,20 @@ MonoBehaviour:
     releaseAcceleration: 12
   brakeEffectsPrefab: {fileID: 1516136291399072021, guid: abbfa796a49aaca40b066fdd92ea2a4a, type: 3}
   manualTurbo:
-    durationSeconds: 6
-    speedBonus: 6
-    gemMultiplier: 2
-    pointMultiplier: 2
+    durationSeconds: 5
+    speedBonus: 7
+    gemMultiplier: 1
+    pointMultiplier: 1
   speedOfferTurbo:
     durationSeconds: 6
     speedBonus: 6
     gemMultiplier: 2
     pointMultiplier: 2
   recoveryTurbo:
-    durationSeconds: 6
-    speedBonus: 6
-    gemMultiplier: 2
-    pointMultiplier: 2
+    durationSeconds: 10
+    speedBonus: 10
+    gemMultiplier: 1
+    pointMultiplier: 1
   turboAuraShader: {fileID: 4800000, guid: c60303daed4c47cbba59a4efa5c969c3, type: 3}
   turboAuraTexture: {fileID: 2800000, guid: cf4b287221636c642a8d4fcb4284a493, type: 3}
   turboAuraIntensity: 0
@@ -54,6 +54,7 @@ MonoBehaviour:
     closestZ: 20
     referenceGems: 20
     referenceMetres: 5000
+  recoveryClearModulesAhead: 3
   laneChangeTime: 0.2
   initialPatternSpacing: 28
   finalPatternSpacing: 26

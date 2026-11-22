@@ -89,6 +89,9 @@ namespace Lotba.Game
                     if (entry.type == "boost_activated" && entry.turboConfiguration != null)
                         events.AppendLine($"Turbo · {entry.timeSeconds:0.#} s: {entry.turboConfiguration.Display()}");
             }
+            foreach (var entry in report.events)
+                if (entry.type == "track_reset" && entry.trackReset != null)
+                    events.AppendLine($"Limpieza: {entry.trackReset.Display()}");
             eventsBody.transform.parent.gameObject.SetActive(events.Length > 0);
             eventsBody.text = events.ToString().TrimEnd();
 

@@ -397,6 +397,8 @@ namespace Lotba.Game
                     }
                 }
             }
+            float origin = riderDistance + scenery.localPosition.z;
+            surfaceViews.Add(new SurfaceView(visual.transform, origin + start, origin + end));
             return visual.transform;
         }
 
@@ -457,6 +459,12 @@ namespace Lotba.Game
                 case VehiclePattern.FlankedRamp: end = roofStart + 2f * bus.Length + laneSwitchGap; break;
                 case VehiclePattern.AlternatingBuses: end = start + 3f * bus.Length + 2f * alternatingGap; break;
                 default: end = roofStart + articulatedLength; break;
+            }
+            float reservedExit = trackReservations.ExitOverlapping(start, end);
+            if (!float.IsNegativeInfinity(reservedExit))
+            {
+                nextPatternDistance = Mathf.Max(nextPatternDistance, reservedExit);
+                return true;
             }
             float exitClearance = Mathf.Max(28f, laneSwitchGap);
             if (route.NeedsGentlePatterns(start - 6f, end + exitClearance) ||
@@ -613,6 +621,9 @@ namespace Lotba.Game
                 {
                     Destroy(encounter.Ramp.gameObject);
                     elevatedEncounters.RemoveAt(i);
+                    for (int j = surfaceViews.Count - 1; j >= 0; j--)
+                        if (surfaceViews[j].View == null || surfaceViews[j].View.IsChildOf(encounter.Ramp))
+                            surfaceViews.RemoveAt(j);
                     continue;
                 }
                 Vector3 position = encounter.Ramp.localPosition;
@@ -889,23 +900,12 @@ namespace Lotba.Game
 #if UNITY_EDITOR
             lastDebugContact = null;
 #endif
-            brakeEffects?.Clear();
-            brakeSlideStarted = float.NegativeInfinity;
-            riderVisual.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
-            impactPresentation.ResetImpactReaction();
+            trackReservations.Clear();
             if (recoveryCurtain != null) recoveryCurtain.Clear();
-            riderVisual.localScale = Vector3.one;
-            steeringPivot.localRotation = Quaternion.identity;
-            hips.Reset(); torso.Reset(); head.Reset();
-            foreach (RiderLimb limb in legs) limb.Reset();
-            foreach (RiderLimb limb in arms) limb.Reset();
-            turboAura?.Clear();
-            ClearGemScatter();
             riderDistance = 0f;
-            ClearImpactBlink();
             random = new System.Random(settings.Seed);
             foreach (TrackItem item in items) Hide(item);
-            jump.Reset(); nextPatternDistance = FirstPatternDistance; wave = 0; safeLane = visualLane = 1;
+            nextPatternDistance = FirstPatternDistance; wave = 0;
             nextProfileObstacle = 100f;
             nextVehicleSafeDistance = 0f;
             gemRowsSincePink = pinkDodgeSequence = 0;
@@ -918,21 +918,11 @@ namespace Lotba.Game
             ResetLetters();
             foreach (ElevatedEncounter encounter in elevatedEncounters) Destroy(encounter.Ramp.gameObject);
             elevatedEncounters.Clear();
-            courseJumpBase = courseFallSpeed = nextElevatedDistance = 0f;
+            surfaceViews.Clear();
+            nextElevatedDistance = 0f;
             vehiclePatternIndex = 0;
-            laneOrigin = laneTime = pedalPhase = wheelSpin = lanePoseDirection = 0f;
-            lanePoseAge = LanePoseSeconds;
-            sprintPose = sprintFrom = sprintAge = airPose = 0f;
-            riderSway = riderBank = riderBrace = riderTakeoff = riderLanding = 0f;
-            landingAge = LandingPoseSeconds;
-            takeoffAge = TakeoffPreloadSeconds;
-            sprinting = wasAirborne = false;
-            rider.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
-            UpdateRiderShadow(0f, 0f, 0f);
             roadStream.ResetRoad();
-            for (int i = 0; i < wheels.Length; i++) wheels[i].localRotation = wheelOrigins[i];
-            ResetProgressiveBrakePresentation();
-            cameraPresentation.Reset();
+            RecenterRider(1);
             cameraSession = null;
             curtainSession = null;
             worldCamera.transform.SetLocalPositionAndRotation(cameraOrigin, cameraRotation);
@@ -1532,6 +1522,12 @@ namespace Lotba.Game
 
         private bool TryPlaceLetter(float distance, float riderDistance)
         {
+            float reservedExit = trackReservations.ExitContaining(distance);
+            if (reservedExit > distance)
+            {
+                nextLetterDistance = reservedExit;
+                return false;
+            }
             if (activeWord == null && !PrepareWord())
             {
                 nextLetterDistance = float.PositiveInfinity;
@@ -1759,6 +1755,8 @@ namespace Lotba.Game
         private TrackItem Place(ItemKind kind, int lane, float z, float height, ObstacleDefinition definition = null,
             int airborneNote = -1, bool pink = false, int pinkDodgeEncounter = 0)
         {
+            float placementHalfLength = definition != null ? definition.Length * .5f + definition.ContactPadding : 0f;
+            if (trackReservations.Blocks(riderDistance + z, placementHalfLength)) return null;
             TrackItem item = null;
             foreach (TrackItem candidate in items)
             {
@@ -1820,7 +1818,7 @@ namespace Lotba.Game
             float padding = definition.ContactPadding;
             float start = riderDistance + z;
             if (roadStream.Route.TouchesDecisionApproach(start, start + definition.Length + 2f * padding)) return 0f;
-            Place(ItemKind.Obstacle, lane, z + definition.Length * .5f + padding, 0, definition);
+            if (Place(ItemKind.Obstacle, lane, z + definition.Length * .5f + padding, 0, definition) == null) return 0f;
             // Contact starts at z and ends after the full padded collider passes.
             return definition.Length + 2f * padding;
         }

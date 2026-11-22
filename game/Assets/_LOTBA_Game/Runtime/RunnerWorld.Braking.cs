@@ -33,7 +33,7 @@ namespace Lotba.Game
         private void ResetProgressiveBrakePresentation()
         {
             heldBrakePose = heldBrakeMoving = heldBrakeParticles = completedProgressiveBrake = false;
-            markDistance = 0f;
+            markDistance = riderDistance;
             CaptureRidingPose();
         }
 

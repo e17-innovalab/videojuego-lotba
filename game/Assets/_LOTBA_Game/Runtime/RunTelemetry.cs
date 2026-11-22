@@ -47,6 +47,24 @@ namespace Lotba.Game
         public float purchasedSpeedKmh;
         // Added to the unpublished v20 contract; historical local reports may lack it.
         public RunTurboConfiguration turboConfiguration;
+        public RunTrackReset trackReset;
+    }
+
+    [Serializable]
+    public sealed class RunTrackReset
+    {
+        public float startMetres, endMetres;
+        public int obstacles, gems, letters, platforms, surfaceViews;
+        public int fromLane, toLane;
+        public bool grounded;
+        public static RunTrackReset From(TrackClearanceResult result, int fromLane, int toLane) => new RunTrackReset
+        {
+            startMetres = result.Span.Start, endMetres = result.Span.End,
+            obstacles = result.Obstacles, gems = result.Gems, letters = result.Letters,
+            platforms = result.Platforms, surfaceViews = result.SurfaceViews,
+            fromLane = fromLane, toLane = toLane, grounded = true
+        };
+        public string Display() => $"{startMetres:0.#}–{endMetres:0.#} m · retirados: {obstacles} obstáculos, {gems} gemas, {letters} letras, {platforms} apoyos · carril {fromLane}→{toLane}";
     }
 
     [Serializable]
@@ -90,6 +108,7 @@ namespace Lotba.Game
         public int recoveryAttempts;
         public int brakePresses, brakeReleases;
         public float brakeHeldSeconds;
+        public int trackResets, clearedObstacles, clearedGems, clearedLetters, clearedPlatforms;
         public int decisionsShown, decisionsKept;
         public int gemsLost, gemsRecovered, gemBalance, boostCollisions;
         public int gemsSpent, speedUpgrades;

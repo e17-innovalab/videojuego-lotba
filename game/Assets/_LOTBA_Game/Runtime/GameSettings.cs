@@ -60,6 +60,9 @@ namespace Lotba.Game
         public RecoveryCurtain RecoveryCurtainPrefab => recoveryCurtainPrefab;
         [SerializeField, InspectorName("Dificultad de niebla")] private RecoveryFogDifficulty recoveryFogDifficulty = new RecoveryFogDifficulty();
         public RecoveryFogDifficulty RecoveryFogDifficulty => recoveryFogDifficulty;
+        [SerializeField, Min(0), InspectorName("Módulos a limpiar por delante"), Tooltip("Además del módulo actual, que siempre se limpia.")]
+        private int recoveryClearModulesAhead = 2;
+        public int RecoveryClearModuleCount => 1 + Mathf.Max(0, recoveryClearModulesAhead);
         [SerializeField, Range(.07f, .25f)] private float laneChangeTime = .11f;
         [Header("Track patterns (metres)")]
         [SerializeField, Min(1f)] private float initialPatternSpacing = 28f;

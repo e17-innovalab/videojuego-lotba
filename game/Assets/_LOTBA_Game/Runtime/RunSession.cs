@@ -354,6 +354,8 @@ namespace Lotba.Game
                     voluntaryBoosts = VoluntaryBoosts, manualBoosts = ManualBoosts, recoveryBoosts = RecoveryBoosts, bonusGems = BonusGems,
                     recoveryAttempts = RecoveryAttempts,
                     brakePresses = BrakePresses, brakeReleases = BrakeReleases, brakeHeldSeconds = BrakeHeldSeconds,
+                    trackResets = TrackResets, clearedObstacles = ClearedObstacles, clearedGems = ClearedGems,
+                    clearedLetters = ClearedLetters, clearedPlatforms = ClearedPlatforms,
                     gemsLost = GemsLost, gemsRecovered = GemsRecovered, gemBalance = GemBalance, boostCollisions = BoostCollisions,
                     pinkGemsCollected = PinkGemsCollected, pinkGemsMissed = PinkGemsMissed,
                     pinkGemNearMisses = PinkGemNearMisses,
@@ -376,7 +378,7 @@ namespace Lotba.Game
 
         private void Record(string type, string detail = null, long delta = 0,
             int gemDelta = 0, bool duringBoost = false, int decisionNumber = 0, int streakBefore = 0,
-            bool pinkGemNearMiss = false, int pinkDodgeEncounter = 0)
+            bool pinkGemNearMiss = false, int pinkDodgeEncounter = 0, RunTrackReset trackReset = null)
         {
             if (Telemetry == null) return;
             Telemetry.events.Add(new RunTelemetryEvent
@@ -391,7 +393,8 @@ namespace Lotba.Game
                 pinkGemNearMiss = pinkGemNearMiss,
                 pinkDodgeEncounter = pinkDodgeEncounter,
                 purchasedSpeedKmh = PurchasedSpeed * 3.6f,
-                turboConfiguration = type == "boost_activated" ? RunTurboConfiguration.From(activeTurbo) : null
+                turboConfiguration = type == "boost_activated" ? RunTurboConfiguration.From(activeTurbo) : null,
+                trackReset = trackReset
             });
         }
     }

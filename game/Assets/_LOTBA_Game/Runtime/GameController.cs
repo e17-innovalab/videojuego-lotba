@@ -143,8 +143,12 @@ namespace Lotba.Game
                     session.ShowRecoveryOffer();
                 if (recoveryChoiceRequested.HasValue && session.RecoveryOfferPending && session.State == RunState.Running)
                 {
-                    int cleared = world.PrepareRecoveryResume(session);
-                    session.ChooseRecovery(recoveryChoiceRequested.Value, cleared, world.SelectRecoveryFogZ(session));
+                    var span = TrackSpan.ModulesAt(session.Distance, RoadStandard.ModuleLength, settings.RecoveryClearModuleCount);
+                    var cleared = world.ClearAndReserve(span);
+                    world.RecenterRider(1);
+                    session.RecordTrackReset(cleared, 1, "recovery_resume");
+                    laneRequested = 0; jumpRequested = false; trackingSwipe = false;
+                    session.ChooseRecovery(recoveryChoiceRequested.Value, cleared.Obstacles, world.SelectRecoveryFogZ(session));
                 }
                 if (session.State == RunState.Running && !session.OfferPending)
                 {
