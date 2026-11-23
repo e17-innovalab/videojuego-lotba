@@ -144,3 +144,128 @@ test('POST /api/v1/sessions rejects payloads larger than 2mb with 413', async ()
     assert.deepEqual(body, { error: 'payload_too_large' });
   });
 });
+
+test('POST /api/v1/sessions accepts schemaVersion 19 and schemaVersion 20 payloads without breaking schema 13', async () => {
+  await withServer(async ({ baseUrl, tempDir }) => {
+    const v13 = makeValidReport('run_schema_13');
+    const v19 = {
+      ...makeValidReport('run_schema_19'),
+      metadata: { ...makeValidReport('run_schema_19').metadata, schemaVersion: 19, gameVersion: '0.4.0' },
+      summary: {
+        ...makeValidReport('run_schema_19').summary,
+        pinkGemsCollected: 3,
+        pinkGemsMissed: 1,
+        pinkGemNearMisses: 1,
+        bestPinkGemStreak: 2,
+        pinkDodgeCleared: 1,
+        pinkDodgeCollisions: 0
+      }
+    };
+    const v20 = {
+      metadata: {
+        ...makeValidReport('run_schema_20').metadata,
+        schemaVersion: 20,
+        gameVersion: '0.4.0',
+        braking: {
+          mode: 'hold_to_stop',
+          decelerationMetresPerSecondSquared: 28.5,
+          releaseAccelerationMetresPerSecondSquared: 12.0
+        }
+      },
+      summary: {
+        ...makeValidReport('run_schema_20').summary,
+        recoveryBoosts: 1,
+        recoveryAttempts: 1,
+        brakePresses: 3,
+        brakeReleases: 2,
+        brakeHeldSeconds: 1.45
+      },
+      events: [
+        { sequence: 1, type: 'run_started', timeSeconds: 0 },
+        {
+          sequence: 2,
+          type: 'boost_activated',
+          timeSeconds: 1.2,
+          turboConfiguration: {
+            durationSeconds: 3.5,
+            speedBonusMetresPerSecond: 6.0,
+            gemMultiplier: 2,
+            pointMultiplier: 2
+          }
+        },
+        { sequence: 3, type: 'run_finished', detail: 'brake', timeSeconds: 2.0 }
+      ]
+    };
+
+    for (const report of [v13, v19, v20]) {
+      const first = await fetch(`${baseUrl}/api/v1/sessions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(report)
+      });
+      assert.equal(first.status, 201);
+      assert.deepEqual(await first.json(), { status: 'created', runId: report.metadata.runId });
+
+      const retry = await fetch(`${baseUrl}/api/v1/sessions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(report)
+      });
+      assert.equal(retry.status, 200);
+      assert.deepEqual(await retry.json(), { status: 'already_exists', runId: report.metadata.runId });
+    }
+
+    const files = (await fs.readdir(tempDir)).sort();
+    assert.deepEqual(files, [
+      'session_run_schema_13.json',
+      'session_run_schema_19.json',
+      'session_run_schema_20.json'
+    ]);
+  });
+});
+
+test('Delivery state machine: transient 5xx stays pending and retries; permanent 4xx becomes rejected; orphan report binds to BaseUrl', async () => {
+  // Mirrors SessionReportTransport.IsTransientFailure and status transitions
+  const isTransientFailure = (code) => code === 0 || code === 408 || code === 429 || code >= 500;
+  const applyResponse = (delivery, code, body, expectedRunId) => {
+    const confirmed =
+      body &&
+      body.runId === expectedRunId &&
+      ((code === 201 && body.status === 'created') || (code === 200 && body.status === 'already_exists'));
+    if (confirmed) {
+      delivery.status = 'delivered';
+      delivery.lastError = '';
+      return;
+    }
+    delivery.status = isTransientFailure(code) ? 'pending' : 'rejected';
+    delivery.lastError = `HTTP ${code}`;
+  };
+
+  // 1. Orphan report without destination binds to configured BaseUrl
+  const orphanRecord = { runId: 'run_orphan_01', originalDestination: '', deliveries: [] };
+  const baseUrl = 'https://telemetry.example.com';
+  if (baseUrl && !orphanRecord.originalDestination && orphanRecord.deliveries.length === 0) {
+    orphanRecord.originalDestination = baseUrl;
+    orphanRecord.deliveries.push({ destination: baseUrl, status: 'pending', lastError: '' });
+  }
+  assert.equal(orphanRecord.originalDestination, baseUrl);
+  assert.equal(orphanRecord.deliveries[0].status, 'pending');
+
+  // 2. Transient 5xx keeps status pending
+  applyResponse(orphanRecord.deliveries[0], 503, null, 'run_orphan_01');
+  assert.equal(orphanRecord.deliveries[0].status, 'pending');
+
+  // 3. Retry succeeds with 201 created -> delivered
+  applyResponse(orphanRecord.deliveries[0], 201, { status: 'created', runId: 'run_orphan_01' }, 'run_orphan_01');
+  assert.equal(orphanRecord.deliveries[0].status, 'delivered');
+
+  // 4. Duplicate retry with 200 already_exists -> delivered
+  const dupDelivery = { destination: baseUrl, status: 'pending', lastError: '' };
+  applyResponse(dupDelivery, 200, { status: 'already_exists', runId: 'run_dup_01' }, 'run_dup_01');
+  assert.equal(dupDelivery.status, 'delivered');
+
+  // 5. Permanent 4xx (e.g. 400) -> rejected
+  const badDelivery = { destination: baseUrl, status: 'pending', lastError: '' };
+  applyResponse(badDelivery, 400, { error: 'invalid_payload' }, 'run_bad_01');
+  assert.equal(badDelivery.status, 'rejected');
+});

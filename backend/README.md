@@ -118,8 +118,8 @@ Cada reporte contiene tres bloques principales:
 Detalles de versión y endings soportados:
 
 - `reportVersion = "1.0"`
-- Probado con `schemaVersion = 13` y `schemaVersion = 19`
-- `gameVersion = "0.4.0"` en las pruebas de schema 19
+- Compatible con `schemaVersion = 13`, `19` y `20`
+- `gameVersion = "0.4.0"` en las pruebas de schema 19/20
 - Endings soportados:
   - `brake`
   - `route_complete`
@@ -150,6 +150,8 @@ Las migraciones ubicadas en `backend/sql/` **deben aplicarse en orden** y **no d
      - `vw_bi_session_overview`
      - `vw_bi_behavior_metrics`
      - `vw_bi_speed_decisions`
+5. **`005_schema_v20_columns.sql`**
+   - Agrega columnas de `schemaVersion = 20` (`braking_*`, `recovery_boosts`, `brake_presses`, `brake_releases`, `brake_held_seconds` en `sessions`; `turbo_*` en `session_events`), actualiza `ingest_session_report` y extiende `vw_sessions_summary` y `vw_bi_session_overview` preservando compatibilidad con schema 13 y 19.
 
 ## 9. Seguridad
 
@@ -158,11 +160,12 @@ Las migraciones ubicadas en `backend/sql/` **deben aplicarse en orden** y **no d
 - `service_role` utilizado exclusivamente por el backend.
 - Vistas analíticas y de BI configuradas con `security_invoker = true`.
 - Vistas sin permiso `SELECT` para `PUBLIC`, `anon` ni `authenticated`.
+- El cliente Unity mantiene `redirectLimit = 0` en `POST /api/v1/sessions` por seguridad; la URL productiva configurada en `SessionReportTransport.DefaultBaseUrl` debe apuntar al origen **HTTPS canónico sin redirects** (`301`/`302`/`308`).
 - Para conectar un futuro dashboard externo (como Looker Studio), se recomienda crear un **rol PostgreSQL dedicado de solo lectura** (`read-only`). **No usar `service_role` directamente desde Looker Studio.**
 
 ## 10. Tests y validaciones realizadas
 
-- Tests automatizados: `npm test` → **9/9 passing**.
+- Tests automatizados: `npm test` → **11/11 passing**.
 - Validación manual en Supabase DEV (`lotba-dev`):
   - Ingesta real con `schemaVersion = 13`
   - Ingesta real con `schemaVersion = 19`
