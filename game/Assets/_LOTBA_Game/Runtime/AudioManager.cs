@@ -51,6 +51,11 @@ namespace Lotba.Game
         [SerializeField, Range(0f, 1f)] private float letterPickupVolume = .7f;
         [SerializeField] private AudioClip wordCompleted;
         [SerializeField, Range(0f, 1f)] private float wordCompletedVolume = .7f;
+        [Header("Recovery · Celebration & Near Miss")]
+        [SerializeField] private AudioClip recoveryCelebration;
+        [SerializeField, Range(0f, 1f)] private float recoveryCelebrationVolume = 0.85f;
+        [SerializeField] private AudioClip recoveryNearMiss;
+        [SerializeField, Range(0f, 1f)] private float recoveryNearMissVolume = 0.75f;
         public bool Muted { get; private set; }
         public float MusicLevel { get; private set; } = 1f;
         public float EffectsLevel { get; private set; } = 1f;
@@ -237,6 +242,8 @@ namespace Lotba.Game
         }
         public void PlayLetterPickup() => Play(letterPickup, letterPickupVolume);
         public void PlayWordCompleted() => Play(wordCompleted, wordCompletedVolume);
+        public void PlayRecoveryCelebration() => Play(recoveryCelebration != null ? recoveryCelebration : wordCompleted, recoveryCelebrationVolume);
+        public void PlayRecoveryNearMiss() => Play(recoveryNearMiss != null ? recoveryNearMiss : gemLoss, recoveryNearMissVolume);
 
         public void Stop()
         {

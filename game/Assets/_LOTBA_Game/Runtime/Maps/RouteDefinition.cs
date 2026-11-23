@@ -141,8 +141,8 @@ namespace Lotba.Game
             return sections.Length - 1;
         }
         public MapDefinition MapAtDistance(float distance) => sections[SectionAt(distance, out _)].Map;
-        public bool HasDecision(int index) => sections[index].ModuleCount > 0 &&
-            (sections[index].Transition || (index > 0 && index < sections.Length - 1));
+        public bool HasDecision(int index) => sections[index].ModuleCount > 0 && index < sections.Length - 1 &&
+            (sections[index].Transition || (!sections[index + 1].Transition && !sections[index].Transition));
 
         public RouteSection SpeedOfferAt(int index) =>
             sections[index].Transition && sections[index].SpeedUpgradeCost == 0 && index > 0

@@ -7,7 +7,7 @@ namespace Lotba.Game
     [Serializable]
     public sealed class RunTelemetry
     {
-        public const int CurrentSchemaVersion = 20;
+        public const int CurrentSchemaVersion = 21;
         public int schemaVersion = CurrentSchemaVersion;
         public static string SchemaLabel(int version) => $"Datos v{version}";
         public string runId = Guid.NewGuid().ToString("N");
@@ -19,7 +19,10 @@ namespace Lotba.Game
         public float durationSeconds;
         public float routeDistanceMetres;
         public RunBrakingConfiguration braking;
+        public SectionTransitionSettings transitions;
+        public RunLanePattern exitPattern;
         public List<RunTelemetryEvent> events = new List<RunTelemetryEvent>();
+        public List<RunRecoveryOpportunity> recoveryOpportunities = new List<RunRecoveryOpportunity>();
         public RunTelemetrySummary summary;
 
         public string ToJson() => JsonUtility.ToJson(this, true);
@@ -48,6 +51,41 @@ namespace Lotba.Game
         // Added to the unpublished v20 contract; historical local reports may lack it.
         public RunTurboConfiguration turboConfiguration;
         public RunTrackReset trackReset;
+        public int transitionSection = -1;
+        public RunRecoveryOpportunity recovery;
+        public string lossOrigin;
+        public int gemRewardMultiplier, pointRewardMultiplier;
+    }
+
+    [Serializable]
+    public sealed class RunLanePattern
+    {
+        public string name;
+        public float maximumObstacleLength, maximumObstacleWidth;
+        public LanePatternRow[] rows;
+        public static RunLanePattern From(LanePatternParameters value) => value == null || value.ValidationError != null ? null : new RunLanePattern
+        {
+            name = value.Name, maximumObstacleLength = value.MaximumObstacleLength,
+            maximumObstacleWidth = value.MaximumObstacleWidth, rows = Array.ConvertAll(value.Rows, row => row.Copy())
+        };
+    }
+
+    [Serializable]
+    public sealed class RunRecoveryOpportunity
+    {
+        public string offerId, attemptId, outcome, cause;
+        public int section;
+        public bool accepted;
+        public int[] eligibleLossSequences;
+        public long eligiblePoints, offeredPoints, returnedPoints;
+        public int eligibleGems, offeredGems, returnedGems;
+        public float offerDistanceMetres, startDistanceMetres, endDistanceMetres, challengeMetres;
+        public float startTimeSeconds, endTimeSeconds, fogLocalZ;
+        public float pointLossFraction, gemLossFraction;
+        public int minimumPointLoss;
+        public RunTurboConfiguration turbo;
+        public RunRecoveryOpportunity Copy() => (RunRecoveryOpportunity)MemberwiseClone();
+        public string Display() => $"{offerId} · {attemptId} · tramo {section} · {outcome} ({cause}) · ofrecido {offeredPoints} puntos / {offeredGems} gemas · devuelto {returnedPoints} / {returnedGems} · reto {challengeMetres:0.#} m";
     }
 
     [Serializable]
@@ -70,16 +108,18 @@ namespace Lotba.Game
     [Serializable]
     public sealed class RunTurboConfiguration
     {
+        public string lifetimeMode;
         public float durationSeconds, speedBonusMetresPerSecond;
         public int gemMultiplier, pointMultiplier;
 
-        public static RunTurboConfiguration From(TurboParameters value) => new RunTurboConfiguration
+        public static RunTurboConfiguration From(TurboParameters value, bool externalLifetime = false) => new RunTurboConfiguration
         {
-            durationSeconds = value.DurationSeconds, speedBonusMetresPerSecond = value.SpeedBonus,
+            lifetimeMode = externalLifetime ? "external_distance_challenge" : "timed",
+            durationSeconds = externalLifetime ? 0f : value.DurationSeconds, speedBonusMetresPerSecond = value.SpeedBonus,
             gemMultiplier = value.GemMultiplier, pointMultiplier = value.PointMultiplier
         };
 
-        public string Display() => $"{durationSeconds:0.#} s · +{speedBonusMetresPerSecond:0.#} m/s · gemas ×{gemMultiplier} · puntos ×{pointMultiplier}";
+        public string Display() => (lifetimeMode == "external_distance_challenge" ? "Hasta resolver el reto" : $"{durationSeconds:0.#} s") + $" · +{speedBonusMetresPerSecond:0.#} m/s · gemas ×{gemMultiplier} · puntos ×{pointMultiplier}";
     }
 
     [Serializable]
@@ -106,6 +146,17 @@ namespace Lotba.Game
         public int manualBoosts;
         public int recoveryBoosts;
         public int recoveryAttempts;
+        public int recoverySucceeded, recoveryFailed, recoveryDeclined, recoveryInterrupted;
+        public int recoveryOffers, recoveryUnavailable, recoveryOffersClosed;
+        public int recoveryZoneCollisions;
+        public long recoveryZonePointsLost;
+        public int recoveryZoneGemsLost;
+        public long recoveryNetPoints;
+        public int recoveryNetGems;
+        public int purchasedGemMultiplier, purchasedPointMultiplier;
+        public long pointsRecovered;
+        public long pointsLost;
+        public float realTimeSeconds;
         public int brakePresses, brakeReleases;
         public float brakeHeldSeconds;
         public int trackResets, clearedObstacles, clearedGems, clearedLetters, clearedPlatforms;

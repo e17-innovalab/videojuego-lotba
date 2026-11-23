@@ -30,6 +30,7 @@ namespace Lotba.Game
         [SerializeField] private UnityEngine.UI.Button endingContinueButton;
         [SerializeField] private CanvasGroup endingContinueGroup;
         private int endingReflectionCharacters;
+        private string endingReflectionTemplate;
         private float endingStarted;
         private float endingContinuedAt = float.PositiveInfinity;
         [SerializeField] private Color resultsBackdrop = new Color32(12, 33, 50, 255);
@@ -80,8 +81,10 @@ namespace Lotba.Game
         public event Action TurboRequested;
         public event Action UiClicked;
         public event Action<bool> SpeedChosen;
+        public event Action RecoveryChosen;
         private void Awake()
         {
+            endingReflectionTemplate = endingReflection.text;
             brakeHoldInput = brake.GetComponent<HeldButtonInput>();
             brakeProgressView = brake.GetComponentInChildren<BrakeProgressView>(true);
             BindResponsiveWidths();
@@ -235,6 +238,7 @@ namespace Lotba.Game
         public void ResetView()
         {
             SettingsOpen = false;
+            ResetRecoveryPopups();
             ClearRankingOffer();
             endingBackground.gameObject.SetActive(false);
             scorePulseUntil = 0f;
@@ -329,12 +333,19 @@ namespace Lotba.Game
             if (finished) SettingsOpen = false;
             readyPanel.SetActive(session.State == RunState.Ready && !SettingsOpen && !RankingOpen);
             bool showPause = session.State == RunState.Paused && !SettingsOpen;
-            bool showOffer = running && session.OfferPending && !session.RecoveryImpactPending;
+            bool showOffer = running && session.OfferPending;
             pausePanel.SetActive(showPause);
             if (modalShade != null) modalShade.SetActive(showPause || showOffer);
             settingsPanel.SetActive(SettingsOpen);
             telemetryPanel?.SetReport(finished ? session.Telemetry : null);
-            if (finished) RenderEnding(session.Ending, openingEnding, settings, session.BrakeMode);
+            if (finished)
+            {
+                if (openingEnding)
+                    endingReflection.text = session.Ending == RunEnding.Brake
+                        ? $"Elegiste frenar. Conservás {session.Score} puntos y {session.GemBalance} gemas.\n\n" + endingReflectionTemplate
+                        : endingReflectionTemplate;
+                RenderEnding(session.Ending, openingEnding, settings, session.BrakeMode);
+            }
             else resultPanel.SetActive(false);
             raceHud.SetActive(active); controls.SetActive(active);
             if (brakeProgressView != null)
@@ -349,46 +360,9 @@ namespace Lotba.Game
             pause.interactable = !SettingsOpen && !session.OfferPending;
             if (speedOffer != null)
             {
-                speedOffer.gameObject.SetActive(showOffer && !session.RecoveryOfferPending);
-                if (speedOffer.gameObject.activeSelf)
-                {
-                    bool upgrade = session.UpgradeCost > 0;
-                    bool availableToBuy = !upgrade || session.CanBuySpeed;
-                    bool showShortfall = upgrade && !availableToBuy;
-                    if (paceShortfallBadge != null) paceShortfallBadge.SetActive(showShortfall);
-                    if (paceAlmostBadge != null)
-                        paceAlmostBadge.SetActive(showShortfall);
-                    if (increaseSpeedButton.interactable != availableToBuy)
-                    {
-                        increaseSpeedButton.interactable = availableToBuy;
-                        for (int i = 0; i < paceCardGraphics.Length; i++)
-                        {
-                            Color color = paceCardColors[i];
-                            float gray = color.grayscale;
-                            paceCardGraphics[i].color = availableToBuy ? color : new Color(gray, gray, gray, color.a);
-                        }
-                        paceCardIcon.sprite = availableToBuy ? availablePaceIcon : unavailablePaceIcon;
-                        paceCardGemIcon.sprite = availableToBuy ? availableGemIcon : unavailableGemIcon;
-                    }
-                    increaseSpeedPriceBadge.gameObject.SetActive(upgrade);
-                    if (upgrade)
-                    {
-                        string price = showShortfall
-                            ? $"{session.GemBalance} / {session.UpgradeCost}"
-                            : session.UpgradeCost.ToString();
-                        increaseSpeedPrice.text = price;
-                        float available = ((RectTransform)increaseSpeedPriceBadge.parent).rect.width * .88f;
-                        float preferred = increaseSpeedPrice.GetPreferredValues(price).x;
-                        increaseSpeedPriceBadge.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal,
-                            Mathf.Min(Mathf.Max(64f, preferred + 42f), Mathf.Max(48f, available)));
-                    }
-                    increaseSpeedDetail.text = upgrade
-                        ? session.GemBalance < session.UpgradeCost ? $"Te faltan {session.UpgradeCost - session.GemBalance}" : ""
-                        : $"Gratis · {session.SpeedOfferTurbo.DurationSeconds:0.#} s\nGemas ×{session.SpeedOfferTurbo.GemMultiplier} · Puntos ×{session.SpeedOfferTurbo.PointMultiplier}";
-                }
+                speedOffer.gameObject.SetActive(false); // Replaced by the authored transition prefab.
                 milestoneBar.gameObject.SetActive(active && session.HasDecisionProgress &&
-                    !session.RecoveryImpactPending && !session.RecoveryOfferPending &&
-                    !session.RecoveryPreparing && !session.RecoveryActive && !session.RecoveryRejoining);
+                    !session.RecoveryForkActive && !session.RecoveryActive);
                 float progress = Mathf.Lerp(milestoneFill.anchorMin.y, milestoneFillEnd.y, session.OfferProgress);
                 milestoneFill.anchorMax = new Vector2(milestoneFillEnd.x, progress);
                 milestoneRider.anchorMin = new Vector2(milestoneRiderMin.x, milestoneRiderMin.y + progress);
@@ -441,14 +415,27 @@ namespace Lotba.Game
                 resultRows[0].text = $"Recorriste {ResultHighlight($"{session.Distance / 1000f:0.0#} km", settings.Brand.White)}";
                 resultRows[1].text = $"Recolectaste {ResultHighlight($"{session.Gems} gemas", settings.Brand.Pink)}";
                 resultRows[2].text = $"Chocaste {ResultHighlight(Times(session.Collisions), settings.Brand.Red)}";
-                resultRows[3].text = session.RecoveryOutcome switch
+                if (session.RecoveryAttempts > 0)
                 {
-                    "succeeded" => $"Recuperaste {ResultHighlight($"{session.GemsRecovered} gemas", settings.Brand.Green)}",
-                    "failed" => "Intentaste recuperar y chocaste",
-                    "interrupted" => "Recupero interrumpido al terminar",
-                    "declined" => "Elegiste seguir sin intentar recuperar",
-                    _ => $"Intentos de recupero: {session.RecoveryAttempts}"
-                };
+                    long netPoints = session.PointsRecovered - session.RecoveryZonePointsLost;
+                    string netColor = netPoints >= 0 ? "#8EEF29" : "#FF6B6B";
+                    string netSign = netPoints >= 0 ? "+" : "";
+                    if (session.RecoverySucceeded > 0)
+                    {
+                        resultRows[3].text = $"Recuperos: {session.RecoverySucceeded}/{session.RecoveryAttempts} logrados · " +
+                            $"Reintegraste: +{session.PointsRecovered:N0} pts · Perdiste en atajo: -{session.RecoveryZonePointsLost:N0} pts " +
+                            $"(Neto: <color={netColor}><b>{netSign}{netPoints:N0} pts</b></color>)";
+                    }
+                    else
+                    {
+                        resultRows[3].text = $"Recuperos: 0/{session.RecoveryAttempts} logrados (gema no alcanzada) · " +
+                            $"Perdiste en atajo: <color=#FF6B6B><b>-{session.RecoveryZonePointsLost:N0} pts</b></color>";
+                    }
+                }
+                else
+                {
+                    resultRows[3].text = "Recuperos: No utilizaste atajos de recupero";
+                }
                 resultRows[4].text = $"Aceleraste {ResultHighlight(Times(session.VoluntaryBoosts + session.SpeedUpgrades), settings.Brand.Yellow)}";
                 if (resultRows.Length > 5 && resultRows[5] != null)
                     resultRows[5].text = $"Racha máxima {ResultHighlight($"×{session.BestPinkGemStreak}", settings.Brand.Yellow)}";

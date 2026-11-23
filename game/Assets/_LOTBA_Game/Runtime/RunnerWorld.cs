@@ -187,8 +187,6 @@ namespace Lotba.Game
         private float nextVehicleSafeDistance;
         private int gemRowsSincePink, pinkDodgeSequence;
         private float lastPinkGemDistance;
-        private int nextDecisionGemSection;
-        private float decisionGemSectionStart;
         private float laneTime;
         private float laneOrigin;
         private int visualLane = 1;
@@ -460,7 +458,7 @@ namespace Lotba.Game
                 case VehiclePattern.AlternatingBuses: end = start + 3f * bus.Length + 2f * alternatingGap; break;
                 default: end = roofStart + articulatedLength; break;
             }
-            float reservedExit = trackReservations.ExitOverlapping(start, end);
+            float reservedExit = Mathf.Max(trackReservations.ExitOverlapping(start, end), transitionPatternReservations.ExitOverlapping(start, end));
             if (!float.IsNegativeInfinity(reservedExit))
             {
                 nextPatternDistance = Mathf.Max(nextPatternDistance, reservedExit);
@@ -901,7 +899,9 @@ namespace Lotba.Game
             lastDebugContact = null;
 #endif
             trackReservations.Clear();
+            PrepareSectionTransitions();
             if (recoveryCurtain != null) recoveryCurtain.Clear();
+            ResetRecoveryPresentation();
             riderDistance = 0f;
             random = new System.Random(settings.Seed);
             foreach (TrackItem item in items) Hide(item);
@@ -910,8 +910,6 @@ namespace Lotba.Game
             nextVehicleSafeDistance = 0f;
             gemRowsSincePink = pinkDodgeSequence = 0;
             lastPinkGemDistance = 19f;
-            nextDecisionGemSection = 0;
-            decisionGemSectionStart = 0f;
             previousVehicleLane = -1;
             encounterSection = -1;
             lastPatternEnd = 19f; // End of the opening gem row.
@@ -934,7 +932,7 @@ namespace Lotba.Game
                 return;
             }
 #endif
-            for (int i = 0; i < 4; i++) Place(ItemKind.Gem, 1, 10 + i * 3, 1.1f, pink: i == 3);
+            for (int i = 0; i < 4; i++) Place(ItemKind.Gem, 1, 10 + i * 3, 1.1f, pink: false);
 #if UNITY_EDITOR
             SpawnVehicleCourse();
 #endif
@@ -990,8 +988,9 @@ namespace Lotba.Game
             TrackContact step = UpdateVehicleCourse(session.Distance, travel, oldX, x, session.Elapsed, dt);
             rider.localPosition = new Vector3(x, step.EndHeight, 0);
             RestoreRidingPose();
+            float visualTravel = (session.OfferPending ? 18f : session.Speed) * dt;
             AnimateRider(session.BoostActive, jump.HeightAt(session.Elapsed) > 0f || courseFallSpeed > 0f,
-                (step.EndHeight - step.StartHeight) / dt, travel, reducedMotion, dt);
+                (step.EndHeight - step.StartHeight) / dt, visualTravel, reducedMotion, dt);
             CaptureRidingPose();
             UpdateRiderShadow(x, step.EndHeight, 0f);
             roadStream.Advance(session.Distance);
@@ -1072,7 +1071,7 @@ namespace Lotba.Game
                     int previousGemsLost = session.GemsLost;
                     bool streakLost = session.PinkGemStreak > 0;
                     session.Hit(item.Definition.Id, item.PinkDodgeEncounter);
-                    impactPresentation.StartImpactReaction(impactVisualRoot, reducedMotion, session.Lane == 0 ? 1f : -1f, RunSession.RecoveryImpactSeconds, Time.unscaledTime);
+                    impactPresentation.StartImpactReaction(impactVisualRoot, reducedMotion, session.Lane == 0 ? 1f : -1f, 0.85f, Time.unscaledTime);
                     int gemsLost = session.GemsLost - previousGemsLost;
                     if (settings.LogObstacleCollisions)
                     {
@@ -1097,11 +1096,6 @@ namespace Lotba.Game
                     ImpactFeedback?.Invoke(duringBoost, gemsLost, streakLost);
                 }
             }
-            if (session.RecoveryImpactPending || session.RecoveryOfferPending)
-            {
-                ClearImpactBlink();
-                return;
-            }
             foreach (TrackItem item in items)
             {
                 float behind = item.Definition != null ? -item.Definition.Length * .5f - 9 : -8;
@@ -1114,10 +1108,11 @@ namespace Lotba.Game
                 if (item.Active && item.View.localPosition.z < behind) Hide(item);
             }
             AdvanceLetter(travel, step, session, dt);
+            AdvanceRecoveryGem(travel, step, session, dt);
             using (PopulateAheadMarker.Auto())
                 PopulateAhead(session.Distance, session.Speed);
-            session.UpdateRecovery();
-            session.ShowSpeedOffer();
+            session.UpdateRecoveryZone();
+            session.UpdateTransitionArrival();
             float protection = session.ProtectionProgress;
             const float whiteFlashEnd = .07f;
             bool showImpact = !reducedMotion && session.IsProtected;
@@ -1145,10 +1140,12 @@ namespace Lotba.Game
             if (settings.PreparePatternsBeyondVisibility)
                 lookAhead = Mathf.Max(lookAhead, roadStream.VisibilityDistance + settings.PatternVisibilityMargin);
             float spawnHorizon = distance + lookAhead;
-            SpawnDecisionGems(spawnHorizon, distance);
+            PopulateTransitionExits(spawnHorizon);
             float clearance = Mathf.Max(0f, letterClearance);
-            while (true)
+            int loopSafety = 0;
+            while (++loopSafety < 120)
             {
+                float loopStartDistance = nextPatternDistance;
                 float letterDistance = Mathf.Max(nextLetterDistance, lastPatternEnd + clearance);
                 if (nextLetterDistance <= nextPatternDistance && CanPlaceLetter(letterDistance, clearance))
                 {
@@ -1160,19 +1157,31 @@ namespace Lotba.Game
                     }
                 }
                 if (nextPatternDistance > spawnHorizon) break;
+                float reservedPatternExit = transitionPatternReservations.ExitContaining(nextPatternDistance);
+                if (reservedPatternExit > nextPatternDistance)
+                {
+                    nextPatternDistance = reservedPatternExit;
+                    continue;
+                }
 #if UNITY_EDITOR
                 if (SkipVehicleCourse(ref nextPatternDistance)) continue;
 #endif
 
-                if (TrySpawnElevatedEncounter(distance, speed) || TrySpawnProfileEncounter(distance, speed)) continue;
+                if (TrySpawnElevatedEncounter(distance, speed) || TrySpawnProfileEncounter(distance, speed))
+                {
+                    if (nextPatternDistance <= loopStartDistance) nextPatternDistance = loopStartDistance + 4f;
+                    continue;
+                }
                 if (nextPatternDistance < nextVehicleSafeDistance)
                 {
                     nextPatternDistance = nextVehicleSafeDistance;
+                    if (nextPatternDistance <= loopStartDistance) nextPatternDistance = loopStartDistance + 4f;
                     continue;
                 }
                 lastPatternEnd = SpawnPattern(nextPatternDistance, distance, speed);
                 nextPatternDistance = Mathf.Max(nextPatternDistance + settings.PatternSpacingAt(nextPatternDistance) / obstacleIntensity,
                     lastPatternEnd + settings.PatternClearance);
+                if (nextPatternDistance <= loopStartDistance) nextPatternDistance = loopStartDistance + 4f;
             }
         }
 
@@ -1249,28 +1258,14 @@ namespace Lotba.Game
 
         private float nextProfileGems;
 
-        private void SpawnDecisionGems(float horizon, float distance)
-        {
-            RouteDefinition route = roadStream.Route;
-            while (nextDecisionGemSection < route.Sections.Length)
-            {
-                float length = route.Sections[nextDecisionGemSection].ModuleCount * RoadStandard.ModuleLength;
-                float midpoint = decisionGemSectionStart + length * .5f;
-                float lead = Mathf.Min(24f, length * .25f);
-                if (midpoint - lead > horizon) return;
-                if (route.HasDecision(nextDecisionGemSection))
-                {
-                    for (int i = 1; i <= 6; i++)
-                        Place(ItemKind.Gem, 1, midpoint - lead * (1f - i / 7f) - distance, 1.1f);
-                }
-                nextDecisionGemSection++;
-                decisionGemSectionStart += length;
-            }
-        }
-
         private bool TrySpawnProfileEncounter(float riderDistance, float speed)
         {
             float distance = nextPatternDistance;
+            if (transitionPatternReservations.ExitContaining(distance) > distance)
+            {
+                nextPatternDistance = transitionPatternReservations.ExitContaining(distance);
+                return true;
+            }
             RouteDefinition route = roadStream.Route;
             int index = route.SectionAt(distance, out float start);
             RouteSection section = route.Sections[index];
@@ -1286,7 +1281,8 @@ namespace Lotba.Game
                 nextProfileObstacle = Mathf.Max(100f, distance + 6f);
             }
             // Earlier encounters, letters and decisions can advance the shared cursor.
-            bool spawnGems = nextProfileGems <= nextProfileObstacle;
+            bool inRecovery = cameraSession != null && cameraSession.RecoveryActive;
+            bool spawnGems = !inRecovery && (nextProfileGems <= nextProfileObstacle);
             if (!spawnGems && distance < nextVehicleSafeDistance)
             {
                 nextProfileObstacle = Mathf.Max(nextProfileObstacle, nextVehicleSafeDistance);
@@ -1310,7 +1306,8 @@ namespace Lotba.Game
                         random.NextDouble() < profile.LaneChangeChance ? random.Next(2, count - 1) : -1;
                     int roseLane = turnAt >= 0 ? PickNeighborLane(lane) : lane;
                     gemRowsSincePink++;
-                    bool pink = profile.PinkGemEveryRows > 0 && gemRowsSincePink >= profile.PinkGemEveryRows &&
+                    bool pinkAllowed = cameraSession != null && cameraSession.PinkGemsUnlocked;
+                    bool pink = pinkAllowed && profile.PinkGemEveryRows > 0 && gemRowsSincePink >= profile.PinkGemEveryRows &&
                         occupiedEnd - lastPinkGemDistance >= profile.PinkGemMinimumSpacing;
                     int dodgeEncounter = 0;
                     int dodgeExitLane = -1;
@@ -1325,25 +1322,28 @@ namespace Lotba.Game
                         gemRowsSincePink = 0;
                         lastPinkGemDistance = rowEnd;
                     }
-                    for (int gem = 0; gem < count; gem++)
+                    if (!inRecovery)
                     {
-                        if (gem == turnAt)
+                        for (int gem = 0; gem < count; gem++)
                         {
-                            lane = roseLane;
-                            // Leave one slot empty so the lane change fits at boost speed.
-                            continue;
+                            if (gem == turnAt)
+                            {
+                                lane = roseLane;
+                                // Leave one slot empty so the lane change fits at boost speed.
+                                continue;
+                            }
+                            for (int thread = 0; thread < threads; thread++)
+                                Place(ItemKind.Gem, (lane + thread) % 3,
+                                    distance - riderDistance + gem * profile.GemSpacing, 1.1f,
+                                    pink: pink && thread == 0 && gem == count - 1,
+                                    pinkDodgeEncounter: pink && thread == 0 && gem == count - 1 ? dodgeEncounter : 0);
                         }
-                        for (int thread = 0; thread < threads; thread++)
-                            Place(ItemKind.Gem, (lane + thread) % 3,
-                                distance - riderDistance + gem * profile.GemSpacing, 1.1f,
-                                pink: pink && thread == 0 && gem == count - 1,
-                                pinkDodgeEncounter: pink && thread == 0 && gem == count - 1 ? dodgeEncounter : 0);
                     }
                     safeLane = dodgeExitLane >= 0 ? dodgeExitLane : lane;
                 }
                 float variation = profile.GemIntervalVariation;
                 float jitter = variation > 0f ? 1f + variation * (2f * (float)random.NextDouble() - 1f) : 1f;
-                nextProfileGems = distance + profile.GemInterval * jitter / gemIntensity;
+                nextProfileGems = distance + profile.GemInterval * jitter / Mathf.Max(.25f, gemIntensity);
                 if (occupiedEnd > rowEnd)
                     nextProfileGems = Mathf.Max(nextProfileGems, occupiedEnd + Mathf.Max(8f, (nextVehicleSafeDistance - occupiedEnd) * .5f));
             }
@@ -1351,11 +1351,13 @@ namespace Lotba.Game
             {
                 ObstacleSet catalog = obstacleOverride != null ? obstacleOverride : section.Map.Obstacles;
                 // Leave a free path and enough distance to read and change lanes.
-                float clearance = Mathf.Max(profile.ObstacleClearance, VehicleLaneSwitchGap(speed, catalog));
+                float clearance = inRecovery
+                    ? Mathf.Max(7f, VehicleLaneSwitchGap(speed, catalog) * 0.8f)
+                    : Mathf.Max(profile.ObstacleClearance, VehicleLaneSwitchGap(speed, catalog));
                 float maximumLength = Mathf.Min(distance < 220f ? 4.5f : float.PositiveInfinity, end - distance - clearance);
                 int lane = (safeLane + 1 + random.Next(2)) % 3;
                 float occupied = PlaceObstacle(catalog, wave % 3 == 0, lane, distance - riderDistance, maximumLength);
-                float extraObstacleChance = Mathf.Clamp01(obstacleIntensity - 1f + profile.ExtraObstacleChance);
+                float extraObstacleChance = inRecovery ? 0.65f : Mathf.Clamp01(obstacleIntensity - 1f + profile.ExtraObstacleChance);
                 if (occupied > 0f && ((catalog?.ElevatedBus != null && wave % 2 == 1) ||
                     (extraObstacleChance > 0f && random.NextDouble() < extraObstacleChance)))
                 {
@@ -1367,9 +1369,12 @@ namespace Lotba.Game
                 if (occupied > 0f)
                 {
                     nextVehicleSafeDistance = occupiedEnd + clearance;
-                    nextProfileGems = Mathf.Max(nextProfileGems, occupiedEnd + Mathf.Max(8f, clearance * .5f));
+                    nextProfileGems = inRecovery ? occupiedEnd + clearance : Mathf.Max(nextProfileGems, occupiedEnd + Mathf.Max(8f, clearance * .5f));
                 }
-                nextProfileObstacle = Mathf.Max(distance + profile.ObstacleInterval / obstacleIntensity, occupiedEnd + clearance);
+                nextProfileObstacle = inRecovery
+                    ? Mathf.Max(distance + 14f, occupiedEnd + clearance)
+                    : Mathf.Max(distance + profile.ObstacleInterval / obstacleIntensity, occupiedEnd + clearance);
+                if (inRecovery) nextProfileGems = nextProfileObstacle;
                 wave++;
             }
             lastPatternEnd = Mathf.Min(end, occupiedEnd);
@@ -1426,12 +1431,18 @@ namespace Lotba.Game
             float z = distance - riderDistance;
             float spacing = settings.GemSpacingAt(distance);
             float patternEnd = distance + spacing * 3;
-            if (roadStream.Route.TouchesDecisionApproach(distance, patternEnd)) return patternEnd;
+            if (roadStream.Route.TouchesDecisionApproach(distance, patternEnd) ||
+                !float.IsNegativeInfinity(transitionPatternReservations.ExitOverlapping(distance, patternEnd + 12f)))
+                return Mathf.Max(patternEnd, transitionPatternReservations.ExitOverlapping(distance, patternEnd + 12f));
             bool gentle = roadStream.Route.NeedsGentlePatterns(distance - 6, patternEnd + 6);
             bool jumping = !gentle && distance > 155f && wave % 4 == 2;
-            for (int i = 0; i < 4; i++)
-                Place(ItemKind.Gem, safeLane, z + i * spacing, jumping ? (i == 0 || i == 3 ? 2.05f : 2.7f) : 1.1f,
-                    airborneNote: jumping ? i : -1);
+            bool inRecovery = cameraSession != null && cameraSession.RecoveryActive;
+            if (!inRecovery)
+            {
+                for (int i = 0; i < 4; i++)
+                    Place(ItemKind.Gem, safeLane, z + i * spacing, jumping ? (i == 0 || i == 3 ? 2.05f : 2.7f) : 1.1f,
+                        airborneNote: jumping ? i : -1);
+            }
             ObstacleSet obstacleSet = obstacleOverride != null ? obstacleOverride : roadStream.Route.MapAtDistance(distance).Obstacles;
             float maximumLength = gentle || distance < 220f ? 4.5f : float.PositiveInfinity;
             float obstacleOffset = spacing * 1.5f;
@@ -1516,9 +1527,11 @@ namespace Lotba.Game
         }
 
         private bool CanPlaceLetter(float distance, float clearance) =>
+            (cameraSession == null || !cameraSession.RecoveryActive) &&
             wordCollectionEnabled && activeLetter < 0 && (activeWord == null || pendingLetters.Count > 0) &&
             !roadStream.Route.NeedsGentlePatterns(distance - clearance, distance + clearance) &&
-            !roadStream.Route.TouchesDecisionApproach(distance, distance);
+            !roadStream.Route.TouchesDecisionApproach(distance, distance) &&
+            !transitionPatternReservations.Blocks(distance, clearance);
 
         private bool TryPlaceLetter(float distance, float riderDistance)
         {
@@ -1753,10 +1766,11 @@ namespace Lotba.Game
             UpdateGemGlow(item);
         }
         private TrackItem Place(ItemKind kind, int lane, float z, float height, ObstacleDefinition definition = null,
-            int airborneNote = -1, bool pink = false, int pinkDodgeEncounter = 0)
+            int airborneNote = -1, bool pink = false, int pinkDodgeEncounter = 0, bool plannedWindowContent = false)
         {
             float placementHalfLength = definition != null ? definition.Length * .5f + definition.ContactPadding : 0f;
             if (trackReservations.Blocks(riderDistance + z, placementHalfLength)) return null;
+            if (!plannedWindowContent && transitionPatternReservations.Blocks(riderDistance + z, placementHalfLength)) return null;
             TrackItem item = null;
             foreach (TrackItem candidate in items)
             {
@@ -2238,6 +2252,10 @@ namespace Lotba.Game
                     BendPickup(letterPickup.transform, letterLaneX);
                     if (letterBeam != null && letterBeam.enabled)
                         BendPickup(letterBeam.transform, letterLaneX + settings.LetterBeamBaseOffset.x, letterPickup.transform.localPosition.z);
+                }
+                if (recoveryGemInstance != null && recoveryGemInstance.gameObject.activeSelf)
+                {
+                    BendPickup(recoveryGemInstance.transform, recoveryGemLaneX);
                 }
                 refreshDepthBend = depthBendStrength != 0f;
             }

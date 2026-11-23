@@ -12,6 +12,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f2c7bfd5218df6f4ebb04055bb2d661a, type: 3}
   m_Name: GameSettings
   m_EditorClassIdentifier: Lotba.Game::Lotba.Game.GameSettings
+  transitions:
+    clearApproachMetres: 96
+    clearExitMetres: 96
+    announcementMetres: 120
+    referenceApproachSpeed: 70
+    announcementSeconds: 3
+    rejoinSeconds: 1.25
+    automaticDeceleration: 16
+    recoveryDistanceMetres: 500
+    maximumRecoveryGems: 20
+    maximumRecoveryPoints: 2000
+    purchasedGemMultiplier: 2
+    purchasedPointMultiplier: 2
+    recoveryCollision:
+      pointFraction: 0.25
+      minimumPointLoss: 50
+      gemFraction: 0.5
+  transitionViewPrefab: {fileID: 6130112520800718616, guid: 6c05944b41dd5db47b74ed9bc114d8b8, type: 3}
+  sectionGatePrefab: {fileID: 8128184567064933309, guid: 6fc7feb8916a0124a8e9bc7c2bf599b2, type: 3}
+  transitionExitPattern: {fileID: 11400000, guid: d139aa9e931286442a93f7305cc6d821, type: 2}
   initialSpeed: 28.5
   cruiseSpeed: 41.5
   accelerationTime: 95
@@ -30,8 +50,8 @@ MonoBehaviour:
   speedOfferTurbo:
     durationSeconds: 6
     speedBonus: 6
-    gemMultiplier: 2
-    pointMultiplier: 2
+    gemMultiplier: 1
+    pointMultiplier: 1
   recoveryTurbo:
     durationSeconds: 10
     speedBonus: 10
@@ -44,12 +64,14 @@ MonoBehaviour:
   boostCameraPullback: 1.3
   boostCameraFieldOfView: 12
   boostCameraBlendRate: 7
-  boostLineColor: {r: 0.68, g: 0.88, b: 1, a: 0.9}
-  boostLineCount: 32
-  boostLineSpeed: 4.8
-  boostLineLength: 0.3
-  boostLineWidth: 5
+  recoveryPortalContinuePrefab: {fileID: 6332740948503998542, guid: 9287fa9bb9e37794e85896628b327fc0, type: 3}
+  recoveryPortalRecoverPrefab: {fileID: 7102075809175602689, guid: 8dcbfda10f1d8de468c69ad2b15a7a29, type: 3}
+  recoveryBarrierPrefab: {fileID: 1541978643439349511, guid: cb88e88ca40249542b0dfcf87c57191c, type: 3}
+  enableRecoveryFog: 0
   recoveryCurtainPrefab: {fileID: 4904403769921249031, guid: a5f95583c13225049a16ec99428ce6ff, type: 3}
+  recoveryGemPrefab: {fileID: 1720567491562502469, guid: 6f3ba9bce064ebe41a45d0aa54cc01c0, type: 3}
+  recoveryCelebrationPrefab: {fileID: 4567754396485161988, guid: a4e2489ae5caffb48997f9a389a78229, type: 3}
+  recoveryMissPrefab: {fileID: 4131392718214520758, guid: ba9c9d3c9da486840aaebb3bb8b837d3, type: 3}
   recoveryFogDifficulty:
     closestZ: 20
     referenceGems: 20

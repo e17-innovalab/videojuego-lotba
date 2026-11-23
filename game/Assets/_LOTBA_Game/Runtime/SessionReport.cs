@@ -9,6 +9,7 @@ namespace Lotba.Game
         public SessionReportMetadata metadata;
         public RunTelemetrySummary summary;
         public List<RunTelemetryEvent> events = new List<RunTelemetryEvent>();
+        public List<RunRecoveryOpportunity> recoveryOpportunities = new List<RunRecoveryOpportunity>();
     }
 
     [Serializable]
@@ -25,5 +26,7 @@ namespace Lotba.Game
         public int seed;
         public float routeDistanceMetres;
         public RunBrakingConfiguration braking;
+        public SectionTransitionSettings transitions;
+        public RunLanePattern exitPattern;
     }
 }

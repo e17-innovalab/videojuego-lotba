@@ -45,7 +45,7 @@ namespace Lotba.Game
                     if (label.text.StartsWith("Datos v"))
                         label.text = RunTelemetry.SchemaLabel(RunTelemetry.CurrentSchemaVersion) +
                             "\nDecisiones · aceleraciones · compras\nChoques · puntos · gemas · rosas / CASI\nLetras · final de partida" +
-                            "\nRecupero: intentos, turbo automático, resultados y gemas devueltas.\nSin datos personales.";
+                            "\nRecupero: ofertas por tramo, distancia, resultados, puntos y gemas devueltos.\nSin datos personales.";
             if (launcher == null || closeButton == null || endpoint == null)
             {
                 Debug.LogError("Development tools hierarchy is not fully assigned in the Game UI prefab.", this);
@@ -233,6 +233,8 @@ namespace Lotba.Game
             foreach (var entry in report.events)
                 if (entry.type == "track_reset" && entry.trackReset != null)
                     measured.AppendLine($"Limpieza · {entry.timeSeconds:0.#} s: {entry.trackReset.Display()}");
+            if (report.recoveryOpportunities != null)
+                foreach (var opportunity in report.recoveryOpportunities) measured.AppendLine(opportunity.Display());
             recordedMetrics.text = measured.ToString();
         }
 

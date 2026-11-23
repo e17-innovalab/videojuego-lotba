@@ -63,6 +63,20 @@ namespace Lotba.Game
             return new TrackClearanceResult(span, obstacles, gems, letters, platforms, visuals);
         }
 
+        public void ClearGemsAhead(float from, float to)
+        {
+            for (int i = 0; i < items.Count; i++)
+            {
+                var item = items[i];
+                if (!item.Active || item.Kind != ItemKind.Gem) continue;
+                float center = riderDistance + item.View.localPosition.z;
+                if (center >= from && center <= to)
+                {
+                    Hide(item);
+                }
+            }
+        }
+
         /// <summary>Reset rider placement/presentation without resetting route distance, score or generation.</summary>
         public void RecenterRider(int lane)
         {

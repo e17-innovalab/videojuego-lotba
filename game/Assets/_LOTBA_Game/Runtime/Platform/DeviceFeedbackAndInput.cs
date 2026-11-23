@@ -19,6 +19,7 @@ namespace Lotba.Game
         private AndroidJavaObject vibrator;
         private int androidSdk;
         private bool amplitudeControl;
+        private float nextBoostRefresh;
 #endif
         public void Initialize()
         {
@@ -141,9 +142,9 @@ namespace Lotba.Game
             catch (AndroidJavaException) { VibrationAvailable = false; }
 #endif
         }
-        public void UpdateBoostFeedback(float remaining)
+        public void UpdateBoostFeedback(bool active)
         {
-            if (remaining <= 0f || !VibrationEnabled)
+            if (!active || !VibrationEnabled)
             {
                 if (boostVibrating) CancelFeedback();
                 return;
@@ -151,15 +152,16 @@ namespace Lotba.Game
 
 #if UNITY_ANDROID && !UNITY_EDITOR
             // A motor without amplitude control cannot produce a soft sustained vibration.
-            if (!amplitudeControl || boostVibrating || Time.unscaledTime < nextVibration) return;
+            if (!amplitudeControl || Time.unscaledTime < nextVibration || (boostVibrating && Time.unscaledTime < nextBoostRefresh)) return;
             try
             {
-                long duration = Mathf.Max(1, Mathf.CeilToInt(remaining * 1000f));
+                const long duration = 350;
                 int amplitude = 12 + (vibrationLevel - 1) * 8;
                 using (var effects = new AndroidJavaClass("android.os.VibrationEffect"))
                 using (var effect = effects.CallStatic<AndroidJavaObject>("createOneShot", duration, amplitude))
                     vibrator.Call("vibrate", effect);
                 boostVibrating = true;
+                nextBoostRefresh = Time.unscaledTime + .25f;
             }
             catch (AndroidJavaException) { VibrationAvailable = false; }
 #endif
