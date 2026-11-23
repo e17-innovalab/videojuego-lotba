@@ -147,6 +147,7 @@ namespace Lotba.Game
                 {
                     activeRecoveryGemAttempt = session.RecoveryAttempts;
                     recoveryGemResolved = false;
+                    trackScheduler.NotifyRecoveryEntered(session.Distance, session.RecoveryZoneEnd);
 
                     if (settings.RecoveryGemPrefab != null)
                     {
@@ -215,6 +216,7 @@ namespace Lotba.Game
             {
                 recoveryGemInstance.gameObject.SetActive(false);
             }
+            trackScheduler?.NotifyRecoveryExited();
             RestoreDayEnvironment();
         }
 

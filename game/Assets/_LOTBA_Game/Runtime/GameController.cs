@@ -147,7 +147,7 @@ namespace Lotba.Game
                 {
                     recoveryChoiceRequested = false;
                     session.ChooseTransitionRecovery();
-                    world.ClearGemsAhead(session.Distance, session.Distance + 350f);
+                    world.ClearGemsAhead(session.Distance, Mathf.Max(session.RecoveryZoneEnd + 10f, session.Distance + 600f));
                     if (!session.OfferPending) { laneRequested = 0; jumpRequested = false; trackingSwipe = false; }
                 }
                 if (session.State == RunState.Running && !session.OfferPending)

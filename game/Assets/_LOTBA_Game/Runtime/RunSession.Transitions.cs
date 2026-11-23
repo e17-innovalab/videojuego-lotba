@@ -53,8 +53,6 @@ namespace Lotba.Game
                 PurchasedGemMultiplier += Math.Max(0, transitionSettings.purchasedGemMultiplier - 1);
                 PurchasedPointMultiplier += Math.Max(0, transitionSettings.purchasedPointMultiplier - 1);
                 PinkGemsUnlocked = true;
-                PinkGemStreak = Math.Max(PinkGemStreak + 1, 2);
-                BestPinkGemStreak = Math.Max(BestPinkGemStreak, PinkGemStreak);
                 SpeedUpgrades++;
                 Record("speed_upgrade_purchased", gemDelta: -UpgradeCost, decisionNumber: DecisionsShown);
             }

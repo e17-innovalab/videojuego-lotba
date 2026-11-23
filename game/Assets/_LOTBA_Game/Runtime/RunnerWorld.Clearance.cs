@@ -5,6 +5,7 @@ namespace Lotba.Game
     public sealed partial class RunnerWorld
     {
         private readonly TrackReservations trackReservations = new TrackReservations();
+        public TrackReservations TrackReservations => trackReservations;
         private readonly System.Collections.Generic.List<SurfaceView> surfaceViews = new System.Collections.Generic.List<SurfaceView>();
         private readonly struct SurfaceView
         {

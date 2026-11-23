@@ -61,14 +61,14 @@ namespace Lotba.Game
                     if (celebrationPopup == null && settings.RecoveryCelebrationPrefab != null)
                         celebrationPopup = Instantiate(settings.RecoveryCelebrationPrefab, speedOffer.parent, false);
                     if (celebrationPopup != null)
-                        celebrationPopup.Show(session.RecoveryPointAmount, session.RecoveryAmount);
+                        celebrationPopup.Show(session.RecoveryPointAmount, session.RecoveryAmount, 1.8f);
                 }
                 else if (session.RecoveryOutcome == "failed")
                 {
                     if (missPopup == null && settings.RecoveryMissPrefab != null)
                         missPopup = Instantiate(settings.RecoveryMissPrefab, speedOffer.parent, false);
                     if (missPopup != null)
-                        missPopup.Show("Te faltó poco... La próxima seguro lo conseguís");
+                        missPopup.Show("Te faltó poco... La próxima seguro lo conseguís", 1.8f);
                 }
             }
             bool result = Time.unscaledTime < recoveryResultUntil &&

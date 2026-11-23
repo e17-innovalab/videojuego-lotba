@@ -7,6 +7,7 @@ namespace Lotba.Game
     {
         private SectionTransitionPlan[] sectionTransitions;
         private readonly TrackReservations transitionPatternReservations = new TrackReservations();
+        public TrackReservations TransitionReservations => transitionPatternReservations;
         private readonly List<Transform> sectionMarkers = new List<Transform>();
         private readonly List<ChoiceMarkerView> sectionInvitations = new List<ChoiceMarkerView>();
         private int populatedTransitionExits;

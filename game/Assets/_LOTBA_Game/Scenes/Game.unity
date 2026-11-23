@@ -1183,6 +1183,8 @@ MonoBehaviour:
   letterHoverHeight: 0.18
   letterHoverCycle: 2.8
   letterTilt: 6
+  normalZoneRules: {fileID: 11400000, guid: e19f5838a7296174b93e78d019f873ab, type: 2}
+  recoveryZoneRules: {fileID: 11400000, guid: d864252e53b3d45418175e30d971238a, type: 2}
 --- !u!4 &1708434621
 Transform:
   m_ObjectHideFlags: 0
@@ -1522,6 +1524,10 @@ MonoBehaviour:
   letterPickupVolume: 0.7
   wordCompleted: {fileID: 8300000, guid: 929dd465c1aa9f54994b3eed09b1409c, type: 3}
   wordCompletedVolume: 0.7
+  recoveryCelebration: {fileID: 0}
+  recoveryCelebrationVolume: 0.85
+  recoveryNearMiss: {fileID: 0}
+  recoveryNearMissVolume: 0.75
 --- !u!1001 &3901526582321186557
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -101,7 +101,7 @@ namespace Lotba.Game
             {
                 purchaseButton.gameObject.SetActive(true);
                 purchaseButton.interactable = canAffordPurchase;
-                if (purchaseTitle != null) purchaseTitle.text = "MULTIPLICADOR";
+                if (purchaseTitle != null) purchaseTitle.text = "MULTIPLICADOR\n<size=75%><color=#FFE0F0>GEMAS ROSAS</color></size>";
                 if (purchasePrice != null) purchasePrice.text = purchaseCost > 0 ? purchaseCost.ToString() : "0";
 
                 if (almostBadge != null)
