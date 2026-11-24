@@ -147,13 +147,18 @@ namespace Lotba.Game
             activeBlocks.Add(new ObstacleBlock(lane, startZ, endZ, minHeight, maxHeight));
         }
 
-        public bool HasObstacleAt(int lane, float z, float height = 1.1f, float padding = 0.5f)
+        public bool HasObstacleAt(int lane, float z, float height = 1.1f, float padding = 0.8f)
         {
             for (int i = 0; i < activeBlocks.Count; i++)
             {
                 var block = activeBlocks[i];
                 if (block.Lane == lane && z >= (block.StartZ - padding) && z <= (block.EndZ + padding))
                 {
+                    // Para gemas de piso (altura <= 1.5m), cualquier obstáculo que toque el suelo
+                    // (incluso cajas bajas de 0.5m o conos) prohíbe gemas para que nunca queden encima ni solapadas.
+                    if (height <= 1.5f && block.MinHeight <= 0.5f)
+                        return true;
+
                     if (height >= (block.MinHeight - 0.2f) && height <= (block.MaxHeight + 0.2f))
                         return true;
                 }

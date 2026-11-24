@@ -43,37 +43,13 @@ namespace Lotba.Game
                 return;
             }
 
-            float spacing = context.Profile != null ? context.Profile.GemSpacing : 2.5f;
-            float gemInterval = context.Profile != null ? context.Profile.GemInterval : 24f;
+            // Mayor espaciado y menor frecuencia según pedido del usuario:
+            // espaciado aumentado a 3.4m (antes 2.5m) e intervalo base a 46m (antes 24m)
+            float spacing = 3.4f;
+            float gemInterval = 46f;
             float gemIntensity = Mathf.Max(0.25f, context.Rules.GemIntensity * context.GemIntensity);
 
-            // 1. Asegurar que cada arco de salto activo tenga sus gemas parabólicas en el aire
-            var activeArcs = scheduler.ActiveJumpArcs;
-            for (int i = 0; i < activeArcs.Count; i++)
-            {
-                var arc = activeArcs[i];
-                if (arc.EndZ < context.Distance - 10f || arc.StartZ > context.SpawnHorizon) continue;
-                if (!populatedArcs.Contains(arc.StartZ))
-                {
-                    populatedArcs.Add(arc.StartZ);
-                    SpawnParabolicArc(arc, scheduler);
-                }
-            }
-
-            // 2. Asegurar que cada superficie transitable activa (rampa/techo) tenga sus gemas alineadas
-            var activeSurfaces = scheduler.ActiveSurfaces;
-            for (int i = 0; i < activeSurfaces.Count; i++)
-            {
-                var surf = activeSurfaces[i];
-                if (surf.EndZ < context.Distance - 10f || surf.StartZ > context.SpawnHorizon) continue;
-                if (!populatedSurfaces.Contains(surf.StartZ))
-                {
-                    populatedSurfaces.Add(surf.StartZ);
-                    SpawnSurfaceTrail(surf, spacing, scheduler);
-                }
-            }
-
-            // 3. Generación continua en piso guiando por el camino seguro (breadcrumbs)
+            // Generación de un ÚNICO camino de gemas continuo (sin hileras paralelas en múltiples carriles)
             while (nextGemDistance < context.SpawnHorizon)
             {
                 if (scheduler.IsGemForbiddenAt(nextGemDistance))
@@ -82,8 +58,33 @@ namespace Lotba.Game
                     continue;
                 }
 
-                int count = context.Profile != null ? context.Profile.GemsPerThread : 4;
-                int baseLane = scheduler.GetSafeLaneAt(nextGemDistance, -1);
+                // 1. Si hay una superficie transitable (rampa/techo) en esta cota, el único camino de gemas sube por ella
+                if (scheduler.TryGetSurfaceAt(nextGemDistance, out TraversableSurface surface))
+                {
+                    if (!populatedSurfaces.Contains(surface.StartZ))
+                    {
+                        populatedSurfaces.Add(surface.StartZ);
+                        SpawnSurfaceTrail(surface, spacing, scheduler);
+                    }
+                    nextGemDistance = surface.EndZ + 12f;
+                    continue;
+                }
+
+                // 2. Si hay un arco parabólico de salto en esta cota, el único camino de gemas describe la parábola en el aire
+                if (scheduler.TryGetJumpArcAt(nextGemDistance, out JumpArcTrajectory jumpArc))
+                {
+                    if (!populatedArcs.Contains(jumpArc.StartZ))
+                    {
+                        populatedArcs.Add(jumpArc.StartZ);
+                        SpawnParabolicArc(jumpArc, scheduler);
+                    }
+                    nextGemDistance = jumpArc.EndZ + 12f;
+                    continue;
+                }
+
+                // 3. Generación en piso: exactamente un único camino de gemas siguiendo el carril seguro
+                int count = 4;
+                int safeLane = scheduler.GetSafeLaneAt(nextGemDistance, -1);
 
                 gemRowsSincePink++;
                 bool pinkAllowed = context.PinkGemsUnlocked && context.Rules.AllowPinkGems;
@@ -95,31 +96,26 @@ namespace Lotba.Game
                     gemRowsSincePink = 0;
                 }
 
-                int emittedInTrail = 0;
                 for (int i = 0; i < count; i++)
                 {
                     float z = nextGemDistance + i * spacing;
 
                     if (scheduler.IsGemForbiddenAt(z) || scheduler.IsLetterAt(z)) continue;
 
-                    int gemLane = scheduler.GetSafeLaneAt(z, baseLane);
+                    // Si hay una superficie o arco de salto en cualquier carril a esta cota, no colocar gemas de piso para no duplicar caminos
+                    if (scheduler.TryGetSurfaceAt(z, out _) || scheduler.TryGetJumpArcAt(z, out _)) break;
 
-                    // NUNCA generar una gema si un obstáculo ocupa ese carril a esa altura
-                    if (scheduler.HasObstacleAt(gemLane, z, 1.1f, 0.45f)) continue;
+                    int gemLane = scheduler.GetSafeLaneAt(z, safeLane);
 
-                    // NUNCA generar una gema de piso sobre una rampa o debajo de un colectivo
-                    if (scheduler.TryGetSurfaceAt(z, out TraversableSurface surf) && surf.Lane == gemLane) continue;
-
-                    // NUNCA generar una gema de piso debajo de un arco de salto (el arco tiene sus propias gemas aéreas)
-                    if (scheduler.TryGetJumpArcAt(z, out JumpArcTrajectory arc) && (arc.FromLane == gemLane || arc.ToLane == gemLane)) continue;
+                    // NUNCA generar una gema si hay cualquier obstáculo (incluso cajas pequeñas o conos) en ese carril y cota
+                    if (scheduler.HasObstacleAt(gemLane, z, 1.1f, 1.0f)) continue;
 
                     bool itemPink = isPink && (i == count - 1);
                     scheduler.EmitItem(TrackSpawnItem.CreateGem(gemLane, z, 1.1f, pink: itemPink));
-                    emittedInTrail++;
                 }
 
-                float jitter = 1f + (float)(random.NextDouble() * 0.2 - 0.1);
-                float step = Mathf.Max(spacing * count + 4f, (gemInterval * jitter) / gemIntensity);
+                float jitter = 1f + (float)(random.NextDouble() * 0.15 - 0.05);
+                float step = Mathf.Max(spacing * count + 14f, (gemInterval * jitter) / gemIntensity);
                 nextGemDistance += step;
             }
         }
