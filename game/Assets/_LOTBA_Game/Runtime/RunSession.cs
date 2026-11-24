@@ -35,6 +35,7 @@ namespace Lotba.Game
         public int ManualBoosts { get; private set; }
         private bool transitionDecisionPending;
         public bool OfferPending => transitionDecisionPending;
+        public float PedalAnimationSpeed => OfferPending ? 0f : Speed;
         public bool BoostActive => turbo.IsActive(Elapsed);
         public float BoostProgress => turbo.Progress(Elapsed);
         public int VoluntaryBoosts { get; private set; }
@@ -61,6 +62,7 @@ namespace Lotba.Game
         public float Elapsed { get; private set; }
         public float Distance { get; private set; }
         public float Speed { get; private set; }
+        public float MovementSpeed { get; private set; }
         public float PeakSpeed { get; private set; }
         public long Score { get; private set; }
         public int Gems { get; private set; }
@@ -137,17 +139,24 @@ namespace Lotba.Game
 #endif
         public void Tick(float dt)
         {
-            if (State != RunState.Running || OfferPending) return;
+            if (State != RunState.Running) return;
             float step = dt;
             Elapsed += step;
+            if (OfferPending) { MovementSpeed = 0f; return; }
             UpdateRecoveryFork();
             float desiredSpeed = CalculateUnbrakedSpeed();
-            if (CurrentTransition != null) desiredSpeed = Math.Min(desiredSpeed, CurrentTransition.SpeedLimit(Distance));
             Speed = braking.IsRestricting ? Math.Min(desiredSpeed, braking.SpeedLimit) : desiredSpeed;
-            if (CurrentTransition != null && Distance + Speed * step >= CurrentTransition.Stop)
-                Speed = Math.Max(0f, (CurrentTransition.Stop - Distance) / Math.Max(.0001f, step));
+            MovementSpeed = Speed;
             PeakSpeed = Math.Max(PeakSpeed, Speed);
-            Distance += Speed * step;
+            float distanceBeforeStep = Distance;
+            float nextDistance = Distance + Speed * step;
+            if (CurrentTransition != null && nextDistance >= CurrentTransition.Stop)
+            {
+                Distance = CurrentTransition.Stop;
+                // Preserve the last short movement so the world and the session end at the same point.
+                MovementSpeed = Math.Max(0f, (Distance - distanceBeforeStep) / Math.Max(.0001f, step));
+            }
+            else Distance = nextDistance;
             if (Telemetry != null)
             {
                 int section = telemetryRoute.SectionAt(Distance, out _);
@@ -340,6 +349,7 @@ namespace Lotba.Game
                 };
             }
             Speed = 0f;
+            MovementSpeed = 0f;
         }
 
         public void RecordJump() => Record("jump");

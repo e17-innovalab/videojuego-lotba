@@ -812,11 +812,11 @@ namespace Lotba.Game
             float blend = Mathf.Clamp01(laneTime / settings.LaneChangeTime);
             // Smoothstep has a short fixed duration and can be redirected during a transition.
             float x = Mathf.Lerp(laneOrigin, targetX, blend * blend * (3 - 2 * blend));
-            float travel = session.Speed * dt;
+            float travel = session.MovementSpeed * dt;
             TrackContact step = UpdateVehicleCourse(session.Distance, travel, oldX, x, session.Elapsed, dt);
             rider.localPosition = new Vector3(x, step.EndHeight, 0);
             RestoreRidingPose();
-            float visualTravel = (session.OfferPending ? 18f : session.Speed) * dt;
+            float visualTravel = session.PedalAnimationSpeed * dt;
             AnimateRider(session.BoostActive, jump.HeightAt(session.Elapsed) > 0f || courseFallSpeed > 0f,
                 (step.EndHeight - step.StartHeight) / dt, visualTravel, reducedMotion, dt);
             CaptureRidingPose();
@@ -858,7 +858,7 @@ namespace Lotba.Game
             crossings.Sort(CrossingOrder);
             foreach (Crossing crossing in crossings)
             {
-                if (session.State != RunState.Running || session.OfferPending) break;
+                if (session.State != RunState.Running) break;
                 TrackItem item = crossing.Item;
                 float fraction = crossing.Fraction;
                 float crossingX = step.XAt(fraction);

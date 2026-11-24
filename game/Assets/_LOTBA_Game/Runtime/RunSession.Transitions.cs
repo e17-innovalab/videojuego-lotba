@@ -26,6 +26,7 @@ namespace Lotba.Game
                 CurrentTransition == null || Distance < CurrentTransition.Stop) return;
             transitionDecisionPending = true;
             Speed = 0f;
+            MovementSpeed = 0f;
             DecisionsShown++;
             Record("transition_decision_shown", decisionNumber: DecisionsShown);
         }

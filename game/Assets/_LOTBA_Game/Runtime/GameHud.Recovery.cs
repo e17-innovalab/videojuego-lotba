@@ -6,6 +6,7 @@ namespace Lotba.Game
     public sealed partial class GameHud
     {
         private TransitionDecisionView transitionView;
+        private DecisionCountdownView decisionCountdownView;
         private RecoveryCelebrationView celebrationPopup;
         private RecoveryMissView missPopup;
         private RunSession recoveryViewSession;
@@ -14,6 +15,17 @@ namespace Lotba.Game
         private int previousCollisions;
         private float collisionLossUntil;
         private string collisionCopy;
+        private bool decisionCountdownVisible;
+        private int decisionCountdownNumber;
+        private bool decisionCountdownRecovery;
+        public bool DecisionCountdownVisible => decisionCountdownVisible;
+
+        public void ShowDecisionCountdown(bool visible, int secondsRemaining, bool enteringRecovery = false)
+        {
+            decisionCountdownVisible = visible;
+            decisionCountdownNumber = secondsRemaining;
+            decisionCountdownRecovery = enteringRecovery;
+        }
 
         public void ResetRecoveryPopups()
         {
@@ -22,20 +34,29 @@ namespace Lotba.Game
         }
         private void RenderRecovery(RunSession session, GameSettings settings)
         {
-            if (transitionView == null)
+            bool running = session.State == RunState.Running && !SettingsOpen;
+            if (decisionCountdownView == null && settings.DecisionCountdownPrefab != null)
             {
-                if (settings.TransitionViewPrefab == null) return;
+                decisionCountdownView = Instantiate(settings.DecisionCountdownPrefab, speedOffer.parent, false);
+                decisionCountdownView.Hide();
+            }
+            if (transitionView == null && settings.TransitionViewPrefab != null)
+            {
                 transitionView = Instantiate(settings.TransitionViewPrefab, speedOffer.parent, false);
                 transitionView.Continue += () => { UiClicked?.Invoke(); SpeedChosen?.Invoke(false); };
                 transitionView.Purchase += () => { UiClicked?.Invoke(); SpeedChosen?.Invoke(true); };
                 transitionView.Recover += () => { UiClicked?.Invoke(); RecoveryChosen?.Invoke(); };
+            }
+            if (transitionView == null)
+            {
+                RenderDecisionCountdown(running);
+                return;
             }
             if (recoveryViewSession != session)
             {
                 recoveryViewSession = session; previousRecoveryOutcome = null; recoveryResultUntil = 0f;
                 previousCollisions = 0; collisionLossUntil = 0f;
             }
-            bool running = session.State == RunState.Running && !SettingsOpen;
             bool canAfford = session.UpgradeCost == 0 || session.CanBuyUpgrade;
             bool showAlmost = !canAfford && session.UpgradeCost > 0;
             string continueCopy = "<b>SEGUIR</b>\n<size=75%>Continuar recorrido</size>";
@@ -45,12 +66,13 @@ namespace Lotba.Game
             bool canRecover = session.HasRecoveryLoss && (session.PendingRecoveryPoints > 0 || session.PendingRecoveryGems > 0);
             string recoveryCopy = $"<b>RECUPERAR</b>\n<size=75%>Atajo nocturno</size>\n<color=#FFD500>+{Resources(session.PendingRecoveryPoints, session.PendingRecoveryGems)}</color>";
 
-            transitionView.Setup(running && session.OfferPending,
+            transitionView.Setup(running && session.OfferPending && !decisionCountdownVisible,
                 "ELEGÍ TU RITMO",
                 continueCopy, purchaseCopy, canAfford, showAlmost, "¡CASI!", canRecover, recoveryCopy,
                 session.UpgradeCost, session.GemBalance, session.PendingRecoveryPoints, session.PendingRecoveryGems);
 
             transitionView.Notice(false, null);
+            RenderDecisionCountdown(running);
             if (previousRecoveryOutcome != session.RecoveryOutcome)
             {
                 previousRecoveryOutcome = session.RecoveryOutcome;
@@ -86,6 +108,20 @@ namespace Lotba.Game
             if (showLoss && !result) status = collisionCopy;
             transitionView.Status(running && !session.OfferPending && (session.RecoveryActive || result || showLoss), status);
         }
+
+        private void RenderDecisionCountdown(bool running)
+        {
+            if (decisionCountdownView == null) return;
+            if (decisionCountdownVisible && running)
+            {
+                string message = decisionCountdownRecovery
+                    ? "ENTRANDO EN ZONA DE RECUPERO"
+                    : "LA PARTIDA COMIENZA EN";
+                decisionCountdownView.Show(message, decisionCountdownNumber);
+            }
+            else decisionCountdownView.Hide();
+        }
+
         private static string Resources(long points, int gems) => points > 0 && gems > 0 ? $"{points} puntos y {gems} gemas"
             : points > 0 ? $"{points} puntos" : $"{gems} gemas";
     }

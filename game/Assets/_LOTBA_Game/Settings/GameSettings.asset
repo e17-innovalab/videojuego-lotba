@@ -37,6 +37,8 @@ MonoBehaviour:
       minimumPointLoss: 50
       gemFraction: 0.5
   transitionViewPrefab: {fileID: 6130112520800718616, guid: 6c05944b41dd5db47b74ed9bc114d8b8, type: 3}
+  decisionCountdownPrefab: {fileID: 100004, guid: a8573d0f85cb45a18b562bb9af449d10, type: 3}
+  decisionCountdownSeconds: 3
   sectionGatePrefab: {fileID: 8128184567064933309, guid: 6fc7feb8916a0124a8e9bc7c2bf599b2, type: 3}
   initialWelcomeSignDistance: 110
   transitionExitPattern: {fileID: 11400000, guid: d139aa9e931286442a93f7305cc6d821, type: 2}

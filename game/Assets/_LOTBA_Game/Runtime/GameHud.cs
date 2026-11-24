@@ -238,6 +238,7 @@ namespace Lotba.Game
         public void ResetView()
         {
             SettingsOpen = false;
+            ShowDecisionCountdown(false, 0);
             ResetRecoveryPopups();
             ClearRankingOffer();
             endingBackground.gameObject.SetActive(false);
@@ -333,7 +334,7 @@ namespace Lotba.Game
             if (finished) SettingsOpen = false;
             readyPanel.SetActive(session.State == RunState.Ready && !SettingsOpen && !RankingOpen);
             bool showPause = session.State == RunState.Paused && !SettingsOpen;
-            bool showOffer = running && session.OfferPending;
+            bool showOffer = running && session.OfferPending && !DecisionCountdownVisible;
             pausePanel.SetActive(showPause);
             if (modalShade != null) modalShade.SetActive(showPause || showOffer);
             settingsPanel.SetActive(SettingsOpen);

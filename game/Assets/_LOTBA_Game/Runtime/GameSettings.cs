@@ -12,6 +12,11 @@ namespace Lotba.Game
         public SectionTransitionSettings Transitions => transitions;
         [SerializeField] private TransitionDecisionView transitionViewPrefab;
         public TransitionDecisionView TransitionViewPrefab => transitionViewPrefab;
+        [SerializeField] private DecisionCountdownView decisionCountdownPrefab;
+        public DecisionCountdownView DecisionCountdownPrefab => decisionCountdownPrefab;
+        [SerializeField, Min(.5f), Tooltip("Segundos de cuenta regresiva después de confirmar una decisión.")]
+        private float decisionCountdownSeconds = 3f;
+        public float DecisionCountdownSeconds => Mathf.Max(.5f, decisionCountdownSeconds);
         [SerializeField] private Transform sectionGatePrefab;
         public Transform SectionGatePrefab => sectionGatePrefab;
         [SerializeField, Min(20f), Tooltip("Distancia inicial a la que aparece el cartel de bienvenida de la primera zona.")]

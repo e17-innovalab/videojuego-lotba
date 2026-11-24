@@ -19,6 +19,9 @@ namespace Lotba.Game
         private int laneRequested;
         private bool? speedChoiceRequested;
         private bool recoveryChoiceRequested;
+        private bool? queuedSpeedChoice;
+        private bool queuedRecoveryChoice, decisionCountdownActive, decisionChoiceReady;
+        private float decisionCountdownRemaining;
         private string previousRecoveryOutcome;
         private bool muted, trackingSwipe;
         private const string QualityPreference = "Lotba.CityRush.Quality";
@@ -141,25 +144,56 @@ namespace Lotba.Game
                         Debug.Log($"[PAUSA] Metro: {session.Distance:F1}m · Semilla: {settings.Seed} · Velocidad: {session.Speed:F1}m/s");
                     }
                 }
-                if (speedChoiceRequested.HasValue)
+                if (!decisionCountdownActive && !decisionChoiceReady && session.State == RunState.Running)
                 {
-                    int previousBoosts = session.VoluntaryBoosts;
-                    session.ChooseTransitionUpgrade(speedChoiceRequested.Value);
-                    speedChoiceRequested = null;
-                    if (!session.OfferPending) { laneRequested = 0; jumpRequested = false; trackingSwipe = false; }
-                    if (session.VoluntaryBoosts > previousBoosts) audioFeedback.PlayBoostStart();
+                    if (speedChoiceRequested.HasValue)
+                    {
+                        queuedSpeedChoice = speedChoiceRequested;
+                        speedChoiceRequested = null;
+                        StartDecisionCountdown();
+                    }
+                    else if (recoveryChoiceRequested)
+                    {
+                        queuedRecoveryChoice = true;
+                        recoveryChoiceRequested = false;
+                        StartDecisionCountdown();
+                    }
                 }
-                if (recoveryChoiceRequested)
+
+                if (decisionCountdownActive && session.State == RunState.Running)
                 {
-                    recoveryChoiceRequested = false;
-                    session.ChooseTransitionRecovery();
-                    if (session.RecoveryActive)
-                        world.PrepareRecoveryChallenge(session);
-                    else
-                        world.ClearGemsAhead(session.Distance, Mathf.Max(session.RecoveryZoneEnd + 10f, session.Distance + 600f));
+                    decisionCountdownRemaining -= Time.unscaledDeltaTime;
+                    if (decisionCountdownRemaining <= 0f)
+                    {
+                        decisionCountdownActive = false;
+                        decisionChoiceReady = true;
+                        hud.ShowDecisionCountdown(false, 0);
+                    }
+                    else hud.ShowDecisionCountdown(true, Mathf.CeilToInt(decisionCountdownRemaining), queuedRecoveryChoice);
+                }
+
+                if (decisionChoiceReady && session.State == RunState.Running)
+                {
+                    if (queuedSpeedChoice.HasValue)
+                    {
+                        int previousBoosts = session.VoluntaryBoosts;
+                        session.ChooseTransitionUpgrade(queuedSpeedChoice.Value);
+                        if (session.VoluntaryBoosts > previousBoosts) audioFeedback.PlayBoostStart();
+                        queuedSpeedChoice = null;
+                    }
+                    else if (queuedRecoveryChoice)
+                    {
+                        session.ChooseTransitionRecovery();
+                        queuedRecoveryChoice = false;
+                        if (session.RecoveryActive)
+                            world.PrepareRecoveryChallenge(session);
+                        else
+                            world.ClearGemsAhead(session.Distance, Mathf.Max(session.RecoveryZoneEnd + 10f, session.Distance + 600f));
+                    }
+                    decisionChoiceReady = false;
                     if (!session.OfferPending) { laneRequested = 0; jumpRequested = false; trackingSwipe = false; }
                 }
-                if (session.State == RunState.Running && !session.OfferPending)
+                if (session.State == RunState.Running)
                 {
                     if (laneRequested != 0 && session.Move(laneRequested)) audioFeedback.PlayLaneSlide();
                     if (jumpRequested && world.TryJump(session.Elapsed))
@@ -168,7 +202,7 @@ namespace Lotba.Game
                         audioFeedback.PlayJump();
                     }
                     float budget = Mathf.Min(Time.unscaledDeltaTime, .15f);
-                    while (budget > 0 && session.State == RunState.Running && !session.OfferPending)
+                    while (budget > 0 && session.State == RunState.Running)
                     {
                         float step = Mathf.Min(.02f, budget); session.Tick(step);
                         if (session.State == RunState.Running)
@@ -218,7 +252,7 @@ namespace Lotba.Game
             world.RenderSectionMarkers(session.Distance, session.State == RunState.Running || session.State == RunState.Paused, session.RecoveryForkActive);
             world.RenderHeldBrake(session.BrakeMode == BrakingMode.HoldToStop && session.BrakeHeld &&
                 (session.State == RunState.Running || session.State == RunState.Paused),
-                session.State == RunState.Running && !session.OfferPending,
+                session.State == RunState.Running,
                 UseBoostCamera, session.Speed, !session.BrakingSpeedRestricted);
             devices.UpdateBoostFeedback(session.State == RunState.Running && !session.OfferPending && session.BoostActive);
             if (session.State != RunState.Finished) audioFeedback.UpdateMusic(session.State);
@@ -234,6 +268,8 @@ namespace Lotba.Game
             sessionReportSaved = false;
             nextReportSaveAttempt = 0f;
             previousRecoveryOutcome = null;
+            queuedSpeedChoice = null; queuedRecoveryChoice = decisionCountdownActive = decisionChoiceReady = false;
+            decisionCountdownRemaining = 0f; hud.ShowDecisionCountdown(false, 0);
             session = new RunSession(settings, world.Route); world.ResetTrack(); hud.ResetView(); audioFeedback.Stop(); devices.CancelFeedback(); trackingSwipe = false;
             if (start) { session.Start(); }
             else world.PrepareOpening();
@@ -303,6 +339,12 @@ namespace Lotba.Game
         private void ChooseRecovery()
         {
             if (session.OfferPending && !recoveryChoiceRequested) recoveryChoiceRequested = true;
+        }
+        private void StartDecisionCountdown()
+        {
+            decisionCountdownRemaining = settings.DecisionCountdownSeconds;
+            decisionCountdownActive = true;
+            hud.ShowDecisionCountdown(true, Mathf.CeilToInt(decisionCountdownRemaining), queuedRecoveryChoice);
         }
         private void RequestPause() { if (!hud.SettingsOpen) pauseRequested = true; }
         private void RequestMenu() => menuRequested = true;
