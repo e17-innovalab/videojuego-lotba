@@ -145,6 +145,12 @@ namespace Lotba.Game
         }
         public MapDefinition MapAtDistance(float distance) => sections[SectionAt(distance, out _)].Map;
         public bool AllowLettersAt(float distance) => sections[SectionAt(distance, out _)].AllowLetters;
+        public MapDefinition DestinationMapAfterSection(int sectionIndex)
+        {
+            for (int i = sectionIndex + 1; i < sections.Length; i++)
+                if (!sections[i].Transition) return sections[i].Map;
+            return sectionIndex >= 0 && sectionIndex < sections.Length ? sections[sectionIndex].Map : null;
+        }
         public float SectionEndDistanceAt(float distance)
         {
             int section = SectionAt(distance, out float start);

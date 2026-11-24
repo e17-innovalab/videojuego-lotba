@@ -11,6 +11,8 @@ namespace Lotba.Game
         [SerializeField] private GameObject landmark;
         [SerializeField] private GameObject zoneBackdrop;
         [SerializeField] private Material roadMaterial;
+        [Tooltip("Material aplicado al panel del cartel cuando el recorrido da la bienvenida a esta zona.")]
+        [SerializeField] private Material welcomeSignMaterial;
         [SerializeField] private ObstacleSet obstacles;
         public ObstacleSet Obstacles => obstacles;
         [SerializeField, Min(80)] private float landmarkDistance = 115;
@@ -18,6 +20,7 @@ namespace Lotba.Game
         [SerializeField] private Color fog = new Color(.57f, .77f, .84f);
         [SerializeField] private float fogStart = 65, fogEnd = 170;
         public Material RoadMaterial => roadMaterial;
+        public Material WelcomeSignMaterial => welcomeSignMaterial;
         public string DisplayName => displayName;
         public RoadModule[] Modules => modules;
         public string ValidationError

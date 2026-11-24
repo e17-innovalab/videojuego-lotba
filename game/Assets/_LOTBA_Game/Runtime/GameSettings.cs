@@ -14,6 +14,9 @@ namespace Lotba.Game
         public TransitionDecisionView TransitionViewPrefab => transitionViewPrefab;
         [SerializeField] private Transform sectionGatePrefab;
         public Transform SectionGatePrefab => sectionGatePrefab;
+        [SerializeField, Min(20f), Tooltip("Distancia inicial a la que aparece el cartel de bienvenida de la primera zona.")]
+        private float initialWelcomeSignDistance = 110f;
+        public float InitialWelcomeSignDistance => initialWelcomeSignDistance;
         [SerializeField] private LanePatternDefinition transitionExitPattern;
         public LanePatternDefinition TransitionExitPattern => transitionExitPattern;
         [SerializeField, Min(1f)] private float initialSpeed = 18f;

@@ -16,6 +16,7 @@ MonoBehaviour:
   - {fileID: 1004, guid: bdb8c39df2c344ea8c0100000000003e, type: 3}
   landmark: {fileID: 0}
   roadMaterial: {fileID: 2100000, guid: bdb8c39df2c344ea8c0100000000002f, type: 2}
+  welcomeSignMaterial: {fileID: 2100000, guid: a6804a5734918de4ca91e9ff35d55c5a, type: 2}
   obstacles: {fileID: 11400000, guid: 08032ee699044682a42646e542414da5, type: 2}
   landmarkDistance: 115
   sky: {r: 0.47, g: 0.65, b: 0.73, a: 1}

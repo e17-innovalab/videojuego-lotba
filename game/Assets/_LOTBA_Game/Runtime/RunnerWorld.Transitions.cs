@@ -10,6 +10,9 @@ namespace Lotba.Game
         public TrackReservations TransitionReservations => transitionPatternReservations;
         private readonly List<Transform> sectionMarkers = new List<Transform>();
         private readonly List<ChoiceMarkerView> sectionInvitations = new List<ChoiceMarkerView>();
+        private Transform initialWelcomeMarker;
+        private ChoiceMarkerView initialWelcomeView;
+        private float initialWelcomeDistance;
         private int populatedTransitionExits;
         private LanePatternParameters transitionExitPattern;
         private SectionTransitionSettings sectionTransitionRules;
@@ -25,11 +28,27 @@ namespace Lotba.Game
             foreach (var marker in sectionMarkers) if (marker != null) Destroy(marker.gameObject);
             sectionMarkers.Clear(); transitionPatternReservations.Clear(); populatedTransitionExits = 0;
             sectionInvitations.Clear();
+            if (initialWelcomeMarker != null) Destroy(initialWelcomeMarker.gameObject);
+            initialWelcomeMarker = null;
+            initialWelcomeView = null;
             ClearForkVisuals();
             lastForkDistance = -1f;
             sectionTransitionRules = settings.Transitions.Capture();
             transitionExitPattern = settings.TransitionExitPattern != null ? settings.TransitionExitPattern.Capture() : null;
             sectionTransitions = SectionTransitionPlan.Build(roadStream.Route, sectionTransitionRules);
+            if (settings.SectionGatePrefab != null && roadStream.Route.Sections.Length > 0)
+            {
+                MapDefinition firstZone = roadStream.Route.Sections[0].Map;
+                float welcomeDistance = settings.InitialWelcomeSignDistance;
+                if (sectionTransitions.Length > 0)
+                    welcomeDistance = Mathf.Min(welcomeDistance, Mathf.Max(20f, sectionTransitions[0].Stop - 36f));
+                initialWelcomeDistance = welcomeDistance;
+                initialWelcomeMarker = Instantiate(settings.SectionGatePrefab, transform, false);
+                initialWelcomeMarker.localPosition += Vector3.forward * welcomeDistance;
+                initialWelcomeView = initialWelcomeMarker.GetComponent<ChoiceMarkerView>();
+                if (initialWelcomeView != null)
+                    initialWelcomeView.SetWelcomeZone(firstZone.DisplayName, firstZone.WelcomeSignMaterial);
+            }
 #if UNITY_EDITOR
             if (roadStream.Route.Sections.Length == 1) return;
 #endif
@@ -42,13 +61,29 @@ namespace Lotba.Game
                     var marker = Instantiate(settings.SectionGatePrefab, transform, false);
                     marker.localPosition += Vector3.forward * plan.Stop;
                     sectionMarkers.Add(marker);
-                    sectionInvitations.Add(marker.GetComponent<ChoiceMarkerView>());
+                    ChoiceMarkerView invitation = marker.GetComponent<ChoiceMarkerView>();
+                    if (invitation != null)
+                    {
+                        MapDefinition destination = roadStream.Route.DestinationMapAfterSection(plan.Section);
+                        if (destination != null)
+                            invitation.SetWelcomeZone(destination.DisplayName, destination.WelcomeSignMaterial);
+                    }
+                    sectionInvitations.Add(invitation);
                 }
             }
         }
 
         public void RenderSectionMarkers(float distance, bool visible, bool offerRecovery)
         {
+            if (initialWelcomeMarker != null)
+            {
+                Vector3 initialPosition = initialWelcomeMarker.localPosition;
+                initialPosition.z = initialWelcomeDistance - distance;
+                initialWelcomeMarker.localPosition = initialPosition;
+                initialWelcomeMarker.gameObject.SetActive(visible && initialPosition.z >= -12f &&
+                    initialPosition.z < roadStream.VisibilityDistance);
+                initialWelcomeView?.ShowInvitation(false);
+            }
             for (int i = 0; i < sectionMarkers.Count; i++)
             {
                 var marker = sectionMarkers[i];

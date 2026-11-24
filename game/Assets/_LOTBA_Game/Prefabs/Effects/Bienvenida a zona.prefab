@@ -194,7 +194,7 @@ GameObject:
   - component: {fileID: 6943252646175710735}
   - component: {fileID: 3861731012238972683}
   m_Layer: 0
-  m_Name: FIN DE TRAMO
+  m_Name: BIENVENIDOS A ZONA
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -288,7 +288,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: FIN DE TRAMO
+  m_text: "BIENVENIDOS A\nZONA"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 9432abe40c0f66043bfe64315e2af9dc, type: 2}
   m_sharedMaterial: {fileID: 7858898089739585551, guid: 9432abe40c0f66043bfe64315e2af9dc, type: 2}
@@ -374,7 +374,7 @@ GameObject:
   - component: {fileID: 8128184567064933309}
   - component: {fileID: 6445958908200537603}
   m_Layer: 0
-  m_Name: Fin de tramo
+  m_Name: Bienvenida a zona
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -413,6 +413,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Lotba.Game::Lotba.Game.ChoiceMarkerView
   invitation: {fileID: 713471675247054304}
+  welcomeLabel: {fileID: 3861731012238972683}
+  welcomeBoard: {fileID: 6367589613421173703}
 --- !u!1 &6614186400453031844
 GameObject:
   m_ObjectHideFlags: 0
