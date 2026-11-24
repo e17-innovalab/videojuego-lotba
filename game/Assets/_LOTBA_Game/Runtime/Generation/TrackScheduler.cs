@@ -133,6 +133,57 @@ namespace Lotba.Game
             return false;
         }
 
+        public bool IsObstacleSpanForbidden(float startZ, float endZ, bool isRecovery = false)
+        {
+            float step = GridStep;
+            for (float z = startZ; z <= endZ; z += step)
+            {
+                if (IsObstacleForbiddenAt(z, isRecovery))
+                    return true;
+            }
+            return IsObstacleForbiddenAt(endZ, isRecovery);
+        }
+
+        public bool IsLaneClearOfObstacles(int lane, float startZ, float endZ)
+        {
+            for (int i = 0; i < activeBlocks.Count; i++)
+            {
+                var block = activeBlocks[i];
+                if (block.Lane == lane && block.MinHeight <= 0.5f)
+                {
+                    // Solapamiento de intervalos [StartZ, EndZ] con [startZ, endZ]
+                    if (block.EndZ >= startZ && block.StartZ <= endZ)
+                        return false;
+                }
+            }
+            return true;
+        }
+
+        public int GetSafeLaneForSpan(float startZ, float endZ, int preferredLane = -1, float clearance = 6.0f)
+        {
+            int targetLane = preferredLane >= 0 ? preferredLane : GetCorridorLaneAt((startZ + endZ) * 0.5f);
+
+            if (IsLaneClearOfObstacles(targetLane, startZ - clearance, endZ + clearance))
+            {
+                return targetLane;
+            }
+
+            int[] tryOrder = targetLane == 1
+                ? new int[] { 0, 2 }
+                : (targetLane == 0 ? new int[] { 1, 2 } : new int[] { 1, 0 });
+
+            for (int i = 0; i < tryOrder.Length; i++)
+            {
+                int lane = tryOrder[i];
+                if (IsLaneClearOfObstacles(lane, startZ - clearance, endZ + clearance))
+                {
+                    return lane;
+                }
+            }
+
+            return targetLane;
+        }
+
         public int GetCorridorLaneAt(float z)
         {
             // Cambia de carril preferente cada 38 metros de forma determinista y orgánica

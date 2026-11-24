@@ -41,7 +41,28 @@ namespace Lotba.Game
                 // Elegir el carril según el meandro determinista del scheduler
                 int lane = scheduler.GetCorridorLaneAt(nextLetterDistance);
 
-                // Registrar reserva de despeje de 8 metros para que ningún obstáculo caiga cerca de la letra
+                // Si ya existe cualquier obstáculo en este carril y cota, buscar un carril contiguo libre
+                if (!scheduler.IsLaneClearOfObstacles(lane, nextLetterDistance - LetterClearance, nextLetterDistance + LetterClearance))
+                {
+                    int[] otherLanes = lane == 1 ? new int[] { 0, 2 } : (lane == 0 ? new int[] { 1, 2 } : new int[] { 1, 0 });
+                    bool foundLane = false;
+                    for (int i = 0; i < otherLanes.Length; i++)
+                    {
+                        if (scheduler.IsLaneClearOfObstacles(otherLanes[i], nextLetterDistance - LetterClearance, nextLetterDistance + LetterClearance))
+                        {
+                            lane = otherLanes[i];
+                            foundLane = true;
+                            break;
+                        }
+                    }
+                    if (!foundLane)
+                    {
+                        nextLetterDistance += 12f;
+                        continue;
+                    }
+                }
+
+                // Registrar reserva de despeje de 12 metros para que ningún obstáculo caiga cerca de la letra
                 scheduler.RegisterLetterReservation(nextLetterDistance, LetterClearance);
 
                 // Materializar la letra en ese carril exacto

@@ -46,9 +46,10 @@ namespace Lotba.Game
                 bool isRecovery = (context.ActiveZone == ZoneType.Recovery || context.RecoveryActive) &&
                                   (context.RecoveryZoneEnd <= 0f || nextObstacleDistance < context.RecoveryZoneEnd);
 
-                if (scheduler.IsObstacleForbiddenAt(nextObstacleDistance, isRecovery))
+                if (scheduler.IsObstacleForbiddenAt(nextObstacleDistance, isRecovery) ||
+                    scheduler.IsObstacleSpanForbidden(nextObstacleDistance - 3f, nextObstacleDistance + 21f, isRecovery))
                 {
-                    nextObstacleDistance += 8f;
+                    nextObstacleDistance += TrackScheduler.GridStep * 2f;
                     continue;
                 }
 

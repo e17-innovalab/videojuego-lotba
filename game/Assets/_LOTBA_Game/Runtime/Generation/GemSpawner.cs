@@ -89,9 +89,20 @@ namespace Lotba.Game
                     continue;
                 }
 
-                // Generación de hilera de suelo en el carril seguro libre de obstáculos
+                // Generación de hilera de suelo en un ÚNICO carril consistente y 100% libre de obstáculos
                 int count = 4;
-                int safeLane = scheduler.GetSafeLaneAt(nextGemDistance, -1);
+                float clusterStartZ = nextGemDistance;
+                float clusterEndZ = clusterStartZ + (count - 1) * TrackScheduler.GridStep;
+
+                // Seleccionar un ÚNICO carril seguro para TODO el cluster, libre de obstáculos con 6m de despeje
+                int clusterLane = scheduler.GetSafeLaneForSpan(clusterStartZ, clusterEndZ, preferredLane: -1, clearance: 6.0f);
+
+                // Si ningún carril tiene despeje continuo durante este tramo, avanzar a la siguiente celda
+                if (!scheduler.IsLaneClearOfObstacles(clusterLane, clusterStartZ - 6.0f, clusterEndZ + 6.0f))
+                {
+                    nextGemDistance += TrackScheduler.GridStep * 2f;
+                    continue;
+                }
 
                 gemRowsSincePink++;
                 bool pinkAllowed = context.PinkGemsUnlocked && context.Rules.AllowPinkGems;
@@ -105,24 +116,19 @@ namespace Lotba.Game
 
                 for (int i = 0; i < count; i++)
                 {
-                    float z = nextGemDistance + i * TrackScheduler.GridStep;
+                    float z = clusterStartZ + i * TrackScheduler.GridStep;
 
-                    if (scheduler.IsGemForbiddenAt(z) || scheduler.IsLetterAt(z)) continue;
+                    if (scheduler.IsGemForbiddenAt(z) || scheduler.IsLetterAt(z, 6f)) continue;
 
                     // Si se aproxima a una rampa o un arco de salto, cortar la hilera de suelo
-                    if (scheduler.TryGetSurfaceAt(z, out _) || scheduler.TryGetJumpArcAt(z, out _)) break;
-
-                    int gemLane = scheduler.GetSafeLaneAt(z, safeLane);
-
-                    // NUNCA generar una gema si hay cualquier obstáculo a nivel de suelo con margen de seguridad de grilla (1.5m)
-                    if (scheduler.HasObstacleAt(gemLane, z, 1.1f, 1.5f)) continue;
+                    if (scheduler.TryGetSurfaceAt(z, out _, 6.0f) || scheduler.TryGetJumpArcAt(z, out _, 6.0f)) break;
 
                     bool itemPink = isPink && (i == count - 1);
-                    scheduler.EmitItem(TrackSpawnItem.CreateGem(gemLane, z, 1.1f, pink: itemPink));
+                    scheduler.EmitItem(TrackSpawnItem.CreateGem(clusterLane, z, 1.1f, pink: itemPink));
                 }
 
                 float jitter = 1f + (float)(random.NextDouble() * 0.10 - 0.05);
-                float rawStep = Mathf.Max(TrackScheduler.GridStep * count + 15f, (gemInterval * jitter) / gemIntensity);
+                float rawStep = Mathf.Max(TrackScheduler.GridStep * count + 18f, (gemInterval * jitter) / gemIntensity);
                 float step = Mathf.Round(rawStep / TrackScheduler.GridStep) * TrackScheduler.GridStep;
                 nextGemDistance += step;
             }
