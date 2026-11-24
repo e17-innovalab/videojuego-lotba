@@ -7,6 +7,7 @@ namespace Lotba.Game
     {
         private TransitionDecisionView transitionView;
         private DecisionCountdownView decisionCountdownView;
+        private RecoveryAnnouncementView recoveryAnnouncementView;
         private RecoveryCelebrationView celebrationPopup;
         private RecoveryMissView missPopup;
         private RunSession recoveryViewSession;
@@ -40,6 +41,11 @@ namespace Lotba.Game
                 decisionCountdownView = Instantiate(settings.DecisionCountdownPrefab, speedOffer.parent, false);
                 decisionCountdownView.Hide();
             }
+            if (recoveryAnnouncementView == null && settings.RecoveryAnnouncementPrefab != null)
+            {
+                recoveryAnnouncementView = Instantiate(settings.RecoveryAnnouncementPrefab, speedOffer.parent, false);
+                recoveryAnnouncementView.Hide();
+            }
             if (transitionView == null && settings.TransitionViewPrefab != null)
             {
                 transitionView = Instantiate(settings.TransitionViewPrefab, speedOffer.parent, false);
@@ -47,15 +53,23 @@ namespace Lotba.Game
                 transitionView.Purchase += () => { UiClicked?.Invoke(); SpeedChosen?.Invoke(true); };
                 transitionView.Recover += () => { UiClicked?.Invoke(); RecoveryChosen?.Invoke(); };
             }
-            if (transitionView == null)
-            {
-                RenderDecisionCountdown(running);
-                return;
-            }
             if (recoveryViewSession != session)
             {
                 recoveryViewSession = session; previousRecoveryOutcome = null; recoveryResultUntil = 0f;
                 previousCollisions = 0; collisionLossUntil = 0f;
+            }
+            bool showRecoveryAnnouncement = session.RecoveryActive;
+            if (recoveryAnnouncementView != null)
+            {
+                if (showRecoveryAnnouncement)
+                    recoveryAnnouncementView.Show();
+                else
+                    recoveryAnnouncementView.Hide();
+            }
+            if (transitionView == null)
+            {
+                RenderDecisionCountdown(running);
+                return;
             }
             bool canAfford = session.UpgradeCost == 0 || session.CanBuyUpgrade;
             bool showAlmost = !canAfford && session.UpgradeCost > 0;
@@ -106,7 +120,8 @@ namespace Lotba.Game
                 : session.RecoveryOutcome == "failed" ? "No alcanzaste la gema dorada. Podés seguir o frenar."
                 : null;
             if (showLoss && !result) status = collisionCopy;
-            transitionView.Status(running && !session.OfferPending && (session.RecoveryActive || result || showLoss), status);
+            transitionView.Status(running && !session.OfferPending && !showRecoveryAnnouncement &&
+                (session.RecoveryActive || result || showLoss), status);
         }
 
         private void RenderDecisionCountdown(bool running)

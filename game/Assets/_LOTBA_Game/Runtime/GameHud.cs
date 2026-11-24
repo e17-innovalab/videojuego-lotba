@@ -22,6 +22,7 @@ namespace Lotba.Game
         [SerializeField] private RectTransform soundSwitchKnob;
         private Vector2 soundOnMin, soundOnMax;
         [SerializeField] private TMPro.TMP_Text score, gems, resultTitle;
+        private GameObject scoreCounterRoot, gemCounterRoot;
         [SerializeField] private TMPro.TMP_Text resultPoints;
         [SerializeField] private TMPro.TMP_Text[] resultRows = new TMPro.TMP_Text[6];
         [SerializeField] private UnityEngine.UI.Image endingBackground;
@@ -85,6 +86,8 @@ namespace Lotba.Game
         private void Awake()
         {
             endingReflectionTemplate = endingReflection.text;
+            scoreCounterRoot = score != null && score.transform.parent != null ? score.transform.parent.gameObject : null;
+            gemCounterRoot = gems != null && gems.transform.parent != null ? gems.transform.parent.gameObject : null;
             brakeHoldInput = brake.GetComponent<HeldButtonInput>();
             brakeProgressView = brake.GetComponentInChildren<BrakeProgressView>(true);
             BindResponsiveWidths();
@@ -349,6 +352,8 @@ namespace Lotba.Game
             }
             else resultPanel.SetActive(false);
             raceHud.SetActive(active); controls.SetActive(active);
+            if (scoreCounterRoot != null) scoreCounterRoot.SetActive(!session.RecoveryActive);
+            if (gemCounterRoot != null) gemCounterRoot.SetActive(!session.RecoveryActive);
             if (brakeProgressView != null)
                 brakeProgressView.Render(active && !SettingsOpen && session.BrakeMode == BrakingMode.HoldToStop, session.BrakeProgress);
             turboButton.interactable = running && !SettingsOpen && session.CanActivateTurbo;

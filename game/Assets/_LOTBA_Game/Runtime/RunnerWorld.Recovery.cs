@@ -34,10 +34,7 @@ namespace Lotba.Game
         private float daySunIntensity = 0.9f;
         private Color daySunColor = Color.white;
         private Color dayAmbientColor = new Color(0.65f, 0.70f, 0.75f, 1f);
-        private Color daySkyColor = new Color(0.35f, 0.72f, 0.91f, 1f);
-
         // Night environment targets (violeta noche estilizado y con buena visibilidad)
-        private readonly Color nightSkyColor = new Color(0.18f, 0.08f, 0.28f, 1f);
         private readonly Color nightAmbientColor = new Color(0.40f, 0.30f, 0.55f, 1f);
         private readonly Color nightSunColor = new Color(0.70f, 0.55f, 0.95f, 1f);
         private const float nightSunIntensity = 0.45f;
@@ -62,10 +59,6 @@ namespace Lotba.Game
         private void CaptureEnvironment()
         {
             if (environmentCaptured) return;
-            if (worldCamera != null)
-            {
-                daySkyColor = worldCamera.backgroundColor;
-            }
             dayAmbientColor = RenderSettings.ambientLight;
             var sunGo = GameObject.Find("Sun");
             if (sunGo != null)
@@ -83,7 +76,6 @@ namespace Lotba.Game
         private void RestoreDayEnvironment()
         {
             if (!environmentCaptured) return;
-            if (worldCamera != null) worldCamera.backgroundColor = daySkyColor;
             RenderSettings.ambientLight = dayAmbientColor;
             if (sunLight != null)
             {
@@ -99,15 +91,9 @@ namespace Lotba.Game
             bool isNight = session != null && session.State == RunState.Running && session.RecoveryActive;
             float lerpSpeed = Time.unscaledDeltaTime * 3.5f;
 
-            Color targetSky = isNight ? nightSkyColor : daySkyColor;
             Color targetAmbient = isNight ? nightAmbientColor : dayAmbientColor;
             float targetSunIntensity = isNight ? nightSunIntensity : daySunIntensity;
             Color targetSunColor = isNight ? nightSunColor : daySunColor;
-
-            if (worldCamera != null)
-            {
-                worldCamera.backgroundColor = Color.Lerp(worldCamera.backgroundColor, targetSky, lerpSpeed);
-            }
 
             RenderSettings.ambientLight = Color.Lerp(RenderSettings.ambientLight, targetAmbient, lerpSpeed);
 

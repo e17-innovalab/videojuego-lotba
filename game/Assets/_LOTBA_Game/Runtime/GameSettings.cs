@@ -17,6 +17,8 @@ namespace Lotba.Game
         [SerializeField, Min(.5f), Tooltip("Segundos de cuenta regresiva después de confirmar una decisión.")]
         private float decisionCountdownSeconds = 3f;
         public float DecisionCountdownSeconds => Mathf.Max(.5f, decisionCountdownSeconds);
+        [SerializeField] private RecoveryAnnouncementView recoveryAnnouncementPrefab;
+        public RecoveryAnnouncementView RecoveryAnnouncementPrefab => recoveryAnnouncementPrefab;
         [SerializeField] private Transform sectionGatePrefab;
         public Transform SectionGatePrefab => sectionGatePrefab;
         [SerializeField, Min(20f), Tooltip("Distancia inicial a la que aparece el cartel de bienvenida de la primera zona.")]

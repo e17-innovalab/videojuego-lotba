@@ -2241,6 +2241,10 @@ PrefabInstance:
       propertyPath: m_TextStyleHashCode
       value: -1183493901
       objectReference: {fileID: 0}
+    - target: {fileID: 2758777624418658935, guid: f0b10b17edb6a2948a61becb1af1e219, type: 3}
+      propertyPath: m_fontSize
+      value: 24.3
+      objectReference: {fileID: 0}
     - target: {fileID: 2761687582614924078, guid: f0b10b17edb6a2948a61becb1af1e219, type: 3}
       propertyPath: m_AnchorMax.x
       value: 0
@@ -2921,6 +2925,10 @@ PrefabInstance:
       propertyPath: m_AdditionalShaderChannelsFlag
       value: 25
       objectReference: {fileID: 0}
+    - target: {fileID: 5335167033059839834, guid: f0b10b17edb6a2948a61becb1af1e219, type: 3}
+      propertyPath: m_fontSize
+      value: 42
+      objectReference: {fileID: 0}
     - target: {fileID: 5362839754848497642, guid: f0b10b17edb6a2948a61becb1af1e219, type: 3}
       propertyPath: m_TextStyleHashCode
       value: -1183493901
@@ -3221,6 +3229,10 @@ PrefabInstance:
       propertyPath: m_TextStyleHashCode
       value: -1183493901
       objectReference: {fileID: 0}
+    - target: {fileID: 6556930958121228577, guid: f0b10b17edb6a2948a61becb1af1e219, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6641965694151714004, guid: f0b10b17edb6a2948a61becb1af1e219, type: 3}
       propertyPath: m_fontColor32.rgba
       value: 4294180862
@@ -3316,6 +3328,10 @@ PrefabInstance:
     - target: {fileID: 6976778954995097998, guid: f0b10b17edb6a2948a61becb1af1e219, type: 3}
       propertyPath: m_IsActive
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7068051813142016120, guid: f0b10b17edb6a2948a61becb1af1e219, type: 3}
+      propertyPath: m_fontSize
+      value: 29
       objectReference: {fileID: 0}
     - target: {fileID: 7306598984270380546, guid: f0b10b17edb6a2948a61becb1af1e219, type: 3}
       propertyPath: m_AnchorMax.x
