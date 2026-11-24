@@ -6,7 +6,8 @@ namespace Lotba.Game
     public enum VehiclePattern
     {
         RampArticulated, Articulated, ArticulatedPair, RoofBridge, RoofJump, RampBarricade, BusConvoy,
-        RampConvoy, FlankedRamp, AlternatingBuses, ArticulatedRoofBridge
+        RampConvoy, FlankedRamp, AlternatingBuses, ArticulatedRoofBridge,
+        ArticulatedTripleChain, LateralRoofLeap, ZigzagRoofJumps, ParallelRoofBridge, SplitLaneBusHops
     }
     /// <summary>Per-map selection data; replacing visuals or changing available traffic needs no generator changes.</summary>
     [CreateAssetMenu(menuName = "LOTBA/Obstacles/Obstacle set")]
@@ -21,16 +22,25 @@ namespace Lotba.Game
         {
             int count = 0;
             var selected = elevatedBus;
-            if (traffic == null || elevatedBus == null) return selected;
+            if (traffic == null || elevatedBus == null || !elevatedBus.RideableRoof) return null;
             foreach (var candidate in traffic)
             {
-                if (candidate == null || candidate.Length != elevatedBus.Length ||
-                    candidate.Height != elevatedBus.Height || candidate.Width != elevatedBus.Width) continue;
+                if (candidate == null || !candidate.RideableRoof) continue;
                 if (random.Next(++count) == 0) selected = candidate;
             }
             return selected;
         }
         public VehiclePattern[] VehiclePatterns => vehiclePatterns;
+        public bool TryPickVehiclePattern(System.Random random, out VehiclePattern pattern)
+        {
+            if (vehiclePatterns == null || vehiclePatterns.Length == 0)
+            {
+                pattern = default;
+                return false;
+            }
+            pattern = vehiclePatterns[random.Next(vehiclePatterns.Length)];
+            return true;
+        }
         public ObstacleDefinition[] Low => low;
         public ObstacleDefinition[] Traffic => traffic;
         public ObstacleDefinition Pick(System.Random random, bool vehicle, float maximumLength, bool preferLong = false)

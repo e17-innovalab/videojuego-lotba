@@ -8,13 +8,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 715aafaee0f5451d9d3c310173d4ba27, type: 3}
   m_Name: EncounterProfile_Standard
   vehiclePatternInterval: 190
+  vehiclePatternIntervalSeconds: 5.5
+  letterInterval: 110
+  letterIntervalVariation: 0.1
+  obstacleReactionSeconds: 0.58
+  trafficObstacleChance: 0.65
+  longVehicleChance: 0.3
+  threeBusRampChance: 0.3
+  roofJumpExitChance: 0.35
+  gemRowIntervalSeconds: 1.3
+  gemCollectionIntervalSeconds: 0.12
   gemInterval: 34
   gemThreads: 1
   gemsPerThread: 6
   gemSpacing: 2.5
   pinkGemEveryRows: 4
+  pinkMiniRowCount: 3
   pinkGemMinimumSpacing: 110
   pinkGemDodgeChance: 0.7
   pinkGemDodgeReactionTime: 0.03
-  obstacleInterval: 21
-  obstacleClearance: 9
+  obstacleInterval: 18
+  obstacleClearance: 7
+  singleBlockerWeight: 0.45
+  corridorGateWeight: 0.35
+  slalomWeight: 0.20
+  hurdleChance: 0.18

@@ -4,6 +4,17 @@ namespace Lotba.Game
 {
     public sealed partial class RunnerWorld
     {
+        public void PrepareRecoveryChallenge(RunSession session)
+        {
+            if (session == null || !session.RecoveryActive) return;
+            ClearContent(new TrackSpan(session.Distance, session.RecoveryZoneEnd + 12f));
+            float firstAerialDelay = recoveryZoneRules != null && recoveryZoneRules.EncounterProfile != null
+                ? recoveryZoneRules.EncounterProfile.RecoveryAerialStartDelay
+                : 72f;
+            trackScheduler.BeginRecoveryChallenge(session.Distance, session.RecoveryChallengeEnd,
+                session.RecoveryZoneEnd, firstAerialDelay);
+        }
+
         private Transform impactVisualRoot;
         private RecoveryCurtain recoveryCurtain;
         private bool missingCurtainReported;
@@ -147,7 +158,8 @@ namespace Lotba.Game
                 {
                     activeRecoveryGemAttempt = session.RecoveryAttempts;
                     recoveryGemResolved = false;
-                    trackScheduler.NotifyRecoveryEntered(session.Distance, session.RecoveryZoneEnd);
+                    trackScheduler.NotifyRecoveryEntered(session.Distance, session.RecoveryZoneEnd,
+                        settings.Transitions.recoveryExitBreathMetres);
 
                     if (settings.RecoveryGemPrefab != null)
                     {
@@ -161,7 +173,7 @@ namespace Lotba.Game
                         recoveryGemLaneX = (lane - 1) * LaneSpacing;
 
                         // Position near the end of the recovery track (15 m before the end)
-                        float remainingDistance = Mathf.Max(25f, (session.RecoveryZoneEnd - session.Distance) - 15f);
+                        float remainingDistance = Mathf.Max(25f, (session.RecoveryChallengeEnd - session.Distance) - 15f);
                         recoveryGemInstance.transform.localPosition = new Vector3(recoveryGemLaneX, 1.2f, remainingDistance);
                         recoveryGemInstance.ResetGem();
                     }

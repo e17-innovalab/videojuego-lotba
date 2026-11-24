@@ -49,7 +49,12 @@ namespace Lotba.Game
                 var surface = scheduler.ActiveSurfaces[i];
                 if (surface.StartZ < context.SpawnHorizon && populatedSurfaces.Add(surface.StartZ))
                 {
-                    SpawnSurfaceTrail(surface, TrackScheduler.GridStep, scheduler);
+                    EncounterProfile surfaceProfile = context.ProfileAt(surface.StartZ);
+                    float collectionSpacing = surfaceProfile != null
+                        ? Mathf.Max(TrackScheduler.GridStep, surfaceProfile.GemSpacing,
+                            context.Speed * surfaceProfile.GemCollectionIntervalSeconds)
+                        : Mathf.Max(TrackScheduler.GridStep, context.Speed * .12f);
+                    SpawnSurfaceTrail(surface, collectionSpacing, scheduler);
                 }
             }
 
@@ -59,12 +64,16 @@ namespace Lotba.Game
                 var arc = scheduler.ActiveJumpArcs[i];
                 if (arc.StartZ < context.SpawnHorizon && populatedArcs.Add(arc.StartZ))
                 {
-                    SpawnParabolicArc(arc, scheduler);
+                    EncounterProfile arcProfile = context.ProfileAt(arc.StartZ);
+                    float collectionSpacing = arcProfile != null
+                        ? Mathf.Max(TrackScheduler.GridStep, arcProfile.GemSpacing,
+                            context.Speed * arcProfile.GemCollectionIntervalSeconds)
+                        : Mathf.Max(TrackScheduler.GridStep, context.Speed * .12f);
+                    SpawnParabolicArc(arc, scheduler, collectionSpacing);
                 }
             }
 
-            // 3. Generación en piso de un ÚNICO camino de gemas continuo, espaciado y alineado a la grilla de 3m
-            float gemInterval = 48f;
+            // 3. Generación en piso de un único camino continuo; su separación responde a la velocidad.
             float gemIntensity = Mathf.Max(0.25f, context.Rules.GemIntensity * context.GemIntensity);
             nextGemDistance = Mathf.Round(nextGemDistance / TrackScheduler.GridStep) * TrackScheduler.GridStep;
 
@@ -90,9 +99,24 @@ namespace Lotba.Game
                 }
 
                 // Generación de hilera de suelo en un ÚNICO carril consistente y 100% libre de obstáculos
-                int count = 4;
+                EncounterProfile profile = context.ProfileAt(nextGemDistance);
+                float gemInterval = profile != null
+                    ? Mathf.Max(profile.GemInterval, context.Speed * profile.GemRowIntervalSeconds)
+                    : Mathf.Max(48f, context.Speed * 1.35f);
+                int count = profile != null ? profile.GemsPerThread : 4;
+                float gemSpacing = profile != null
+                    ? Mathf.Max(TrackScheduler.GridStep, profile.GemSpacing,
+                        context.Speed * profile.GemCollectionIntervalSeconds)
+                    : Mathf.Max(TrackScheduler.GridStep, context.Speed * .12f);
+                float intervalVariation = profile != null ? profile.GemIntervalVariation : .05f;
                 float clusterStartZ = nextGemDistance;
-                float clusterEndZ = clusterStartZ + (count - 1) * TrackScheduler.GridStep;
+                int pinkLevel = context.PinkGemLevel;
+                bool pinkAllowed = pinkLevel > 0 && context.Rules.AllowPinkGems;
+                bool pinkRowDue = pinkAllowed && profile != null && profile.PinkGemEveryRows > 0 &&
+                    gemRowsSincePink + 1 >= profile.PinkGemEveryRows;
+                int pinkMiniCount = pinkRowDue && pinkLevel >= 3 ? profile.PinkMiniRowCount : 0;
+                float normalClusterEndZ = clusterStartZ + (count - 1) * gemSpacing;
+                float clusterEndZ = normalClusterEndZ + pinkMiniCount * gemSpacing;
 
                 // Seleccionar un ÚNICO carril seguro para TODO el cluster, libre de obstáculos con 6m de despeje
                 // El primer cluster de la partida (antes de 30m) siempre arranca en el carril 1 (centro donde empieza el jugador)
@@ -107,9 +131,7 @@ namespace Lotba.Game
                 }
 
                 gemRowsSincePink++;
-                bool pinkAllowed = context.PinkGemsUnlocked && context.Rules.AllowPinkGems;
-                bool isPink = pinkAllowed && context.Profile != null && context.Profile.PinkGemEveryRows > 0 &&
-                             gemRowsSincePink >= context.Profile.PinkGemEveryRows;
+                bool isPink = pinkRowDue;
 
                 if (isPink)
                 {
@@ -118,28 +140,37 @@ namespace Lotba.Game
 
                 for (int i = 0; i < count; i++)
                 {
-                    float z = clusterStartZ + i * TrackScheduler.GridStep;
+                    float z = clusterStartZ + i * gemSpacing;
 
                     if (scheduler.IsGemForbiddenAt(z) || scheduler.IsLetterAt(z, 6f)) continue;
 
                     // Si se aproxima a una rampa o un arco de salto, cortar la hilera de suelo
                     if (scheduler.TryGetSurfaceAt(z, out _, 6.0f) || scheduler.TryGetJumpArcAt(z, out _, 6.0f)) break;
 
-                    bool itemPink = isPink && (i == count - 1);
+                    bool itemPink = isPink && (pinkLevel >= 2 ? i == 0 || i == count - 1 : i == count - 1);
                     scheduler.EmitItem(TrackSpawnItem.CreateGem(clusterLane, z, 1.1f, pink: itemPink));
                 }
 
-                float jitter = 1f + (float)(random.NextDouble() * 0.10 - 0.05);
-                float rawStep = Mathf.Max(TrackScheduler.GridStep * count + 18f, (gemInterval * jitter) / gemIntensity);
+                for (int i = 1; i <= pinkMiniCount; i++)
+                {
+                    float z = normalClusterEndZ + i * gemSpacing;
+                    if (scheduler.IsGemForbiddenAt(z) || scheduler.IsLetterAt(z, 6f)) continue;
+                    if (scheduler.TryGetSurfaceAt(z, out _, 6.0f) || scheduler.TryGetJumpArcAt(z, out _, 6.0f)) break;
+                    scheduler.EmitItem(TrackSpawnItem.CreateGem(clusterLane, z, 1.1f, pink: true));
+                }
+
+                float jitter = 1f + (float)(random.NextDouble() * 2f - 1f) * intervalVariation;
+                float rawStep = Mathf.Max(gemSpacing * (count + pinkMiniCount) + 18f, (gemInterval * jitter) / gemIntensity);
                 float step = Mathf.Round(rawStep / TrackScheduler.GridStep) * TrackScheduler.GridStep;
                 nextGemDistance += step;
             }
         }
 
-        private void SpawnParabolicArc(JumpArcTrajectory arc, TrackScheduler scheduler)
+        private void SpawnParabolicArc(JumpArcTrajectory arc, TrackScheduler scheduler, float spacing)
         {
-            // Coloca gemas alineadas estrictamente a la grilla modular describiendo la trayectoria parabólica en el aire
-            int steps = Mathf.Max(2, Mathf.RoundToInt(arc.Length / TrackScheduler.GridStep));
+            // Nunca extiende la estela más allá del final físico de la trayectoria.
+            int steps = Mathf.FloorToInt(arc.Length / spacing);
+            if (steps <= 0) return;
             bool isHurdleJump = Mathf.Abs(arc.StartHeight - arc.EndHeight) < 0.2f && arc.PeakHeight > arc.StartHeight + 0.5f;
 
             if (isHurdleJump)
@@ -150,10 +181,11 @@ namespace Lotba.Game
                 // Colocamos las 5 gemas aéreas (i = 1 a steps - 1) que coinciden exactamente con la altura del ciclista en el aire:
                 for (int i = 1; i < steps; i++)
                 {
-                    float z = arc.StartZ + i * TrackScheduler.GridStep;
+                    float z = arc.StartZ + i * spacing;
                     float height = arc.EvaluateHeight(z);
                     int lane = arc.FromLane;
-                    scheduler.EmitItem(TrackSpawnItem.CreateGem(lane, z, height, airborneNote: i));
+                    if (!scheduler.HasObstacleAt(lane, z, height))
+                        scheduler.EmitItem(TrackSpawnItem.CreateGem(lane, z, height, airborneNote: i));
                 }
             }
             else
@@ -161,10 +193,11 @@ namespace Lotba.Game
                 // Descenso de techo / rampa hacia el piso
                 for (int i = 1; i <= steps; i++)
                 {
-                    float z = arc.StartZ + i * TrackScheduler.GridStep;
+                    float z = arc.StartZ + i * spacing;
                     float height = arc.EvaluateHeight(z);
                     int lane = arc.EvaluateProgress(z) < 0.5f ? arc.FromLane : arc.ToLane;
-                    scheduler.EmitItem(TrackSpawnItem.CreateGem(lane, z, height, airborneNote: i));
+                    if (!scheduler.HasObstacleAt(lane, z, height))
+                        scheduler.EmitItem(TrackSpawnItem.CreateGem(lane, z, height, airborneNote: i));
                 }
             }
         }

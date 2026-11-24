@@ -18,6 +18,11 @@ namespace Lotba.Game
         public TrackClearanceResult ClearAndReserve(TrackSpan span)
         {
             trackReservations.Reserve(span);
+            return ClearContent(span);
+        }
+
+        public TrackClearanceResult ClearContent(TrackSpan span)
+        {
             int obstacles = 0, gems = 0, letters = 0, platforms = 0, visuals = 0;
             foreach (TrackItem item in items)
             {

@@ -28,7 +28,7 @@ namespace Lotba.Game
             ClearForkVisuals();
             lastForkDistance = -1f;
             sectionTransitionRules = settings.Transitions.Capture();
-            var pattern = transitionExitPattern = settings.TransitionExitPattern != null ? settings.TransitionExitPattern.Capture() : null;
+            transitionExitPattern = settings.TransitionExitPattern != null ? settings.TransitionExitPattern.Capture() : null;
             sectionTransitions = SectionTransitionPlan.Build(roadStream.Route, sectionTransitionRules);
 #if UNITY_EDITOR
             if (roadStream.Route.Sections.Length == 1) return;
@@ -36,9 +36,7 @@ namespace Lotba.Game
             foreach (var plan in sectionTransitions)
             {
                 trackReservations.Reserve(plan.Corridor);
-                transitionPatternReservations.Reserve(new TrackSpan(plan.Corridor.Start,
-                    plan.Corridor.End + (pattern != null && pattern.CanPopulate(roadStream.Route, plan.Corridor.End,
-                        Mathf.Max(72f, sectionTransitionRules.recoveryDistanceMetres)) ? Mathf.Max(72f, sectionTransitionRules.recoveryDistanceMetres) : 0f)));
+                transitionPatternReservations.Reserve(plan.Corridor);
                 if (settings.SectionGatePrefab != null)
                 {
                     var marker = Instantiate(settings.SectionGatePrefab, transform, false);
@@ -134,17 +132,18 @@ namespace Lotba.Game
         }
 
         /// <summary>Prepares legible existing obstacle prefabs ahead, for either exit choice.</summary>
-        private void PopulateTransitionExits(float horizon)
+        private void PopulateTransitionExits(float horizon, float speed)
         {
             while (populatedTransitionExits < sectionTransitions.Length)
             {
                 var plan = sectionTransitions[populatedTransitionExits];
                 if (plan.Corridor.End > horizon) break;
-                float length = Mathf.Max(72f, sectionTransitionRules.recoveryDistanceMetres);
+                float length = sectionTransitionRules.TransitionExitPatternDistance(speed);
                 if (transitionExitPattern == null || !transitionExitPattern.CanPopulate(roadStream.Route, plan.Corridor.End, length))
                 {
                     populatedTransitionExits++; continue;
                 }
+                transitionPatternReservations.Reserve(new TrackSpan(plan.Corridor.Start, plan.Corridor.End + length));
                 foreach (var row in transitionExitPattern.Rows)
                 {
                     float at = plan.Corridor.End + length * row.position;

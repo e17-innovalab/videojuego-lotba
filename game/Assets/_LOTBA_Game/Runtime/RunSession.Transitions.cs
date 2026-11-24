@@ -10,6 +10,7 @@ namespace Lotba.Game
         public SectionTransitionPlan CurrentTransition => transitionIndex < transitions.Length ? transitions[transitionIndex] : null;
         public bool TransitionApproaching => State == RunState.Running && CurrentTransition != null && Distance >= CurrentTransition.Announce && !OfferPending;
         public int PurchasedGemMultiplier { get; private set; } = 1;
+        public int PinkGemActivationCount => Math.Max(0, SpeedUpgrades);
         public int PurchasedPointMultiplier { get; private set; } = 1;
         public int OfferedGemMultiplier => PurchasedGemMultiplier + Math.Max(0, transitionSettings.purchasedGemMultiplier - 1);
         public int OfferedPointMultiplier => PurchasedPointMultiplier + Math.Max(0, transitionSettings.purchasedPointMultiplier - 1);
@@ -73,8 +74,8 @@ namespace Lotba.Game
                 var loss = lossLedger.Consume(out int[] lossSequences);
                 RecoveryLoss = loss.Gems;
                 RecoveryPointLoss = loss.Points;
-                RecoveryAmount = Math.Min(transitionSettings.maximumRecoveryGems, loss.Gems);
-                RecoveryPointAmount = Math.Min(transitionSettings.maximumRecoveryPoints, loss.Points);
+                RecoveryAmount = loss.Gems;
+                RecoveryPointAmount = loss.Points;
                 recoveryOpportunity = new RunRecoveryOpportunity
                 {
                     offerId = "trans-offer-" + DecisionsShown,
@@ -84,7 +85,8 @@ namespace Lotba.Game
                     eligibleLossSequences = lossSequences,
                     offeredPoints = RecoveryPointAmount,
                     offeredGems = RecoveryAmount,
-                    challengeMetres = transitionSettings.recoveryDistanceMetres,
+                    challengeMetres = transitionSettings.RecoveryDistance(RecoveryAmount,
+                        RecoveryPointAmount, finishDistance > 0f ? Distance / finishDistance : 0f),
                     offerDistanceMetres = Distance,
                     outcome = "offered"
                 };
@@ -95,7 +97,12 @@ namespace Lotba.Game
             RecoveryActive = true;
             RecoveryAttempts++;
             RecoveryFogZ = 0f;
-            recoveryZoneEnd = Distance + transitionSettings.recoveryDistanceMetres;
+            float challengeDistance = recoveryOpportunity != null
+                ? recoveryOpportunity.challengeMetres
+                : transitionSettings.RecoveryDistance(RecoveryAmount, RecoveryPointAmount,
+                    finishDistance > 0f ? Distance / finishDistance : 0f);
+            recoveryChallengeEnd = Distance + challengeDistance;
+            recoveryZoneEnd = recoveryChallengeEnd + Math.Max(0f, transitionSettings.recoveryExitBreathMetres);
             RecoveryZoneCollisions = 0;
             RecoveryZonePointsLost = 0;
             RecoveryZoneGemsLost = 0;

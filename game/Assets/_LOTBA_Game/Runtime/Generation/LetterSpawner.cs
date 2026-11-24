@@ -12,7 +12,6 @@ namespace Lotba.Game
         public float NextRequestedDistance => nextLetterDistance;
 
         private float nextLetterDistance = 45f;
-        private const float LetterInterval = 70f;
         private const float LetterClearance = 12f;
         private System.Random random;
 
@@ -32,9 +31,13 @@ namespace Lotba.Game
 
             while (nextLetterDistance < context.SpawnHorizon)
             {
+                EncounterProfile profile = context.ProfileAt(nextLetterDistance);
+                float letterInterval = profile != null ? profile.LetterInterval : 100f;
+                float intervalVariation = profile != null ? profile.LetterIntervalVariation : .1f;
+
                 if (scheduler.IsZoneRestricted(nextLetterDistance) || scheduler.TryGetSurfaceAt(nextLetterDistance, out _))
                 {
-                    nextLetterDistance += 20f;
+                    nextLetterDistance += Mathf.Max(20f, letterInterval * .5f);
                     continue;
                 }
 
@@ -68,7 +71,8 @@ namespace Lotba.Game
                 // Materializar la letra en ese carril exacto
                 scheduler.RequestLetterPlacement(nextLetterDistance, lane);
 
-                nextLetterDistance += LetterInterval + (float)(random.NextDouble() * 10f);
+                float jitter = 1f + ((float)random.NextDouble() * 2f - 1f) * intervalVariation;
+                nextLetterDistance += letterInterval * jitter;
             }
         }
     }

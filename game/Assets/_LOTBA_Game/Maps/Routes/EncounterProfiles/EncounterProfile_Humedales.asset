@@ -15,13 +15,35 @@ MonoBehaviour:
   laneChangeChance: 0.45
   gemIntervalVariation: 0.20
   vehiclePatternInterval: 105
+  vehiclePatternIntervalSeconds: 5.2
+  letterInterval: 125
+  letterIntervalVariation: 0.1
+  trafficObstacleChance: 0.18
+  longVehicleChance: 0
+  threeBusRampChance: 0.08
+  roofJumpExitChance: 0.12
+  obstacleReactionSeconds: 0.82
+  difficultyProgressionMetres: 1800
+  advancedObstacleReactionSeconds: 0.65
+  advancedObstacleInterval: 9
+  advancedVehiclePatternIntervalSeconds: 4
+  advancedTrafficObstacleChance: 0.42
+  advancedThreeBusRampChance: 0.3
+  advancedRoofJumpExitChance: 0.35
+  gemRowIntervalSeconds: 1.5
+  gemCollectionIntervalSeconds: 0.12
   gemThreads: 2
   gemsPerThread: 7
   gemSpacing: 2.5
   pinkGemEveryRows: 3
+  pinkMiniRowCount: 3
   pinkGemMinimumSpacing: 110
   pinkGemDodgeChance: 0.85
   pinkGemDodgeReactionTime: 0.01
-  obstacleInterval: 12
+  obstacleInterval: 11
   obstacleClearance: 7
   extraObstacleChance: 0.55
+  singleBlockerWeight: 0.25
+  corridorGateWeight: 0.5
+  slalomWeight: 0.25
+  hurdleChance: 0.2

@@ -19,4 +19,6 @@ MonoBehaviour:
   allowProfileObstacles: 1
   obstacleIntensityMultiplier: 1.7
   gemIntensityMultiplier: 0
-  minimumObstacleSpacing: 9
+  minimumObstacleSpacing: 12
+  encounterProfile: {fileID: 11400000, guid: 2c85f45a0c8b4b7d9b74cbbf01f37950, type: 2}
+  recoveryAerialSet: {fileID: 11400000, guid: c8d73f4e1a264f7d8be53b4f5a96d4c2, type: 2}

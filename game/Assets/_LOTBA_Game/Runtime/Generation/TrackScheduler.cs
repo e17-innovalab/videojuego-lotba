@@ -31,6 +31,7 @@ namespace Lotba.Game
         private RunnerWorld world;
         private float recoveryStartDistance = -1f;
         private float recoveryEndDistance = -1f;
+        private float recoveryExitBreathMetres;
         private int baseSeed;
 
         public readonly struct ObstacleBlock
@@ -72,21 +73,48 @@ namespace Lotba.Game
             gemSlotCleanupBuffer.Clear();
             recoveryStartDistance = -1f;
             recoveryEndDistance = -1f;
+            recoveryExitBreathMetres = 0f;
 
             obstacleSpawner.Reset(baseSeed);
             gemSpawner.Reset(baseSeed);
             letterSpawner.Reset(baseSeed);
         }
 
-        public void NotifyRecoveryEntered(float startDistance, float endDistance)
+        public void NotifyRecoveryEntered(float startDistance, float endDistance, float exitBreathMetres = 0f)
         {
             recoveryStartDistance = startDistance;
             recoveryEndDistance = endDistance;
+            recoveryExitBreathMetres = Mathf.Max(0f, exitBreathMetres);
         }
 
         public void NotifyRecoveryExited()
         {
             // Mantiene la exclusión de gemas hasta el final del tramo
+        }
+
+        public void BeginRecoveryChallenge(float startDistance, float challengeEnd, float quietEnd,
+            float firstAerialDelay = 72f)
+        {
+            for (int i = activeSurfaces.Count - 1; i >= 0; i--)
+                if (activeSurfaces[i].EndZ >= startDistance && activeSurfaces[i].StartZ <= quietEnd) activeSurfaces.RemoveAt(i);
+            for (int i = activeJumpArcs.Count - 1; i >= 0; i--)
+                if (activeJumpArcs[i].EndZ >= startDistance && activeJumpArcs[i].StartZ <= quietEnd) activeJumpArcs.RemoveAt(i);
+            for (int i = activeBlocks.Count - 1; i >= 0; i--)
+                if (activeBlocks[i].EndZ >= startDistance && activeBlocks[i].StartZ <= quietEnd) activeBlocks.RemoveAt(i);
+            for (int i = letterReservations.Count - 1; i >= 0; i--)
+                if (letterReservations[i].End >= startDistance && letterReservations[i].Start <= quietEnd) letterReservations.RemoveAt(i);
+            gemSlotCleanupBuffer.Clear();
+            foreach (var slot in activeGemLaneBySlot.Keys)
+            {
+                float z = slot * GridStep;
+                if (z >= startDistance && z <= quietEnd) gemSlotCleanupBuffer.Add(slot);
+            }
+            for (int i = 0; i < gemSlotCleanupBuffer.Count; i++) activeGemLaneBySlot.Remove(gemSlotCleanupBuffer[i]);
+
+            recoveryStartDistance = startDistance;
+            recoveryEndDistance = quietEnd;
+            recoveryExitBreathMetres = Mathf.Max(0f, quietEnd - challengeEnd);
+            obstacleSpawner.BeginRecoveryChallenge(startDistance, firstAerialDelay);
         }
 
         public bool IsGemForbiddenAt(float z)
@@ -107,7 +135,11 @@ namespace Lotba.Game
 
         public bool IsZoneRestricted(float z, bool isRecovery = false)
         {
-            if (world != null && world.TrackReservations.Blocks(z, 4f)) return true;
+            // Aceptar el reto inicia una fase nueva: libera el corredor reservado para la lectura y permite
+            // generar sus obstáculos. La fase normal sigue respetando ambas reservas.
+            if (!isRecovery && recoveryStartDistance >= 0f && z >= recoveryStartDistance - 4f && z <= recoveryEndDistance + 4f)
+                return true;
+            if (!isRecovery && world != null && world.TrackReservations.Blocks(z, 4f)) return true;
             if (!isRecovery && world != null && world.TransitionReservations.Blocks(z, 4f)) return true;
             return false;
         }
@@ -121,8 +153,11 @@ namespace Lotba.Game
         {
             if (IsZoneRestricted(z, isRecovery)) return true;
 
-            // Zona de gracia post-recupero: 35 metros libres después de salir de la zona de recupero para que no haya una pared de obstáculos repentina
-            if (recoveryEndDistance > 0f && z >= recoveryEndDistance && z < recoveryEndDistance + 35f)
+            // Mantiene el respiro despejado al salir del desafío, incluso después de resolver la gema especial.
+            if (recoveryEndDistance > 0f && z >= recoveryEndDistance - recoveryExitBreathMetres && z < recoveryEndDistance)
+                return true;
+            // Pequeño margen tras el tramo de lectura antes de retomar la densidad normal.
+            if (recoveryEndDistance > 0f && z >= recoveryEndDistance && z < recoveryEndDistance + 12f)
                 return true;
 
             for (int i = 0; i < letterReservations.Count; i++)
@@ -131,6 +166,7 @@ namespace Lotba.Game
                     return true;
             }
             if (TryGetSurfaceAt(z, out _)) return true;
+            if (TryGetJumpArcAt(z, out _)) return true;
             return false;
         }
 

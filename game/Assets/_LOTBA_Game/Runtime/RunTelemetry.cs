@@ -7,7 +7,7 @@ namespace Lotba.Game
     [Serializable]
     public sealed class RunTelemetry
     {
-        public const int CurrentSchemaVersion = 21;
+        public const int CurrentSchemaVersion = 22;
         public int schemaVersion = CurrentSchemaVersion;
         public static string SchemaLabel(int version) => $"Datos v{version}";
         public string runId = Guid.NewGuid().ToString("N");

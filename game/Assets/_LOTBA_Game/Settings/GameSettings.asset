@@ -20,9 +20,14 @@ MonoBehaviour:
     announcementSeconds: 3
     rejoinSeconds: 1.25
     automaticDeceleration: 16
-    recoveryDistanceMetres: 500
-    maximumRecoveryGems: 20
-    maximumRecoveryPoints: 2000
+    transitionExitPatternSeconds: 2.2
+    minimumTransitionExitPatternMetres: 72
+    maximumTransitionExitPatternMetres: 180
+    recoveryBaseDistanceMetres: 500
+    recoveryMetresPer100Gems: 8
+    recoveryMetresPer1000Points: 8
+    recoveryProgressionMetres: 60
+    recoveryExitBreathMetres: 60
     purchasedGemMultiplier: 2
     purchasedPointMultiplier: 2
     recoveryCollision:
@@ -39,7 +44,7 @@ MonoBehaviour:
   riderImpactShader: {fileID: 4800000, guid: d0754c08401847a0b4258c29d03d1d75, type: 3}
   braking:
     progressiveEnabled: 1
-    deceleration: 50
+    deceleration: 60
     releaseAcceleration: 12
   brakeEffectsPrefab: {fileID: 1516136291399072021, guid: abbfa796a49aaca40b066fdd92ea2a4a, type: 3}
   manualTurbo:

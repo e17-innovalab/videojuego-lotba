@@ -202,7 +202,9 @@ namespace Lotba.Game
         private const float CourseRoofGap = 14f;
         private const float CourseFallGravity = 34f;
         private const float ObstacleLateralPadding = .27f;
-        private const float RoofLandingEdgeTolerance = .08f;
+        // Absorbs small vertical drift while the rider clears a rideable roof edge.
+        // The collision log showed a descent 0.12 m below a 3.25 m roof during a side exit.
+        private const float RoofLandingEdgeTolerance = .14f;
         private ObstacleDefinition courseCar, courseBus, courseArticulatedBus;
         private float courseJumpBase, courseFallSpeed;
 #if UNITY_EDITOR
@@ -270,7 +272,7 @@ namespace Lotba.Game
                     PlaceCourseBus(bus, landingLane, busStart);
                     if (i == 2) continue;
                     float joint = busStart + bus.Length - rampStart;
-                    CreateCourseSurface("UniÃ³n de techos", landingX, joint, joint + connector,
+                    CreateCourseSurface("Union de techos", landingX, joint, joint + connector,
                         bus.Height, bus.Height, bus.Width, bus, scenery, roofBridge: true);
                     encounter.Surfaces.Add(new VehicleSurface(joint + rampStart, joint + rampStart + connector,
                         landingX, bus.Width * .5f, bus.Height, bus.Height));
@@ -457,7 +459,11 @@ namespace Lotba.Game
                 }
                 Vector3 position = encounter.Ramp.localPosition;
                 position.z = encounter.Start - distance;
+                float bendDepth = Mathf.Max(0f, position.z - depthBendStart);
+                position.x = depthBendStrength * bendDepth * bendDepth;
                 encounter.Ramp.localPosition = position;
+                float bendYaw = Mathf.Atan(2f * depthBendStrength * bendDepth) * Mathf.Rad2Deg;
+                encounter.Ramp.localRotation = Quaternion.Euler(0f, bendYaw, 0f);
                 if (!grounded) continue;
                 foreach (VehicleSurface surface in encounter.Surfaces)
                 {
@@ -903,12 +909,13 @@ namespace Lotba.Game
 #endif
                         string zone = roadStream.Route.MapAtDistance(contactDistance).DisplayName;
                         int obstacleLane = Mathf.RoundToInt(item.LaneX / LaneSpacing) + 2;
-                        Debug.Log($"[Choque] Ciclista â†’ {item.Definition.Id} Â· {zone} Â· {contactDistance:F1} m Â· " +
-                            $"carril destino {session.Lane + 1}, obstÃ¡culo {obstacleLane} Â· " +
-                            $"altura al contacto {crossingHeight:F2} m, volumen {item.Definition.CollisionHeight:F2} m Â· " +
-                            $"techo transitable {hasRoofSupport} Â· altura en el paso {step.StartHeight:F2} â†’ {step.EndHeight:F2} m Â· " +
-                            $"desfase lateral {crossingX - item.LaneX:F2} m Â· " +
-                            $"velocidad {session.Speed:F1} m/s Â· turbo {duringBoost} Â· gemas perdidas {gemsLost}", item.View);
+                        Debug.Log($"[Choque] Ciclista -> {item.Definition.Id} | {zone} | {contactDistance:F1} m | " +
+                            $"carril destino {session.Lane + 1}, obstaculo {obstacleLane} | " +
+                            $"altura al contacto {crossingHeight:F2} m, techo {item.Definition.CollisionHeight:F2} m, " +
+                            $"margen vertical {crossingHeight - item.Definition.CollisionHeight:F2} m | " +
+                            $"techo transitable {hasRoofSupport} | altura del paso {step.StartHeight:F2} -> {step.EndHeight:F2} m | " +
+                            $"desfase lateral {crossingX - item.LaneX:F2} m | " +
+                            $"velocidad {session.Speed:F1} m/s | turbo {duringBoost} | gemas perdidas {gemsLost}", item.View);
                     }
                     if (duringBoost)
                     {
@@ -962,7 +969,7 @@ namespace Lotba.Game
             if (settings.PreparePatternsBeyondVisibility)
                 lookAhead = Mathf.Max(lookAhead, roadStream.VisibilityDistance + settings.PatternVisibilityMargin);
             float spawnHorizon = distance + lookAhead;
-            PopulateTransitionExits(spawnHorizon);
+            PopulateTransitionExits(spawnHorizon, speed);
 
             bool isRecovery = cameraSession != null && cameraSession.RecoveryActive;
             ZoneType activeZone = isRecovery ? ZoneType.Recovery
@@ -978,6 +985,8 @@ namespace Lotba.Game
 
             ZoneRules rules = isRecovery ? (recoveryZoneRules != null ? recoveryZoneRules : ZoneRules.CreateDefault(ZoneType.Recovery))
                 : (normalZoneRules != null ? normalZoneRules : ZoneRules.CreateDefault(ZoneType.Normal));
+            if (isRecovery && recoveryZoneRules != null && recoveryZoneRules.EncounterProfile != null)
+                profile = recoveryZoneRules.EncounterProfile;
 
             var context = new GenerationContext(
                 distance: distance,
@@ -994,7 +1003,9 @@ namespace Lotba.Game
                 recoveryZoneEnd: cameraSession != null ? cameraSession.RecoveryZoneEnd : -1f,
                 seed: settings.Seed,
                 obstacleIntensity: obstacleIntensity,
-                gemIntensity: gemIntensity
+                gemIntensity: gemIntensity,
+                recoveryChallengeEnd: cameraSession != null ? cameraSession.RecoveryChallengeEnd : -1f,
+                pinkGemLevel: cameraSession != null ? cameraSession.PinkGemActivationCount : 0
             );
 
             trackScheduler.PopulateAhead(context);
@@ -1484,6 +1495,11 @@ namespace Lotba.Game
         {
             fraction = 0f;
             ObstacleDefinition obstacle = item.Definition;
+            // Si el ciclista ya está por encima del techo, abandonar el lateral del vehículo
+            // es una bajada válida y no debe contarse como un choque contra su caja.
+            if (obstacle.RideableRoof &&
+                Mathf.Min(step.StartHeight, step.EndHeight) >= obstacle.Height - RoofLandingEdgeTolerance)
+                return false;
             float halfLength = obstacle.Length * .5f + obstacle.ContactPadding;
             float halfWidth = obstacle.Width * .5f + ObstacleLateralPadding;
             float enter = 0f, exit = 1f;
@@ -1568,13 +1584,13 @@ namespace Lotba.Game
                 if (part.GetComponentInChildren<Collider>(true) == null)
                     part.SetParent(riderVisual, false);
             }
-            impactVisualRoot = new GameObject("ReacciÃ³n de choque").transform;
+            impactVisualRoot = new GameObject("Reaccion de choque").transform;
             impactVisualRoot.SetParent(rider, false);
             riderVisual.SetParent(impactVisualRoot, false);
 
             var bars = riderVisual.Find("Handlebars");
             var fork = riderVisual.Find("Fork");
-            steeringPivot = CreateVisualPivot("DirecciÃ³n", riderVisual, bars != null ? bars.localPosition : Vector3.zero);
+            steeringPivot = CreateVisualPivot("Direccion", riderVisual, bars != null ? bars.localPosition : Vector3.zero);
             if (bars != null) bars.SetParent(steeringPivot, true);
             if (fork != null) fork.SetParent(steeringPivot, true);
             foreach (Transform wheel in wheels)

@@ -19,6 +19,9 @@ namespace Lotba.Game
         [SerializeField] private bool allowLetters = true;
         [SerializeField] private bool allowElevatedEncounters = true;
         [SerializeField] private bool allowProfileObstacles = true;
+        [SerializeField] private EncounterProfile encounterProfile;
+        [SerializeField, Tooltip("Set opcional de buses/containers reservado para encuentros aéreos durante recuperación.")]
+        private ObstacleSet recoveryAerialSet;
 
         [Header("Multiplicadores de intensidad")]
         [SerializeField, Min(0.1f)] private float obstacleIntensityMultiplier = 1f;
@@ -30,6 +33,8 @@ namespace Lotba.Game
         public bool AllowLetters => allowLetters;
         public bool AllowElevatedEncounters => allowElevatedEncounters;
         public bool AllowProfileObstacles => allowProfileObstacles;
+        public EncounterProfile EncounterProfile => encounterProfile;
+        public ObstacleSet RecoveryAerialSet => recoveryAerialSet;
         public float ObstacleIntensity => obstacleIntensityMultiplier;
         public float GemIntensity => gemIntensityMultiplier;
         public float MinimumObstacleSpacing => minimumObstacleSpacing;
@@ -47,7 +52,7 @@ namespace Lotba.Game
                     rules.allowProfileObstacles = true;
                     rules.obstacleIntensityMultiplier = 1.7f;
                     rules.gemIntensityMultiplier = 0f;
-                    rules.minimumObstacleSpacing = 9f;
+                    rules.minimumObstacleSpacing = 12f;
                     break;
                 case ZoneType.Overstimulation:
                     rules.allowCommonGems = true;

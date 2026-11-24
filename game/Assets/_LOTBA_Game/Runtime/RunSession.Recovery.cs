@@ -8,12 +8,14 @@ namespace Lotba.Game
         private readonly SectionLossLedger lossLedger = new SectionLossLedger();
         private RunRecoveryOpportunity recoveryOpportunity;
         private float recoveryZoneEnd;
+        private float recoveryChallengeEnd;
 
         public bool RecoveryForkActive => recoveryFork.Active;
         public float RecoveryForkDistance => recoveryFork.Distance;
         public int RecoveryForkLane => recoveryFork.RecoveryLane;
         public bool RecoveryForkApproaching => recoveryFork.Active && Distance >= recoveryFork.Distance - 40f;
         public float RecoveryZoneEnd => recoveryZoneEnd;
+        public float RecoveryChallengeEnd => recoveryChallengeEnd;
         public bool RecoveryActive { get; private set; }
         public int RecoveryLoss { get; private set; }
         public long RecoveryPointLoss { get; private set; }
@@ -32,8 +34,8 @@ namespace Lotba.Game
         public int RecoveryUnavailable { get; private set; }
         public int RecoveryOffersClosed { get; private set; }
         public bool HasRecoveryLoss => (lossLedger != null && lossLedger.HasLoss) || RecoveryLoss > 0 || RecoveryPointLoss > 0;
-        public int PendingRecoveryGems => lossLedger != null && lossLedger.HasLoss ? Math.Min(transitionSettings.maximumRecoveryGems, lossLedger.PendingGems) : RecoveryAmount;
-        public long PendingRecoveryPoints => lossLedger != null && lossLedger.HasLoss ? Math.Min(transitionSettings.maximumRecoveryPoints, lossLedger.PendingPoints) : RecoveryPointAmount;
+        public int PendingRecoveryGems => lossLedger != null && lossLedger.HasLoss ? lossLedger.PendingGems : RecoveryAmount;
+        public long PendingRecoveryPoints => lossLedger != null && lossLedger.HasLoss ? lossLedger.PendingPoints : RecoveryPointAmount;
 
         internal void AddLossToLedger(long lostPoints, int lostGems, int sequence)
         {
@@ -45,10 +47,12 @@ namespace Lotba.Game
         {
             var loss = lossLedger.Consume(out int[] lossSequences);
             RecoveryLoss = loss.Gems; RecoveryPointLoss = loss.Points;
-            RecoveryAmount = Math.Min(transitionSettings.maximumRecoveryGems, loss.Gems);
-            RecoveryPointAmount = Math.Min(transitionSettings.maximumRecoveryPoints, loss.Points);
+            RecoveryAmount = loss.Gems;
+            RecoveryPointAmount = loss.Points;
             float forkDistance = Distance + 60f;
-            bool fits = finishDistance <= 0f || forkDistance + 200f < finishDistance;
+            float challengeDistance = transitionSettings.RecoveryDistance(RecoveryAmount,
+                RecoveryPointAmount, finishDistance > 0f ? Distance / finishDistance : 0f);
+            bool fits = finishDistance <= 0f || forkDistance + challengeDistance + 20f < finishDistance;
             bool hasReward = RecoveryAmount > 0 || RecoveryPointAmount > 0;
             if (!fits || !hasReward)
             {
@@ -68,14 +72,15 @@ namespace Lotba.Game
             }
             int recoveryLane = RecoveryOffers % 2 == 0 ? 0 : 2;
             recoveryFork.Begin(forkDistance, recoveryLane, RecoveryPointAmount, RecoveryAmount);
-            recoveryZoneEnd = forkDistance + 180f;
+            recoveryChallengeEnd = forkDistance + challengeDistance;
+            recoveryZoneEnd = recoveryChallengeEnd + Math.Max(0f, transitionSettings.recoveryExitBreathMetres);
             recoveryOpportunity = new RunRecoveryOpportunity
             {
                 offerId = "offer-" + DecisionsShown, section = telemetrySection,
                 eligiblePoints = loss.Points, eligibleGems = loss.Gems,
                 eligibleLossSequences = lossSequences,
                 offeredPoints = RecoveryPointAmount, offeredGems = RecoveryAmount,
-                challengeMetres = 180f, offerDistanceMetres = Distance,
+                challengeMetres = challengeDistance, offerDistanceMetres = Distance,
                 outcome = "offered", cause = null
             };
             Telemetry.recoveryOpportunities.Add(recoveryOpportunity);
@@ -137,7 +142,7 @@ namespace Lotba.Game
         internal void UpdateRecoveryZone()
         {
             if (!RecoveryActive || State != RunState.Running) return;
-            if (Distance >= recoveryZoneEnd)
+            if (Distance >= recoveryChallengeEnd)
             {
                 MissRecoveryGem();
             }

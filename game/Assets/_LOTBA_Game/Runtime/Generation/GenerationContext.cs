@@ -1,3 +1,5 @@
+using UnityEngine;
+
 namespace Lotba.Game
 {
     /// <summary>
@@ -16,8 +18,10 @@ namespace Lotba.Game
         public readonly RouteDefinition Route;
         public readonly EncounterProfile Profile;
         public readonly bool PinkGemsUnlocked;
+        public readonly int PinkGemLevel;
         public readonly bool RecoveryActive;
         public readonly float RecoveryZoneEnd;
+        public readonly float RecoveryChallengeEnd;
         public readonly int Seed;
         public readonly float ObstacleIntensity;
         public readonly float GemIntensity;
@@ -37,7 +41,9 @@ namespace Lotba.Game
             float recoveryZoneEnd,
             int seed,
             float obstacleIntensity = 1f,
-            float gemIntensity = 1f)
+            float gemIntensity = 1f,
+            float recoveryChallengeEnd = -1f,
+            int pinkGemLevel = 0)
         {
             Distance = distance;
             Speed = speed;
@@ -49,8 +55,10 @@ namespace Lotba.Game
             Route = route;
             Profile = profile;
             PinkGemsUnlocked = pinkGemsUnlocked;
+            PinkGemLevel = Mathf.Max(pinkGemLevel, pinkGemsUnlocked ? 1 : 0);
             RecoveryActive = recoveryActive;
             RecoveryZoneEnd = recoveryZoneEnd;
+            RecoveryChallengeEnd = recoveryChallengeEnd;
             Seed = seed;
             ObstacleIntensity = obstacleIntensity;
             GemIntensity = gemIntensity;
@@ -58,7 +66,18 @@ namespace Lotba.Game
 
         public GenerationContext WithHorizon(float newHorizon) => new GenerationContext(
             Distance, Speed, CurrentLane, SafeLane, newHorizon, ActiveZone, Rules, Route,
-            Profile, PinkGemsUnlocked, RecoveryActive, RecoveryZoneEnd, Seed, ObstacleIntensity, GemIntensity
+            Profile, PinkGemsUnlocked, RecoveryActive, RecoveryZoneEnd, Seed, ObstacleIntensity, GemIntensity,
+            RecoveryChallengeEnd, PinkGemLevel
         );
+
+        public EncounterProfile ProfileAt(float distance)
+        {
+            if ((RecoveryActive || ActiveZone == ZoneType.Recovery) && Rules != null && Rules.EncounterProfile != null)
+                return Rules.EncounterProfile;
+            if (Route == null || Route.Sections == null || Route.Sections.Length == 0)
+                return Profile;
+            int section = Route.SectionAt(distance, out _);
+            return Route.Sections[section].EncounterProfile ?? Profile;
+        }
     }
 }

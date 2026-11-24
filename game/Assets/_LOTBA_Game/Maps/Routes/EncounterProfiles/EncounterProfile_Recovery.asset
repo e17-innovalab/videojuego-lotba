@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_Script: {fileID: 11500000, guid: 715aafaee0f5451d9d3c310173d4ba27, type: 3}
+  m_Name: EncounterProfile_Recovery
+  gemInterval: 48
+  vehiclePatternIntervalSeconds: 5.5
+  recoveryAerialEncounterChance: 0.65
+  recoveryAerialInterval: 105
+  recoveryAerialStartDelay: 75
+  recoveryBusJumpChance: 0.55
+  recoveryAdvancedBusJumpChance: 0.9
+  recoveryAdvancedThreeBusRampChance: 0.55
+  recoveryAdvancedReactionSeconds: 0.36
+  recoveryAdvancedAerialIntervalMultiplier: 0.6
+  trafficObstacleChance: 0.55
+  longVehicleChance: 0.4
+  threeBusRampChance: 0.35
+  roofJumpExitChance: 0.4
+  obstacleReactionSeconds: 0.6
+  letterInterval: 120
+  letterIntervalVariation: 0.1
+  gemThreads: 1
+  gemsPerThread: 4
+  gemSpacing: 3
+  pinkGemEveryRows: 0
+  pinkMiniRowCount: 3
+  pinkGemMinimumSpacing: 110
+  pinkGemDodgeChance: 0
+  pinkGemDodgeReactionTime: 0
+  obstacleInterval: 24
+  obstacleClearance: 12
+  gemRowIntervalSeconds: 1.35
+  gemCollectionIntervalSeconds: 0.12
+  singleBlockerWeight: 0.3
+  corridorGateWeight: 0.5
+  slalomWeight: 0.2
+  hurdleChance: 0

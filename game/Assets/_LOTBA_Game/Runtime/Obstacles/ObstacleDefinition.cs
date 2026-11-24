@@ -46,7 +46,7 @@ namespace Lotba.Game
         public float Length => length;
         public bool TumblesOnImpact => tumbleOnImpact && !vehicle;
         public float ContactPadding => rideableRoof ? 0f : vehicle ? .2f : .6f;
-        public float CollisionHeight => collisionHeight > 0f ? collisionHeight : height;
+        public float CollisionHeight => rideableRoof ? height : collisionHeight > 0f ? collisionHeight : height;
         public bool RideableRoof => rideableRoof;
         public int PoolCapacity => poolCapacity;
         public BusLivery Livery => livery;
