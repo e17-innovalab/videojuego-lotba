@@ -20,6 +20,9 @@ namespace Lotba.Game
         private readonly List<ObstacleBlock> activeBlocks = new List<ObstacleBlock>(64);
         private readonly List<TrackSpan> letterReservations = new List<TrackSpan>(8);
 
+        public IReadOnlyList<TraversableSurface> ActiveSurfaces => activeSurfaces;
+        public IReadOnlyList<JumpArcTrajectory> ActiveJumpArcs => activeJumpArcs;
+
         private RunnerWorld world;
         private float recoveryStartDistance = -1f;
         private float recoveryEndDistance = -1f;
@@ -30,15 +33,20 @@ namespace Lotba.Game
             public readonly int Lane;
             public readonly float StartZ;
             public readonly float EndZ;
+            public readonly float MinHeight;
+            public readonly float MaxHeight;
 
-            public ObstacleBlock(int lane, float startZ, float endZ)
+            public ObstacleBlock(int lane, float startZ, float endZ, float minHeight = 0f, float maxHeight = 4f)
             {
                 Lane = lane;
                 StartZ = startZ;
                 EndZ = endZ;
+                MinHeight = minHeight;
+                MaxHeight = maxHeight;
             }
 
-            public bool Blocks(int lane, float z) => Lane == lane && z >= StartZ && z <= EndZ;
+            public bool Blocks(int lane, float z, float height = 1.1f) =>
+                Lane == lane && z >= StartZ && z <= EndZ && height >= MinHeight && height <= MaxHeight;
         }
 
         public void Initialize(RunnerWorld owner, int seed)
@@ -134,9 +142,33 @@ namespace Lotba.Game
             activeJumpArcs.Add(arc);
         }
 
-        public void RegisterObstacleBlock(int lane, float startZ, float endZ)
+        public void RegisterObstacleBlock(int lane, float startZ, float endZ, float minHeight = 0f, float maxHeight = 4f)
         {
-            activeBlocks.Add(new ObstacleBlock(lane, startZ, endZ));
+            activeBlocks.Add(new ObstacleBlock(lane, startZ, endZ, minHeight, maxHeight));
+        }
+
+        public bool HasObstacleAt(int lane, float z, float height = 1.1f, float padding = 0.5f)
+        {
+            for (int i = 0; i < activeBlocks.Count; i++)
+            {
+                var block = activeBlocks[i];
+                if (block.Lane == lane && z >= (block.StartZ - padding) && z <= (block.EndZ + padding))
+                {
+                    if (height >= (block.MinHeight - 0.2f) && height <= (block.MaxHeight + 0.2f))
+                        return true;
+                }
+            }
+            return false;
+        }
+
+        public bool IsLetterAt(float z, float padding = 4f)
+        {
+            for (int i = 0; i < letterReservations.Count; i++)
+            {
+                if (z >= (letterReservations[i].Start - padding) && z <= (letterReservations[i].End + padding))
+                    return true;
+            }
+            return false;
         }
 
         public bool TryGetSurfaceAt(float z, out TraversableSurface foundSurface)
@@ -171,17 +203,11 @@ namespace Lotba.Game
         {
             int targetLane = preferredLane >= 0 ? preferredLane : GetCorridorLaneAt(z);
 
-            // Verifica si targetLane está libre de obstáculos
-            bool targetBlocked = false;
-            for (int i = 0; i < activeBlocks.Count; i++)
+            // Verifica si targetLane está libre de obstáculos a nivel de suelo
+            if (!HasObstacleAt(targetLane, z, 1.1f, 0.4f))
             {
-                if (activeBlocks[i].Blocks(targetLane, z))
-                {
-                    targetBlocked = true;
-                    break;
-                }
+                return targetLane;
             }
-            if (!targetBlocked) return targetLane;
 
             // Busca el carril contiguo libre más conveniente
             int[] tryOrder = targetLane == 1
@@ -191,16 +217,10 @@ namespace Lotba.Game
             for (int i = 0; i < tryOrder.Length; i++)
             {
                 int lane = tryOrder[i];
-                bool blocked = false;
-                for (int b = 0; b < activeBlocks.Count; b++)
+                if (!HasObstacleAt(lane, z, 1.1f, 0.4f))
                 {
-                    if (activeBlocks[b].Blocks(lane, z))
-                    {
-                        blocked = true;
-                        break;
-                    }
+                    return lane;
                 }
-                if (!blocked) return lane;
             }
 
             return targetLane;

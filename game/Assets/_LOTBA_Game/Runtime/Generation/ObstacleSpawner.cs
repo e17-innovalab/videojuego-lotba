@@ -14,6 +14,7 @@ namespace Lotba.Game
 
         private float nextObstacleDistance;
         private int wave;
+        private int currentSafeLane = 1;
         private int previousVehicleLane = -1;
         private System.Random random;
 
@@ -22,6 +23,7 @@ namespace Lotba.Game
             random = new System.Random(baseSeed ^ 0x3A5B);
             nextObstacleDistance = 35f;
             wave = 0;
+            currentSafeLane = 1;
             previousVehicleLane = -1;
         }
 
@@ -76,7 +78,14 @@ namespace Lotba.Game
 
         private void SpawnGroundObstacles(ObstacleSet catalog, in GenerationContext context, bool isRecovery, float intensity, TrackScheduler scheduler)
         {
-            int safeLane = scheduler.GetCorridorLaneAt(nextObstacleDistance);
+            // Transición suave de carril seguro cada pocas olas (estilo Subway Surfers)
+            if (random.NextDouble() < 0.35)
+            {
+                currentSafeLane = Mathf.Clamp(currentSafeLane + (random.Next(2) == 0 ? -1 : 1), 0, 2);
+            }
+
+            int safeLane = currentSafeLane;
+            float patternEndZ = nextObstacleDistance;
             bool hurdleJump = !isRecovery && wave % 4 == 2;
 
             if (hurdleJump)
@@ -85,8 +94,9 @@ namespace Lotba.Game
                 ObstacleDefinition lowObstacle = catalog.Pick(random, vehicle: false, maximumLength: 3.5f);
                 if (lowObstacle != null)
                 {
+                    float obsHalf = lowObstacle.Length * 0.5f;
                     scheduler.EmitItem(TrackSpawnItem.CreateObstacle(safeLane, nextObstacleDistance, lowObstacle));
-                    scheduler.RegisterObstacleBlock(safeLane, nextObstacleDistance - lowObstacle.Length * 0.5f, nextObstacleDistance + lowObstacle.Length * 0.5f);
+                    scheduler.RegisterObstacleBlock(safeLane, nextObstacleDistance - obsHalf, nextObstacleDistance + obsHalf, 0f, lowObstacle.Height);
 
                     // Arco parabólico físico que coincide exactamente con el salto de la bici: 1.1m -> 2.65m -> 1.1m
                     scheduler.RegisterJumpArc(new JumpArcTrajectory(
@@ -99,6 +109,8 @@ namespace Lotba.Game
                         endHeight: 1.1f
                     ));
 
+                    patternEndZ = Mathf.Max(patternEndZ, nextObstacleDistance + 4.5f);
+
                     // Ocasionalmente bloquea un carril vecino para enmarcar el salto
                     if (random.NextDouble() < 0.45)
                     {
@@ -106,40 +118,51 @@ namespace Lotba.Game
                         ObstacleDefinition sideObstacle = catalog.Pick(random, vehicle: false, maximumLength: 4.5f);
                         if (sideObstacle != null)
                         {
+                            float sideHalf = sideObstacle.Length * 0.5f;
                             scheduler.EmitItem(TrackSpawnItem.CreateObstacle(neighbor, nextObstacleDistance, sideObstacle));
-                            scheduler.RegisterObstacleBlock(neighbor, nextObstacleDistance - sideObstacle.Length * 0.5f, nextObstacleDistance + sideObstacle.Length * 0.5f + 2f);
+                            scheduler.RegisterObstacleBlock(neighbor, nextObstacleDistance - sideHalf, nextObstacleDistance + sideHalf + 1f, 0f, sideObstacle.Height);
+                            patternEndZ = Mathf.Max(patternEndZ, nextObstacleDistance + sideHalf);
                         }
                     }
                 }
             }
             else
             {
-                int blockedLane = (safeLane + 1 + (wave % 2)) % 3;
+                // Decidir si se bloquea 1 carril (deja 2 libres) o 2 carriles (puerta/corredor a través del carril seguro)
+                float doubleBlockChance = isRecovery ? 0.70f : Mathf.Clamp01(intensity - 0.9f + (context.Profile != null ? context.Profile.ExtraObstacleChance : 0.2f));
+                bool blockTwoLanes = random.NextDouble() < doubleBlockChance;
 
-                ObstacleDefinition obstacle = catalog.Pick(random, vehicle: wave % 3 == 0, maximumLength: 6f);
-                if (obstacle != null)
+                int firstBlockedLane = (safeLane + 1 + (wave % 2)) % 3;
+                ObstacleDefinition firstObstacle = catalog.Pick(random, vehicle: wave % 3 == 0, maximumLength: 7f);
+                if (firstObstacle != null)
                 {
-                    scheduler.EmitItem(TrackSpawnItem.CreateObstacle(blockedLane, nextObstacleDistance, obstacle));
-                    scheduler.RegisterObstacleBlock(blockedLane, nextObstacleDistance - obstacle.Length * 0.5f, nextObstacleDistance + obstacle.Length * 0.5f + 4f);
+                    float firstHalf = firstObstacle.Length * 0.5f;
+                    scheduler.EmitItem(TrackSpawnItem.CreateObstacle(firstBlockedLane, nextObstacleDistance, firstObstacle));
+                    scheduler.RegisterObstacleBlock(firstBlockedLane, nextObstacleDistance - firstHalf, nextObstacleDistance + firstHalf + 1f, 0f, firstObstacle.Height);
+                    patternEndZ = Mathf.Max(patternEndZ, nextObstacleDistance + firstHalf);
                 }
 
-                // En modo recupero o con alta intensidad, se bloquea un segundo carril no seguro
-                float extraChance = isRecovery ? 0.70f : Mathf.Clamp01(intensity - 1f + (context.Profile != null ? context.Profile.ExtraObstacleChance : 0.2f));
-                if (random.NextDouble() < extraChance)
+                if (blockTwoLanes)
                 {
-                    int secondBlocked = 3 - safeLane - blockedLane;
+                    int secondBlockedLane = 3 - safeLane - firstBlockedLane;
                     ObstacleDefinition secondObstacle = catalog.Pick(random, vehicle: false, maximumLength: 4.5f);
                     if (secondObstacle != null)
                     {
-                        scheduler.EmitItem(TrackSpawnItem.CreateObstacle(secondBlocked, nextObstacleDistance + 2f, secondObstacle));
-                        scheduler.RegisterObstacleBlock(secondBlocked, nextObstacleDistance - 2f, nextObstacleDistance + secondObstacle.Length + 4f);
+                        float secondZ = nextObstacleDistance + 2.5f;
+                        float secondHalf = secondObstacle.Length * 0.5f;
+                        scheduler.EmitItem(TrackSpawnItem.CreateObstacle(secondBlockedLane, secondZ, secondObstacle));
+                        scheduler.RegisterObstacleBlock(secondBlockedLane, secondZ - secondHalf, secondZ + secondHalf + 1f, 0f, secondObstacle.Height);
+                        patternEndZ = Mathf.Max(patternEndZ, secondZ + secondHalf);
                     }
                 }
             }
 
-            float baseInterval = context.Profile != null ? context.Profile.ObstacleInterval : 24f;
-            float spacing = isRecovery ? Mathf.Max(8f, 15f / intensity) : Mathf.Max(12f, baseInterval / intensity);
-            nextObstacleDistance += spacing;
+            // Distancia de reacción garantizada medida desde el FINAL del obstáculo más lejano del patrón
+            float reactionGap = isRecovery
+                ? Mathf.Clamp(15f / intensity, 11f, 17f)
+                : Mathf.Clamp(22f / intensity, 15f, 26f);
+
+            nextObstacleDistance = patternEndZ + reactionGap;
         }
 
         private void SpawnElevatedEncounter(ObstacleSet catalog, in GenerationContext context, TrackScheduler scheduler)
@@ -151,8 +174,9 @@ namespace Lotba.Game
                 return;
             }
 
-            int lane = previousVehicleLane < 0 ? random.Next(3) : (previousVehicleLane + 1 + random.Next(2)) % 3;
+            int lane = previousVehicleLane < 0 ? currentSafeLane : (previousVehicleLane + 1 + random.Next(2)) % 3;
             previousVehicleLane = lane;
+            currentSafeLane = lane;
             int neighborLane = lane == 1 ? (random.Next(2) == 0 ? 0 : 2) : 1;
 
             float busLength = bus.Length;
@@ -167,6 +191,7 @@ namespace Lotba.Game
             float speed = Mathf.Max(26f, context.Speed);
             float arcLength = speed * fallTime * 1.15f;
 
+            float patternEndZ;
             bool isRoofBridge = (wave % 2 == 1);
 
             if (isRoofBridge)
@@ -180,14 +205,14 @@ namespace Lotba.Game
                 float bus1EndZ = rampEndZ + busLength;
                 scheduler.EmitItem(TrackSpawnItem.CreateObstacle(lane, rampEndZ + busLength * 0.5f, bus));
                 scheduler.RegisterSurface(new TraversableSurface(lane, rampEndZ, bus1EndZ, busHeight, busHeight));
-                scheduler.RegisterObstacleBlock(lane, startZ, bus1EndZ + 4f);
+                scheduler.RegisterObstacleBlock(lane, startZ, bus1EndZ + 2f, 0f, busHeight);
 
                 // 3. Colectivo 2 en 'neighborLane' (desfasado 2.5 metros adelante)
                 float bus2StartZ = rampEndZ + 2.5f;
                 float bus2EndZ = bus2StartZ + busLength;
                 scheduler.EmitItem(TrackSpawnItem.CreateObstacle(neighborLane, bus2StartZ + busLength * 0.5f, bus));
                 scheduler.RegisterSurface(new TraversableSurface(neighborLane, bus2StartZ, bus2EndZ, busHeight, busHeight));
-                scheduler.RegisterObstacleBlock(neighborLane, bus2StartZ, bus2EndZ + 4f);
+                scheduler.RegisterObstacleBlock(neighborLane, bus2StartZ, bus2EndZ + 2f, 0f, busHeight);
 
                 // 4. Plataforma de cruce lateral entre ambos techos
                 float bridgeStartZ = bus2StartZ;
@@ -208,7 +233,8 @@ namespace Lotba.Game
                     endHeight: 1.1f
                 ));
 
-                nextObstacleDistance = dropEndZ + 16f;
+                currentSafeLane = neighborLane;
+                patternEndZ = dropEndZ;
             }
             else
             {
@@ -221,13 +247,13 @@ namespace Lotba.Game
                 float bus1EndZ = rampEndZ + busLength;
                 scheduler.EmitItem(TrackSpawnItem.CreateObstacle(lane, rampEndZ + busLength * 0.5f, bus));
                 scheduler.RegisterSurface(new TraversableSurface(lane, rampEndZ, bus1EndZ, busHeight, busHeight));
-                scheduler.RegisterObstacleBlock(lane, startZ, bus1EndZ + 4f);
+                scheduler.RegisterObstacleBlock(lane, startZ, bus1EndZ + 2f, 0f, busHeight);
 
                 // 3. Colectivo 2
                 float bus2EndZ = bus1EndZ + busLength + 1.4f;
                 scheduler.EmitItem(TrackSpawnItem.CreateObstacle(lane, bus1EndZ + 1.4f + busLength * 0.5f, bus));
                 scheduler.RegisterSurface(new TraversableSurface(lane, bus1EndZ + 1.4f, bus2EndZ, busHeight, busHeight));
-                scheduler.RegisterObstacleBlock(lane, bus1EndZ, bus2EndZ + 4f);
+                scheduler.RegisterObstacleBlock(lane, bus1EndZ, bus2EndZ + 2f, 0f, busHeight);
 
                 // 4. Descenso balístico al final del segundo colectivo hacia el piso
                 float jumpStartZ = bus2EndZ;
@@ -242,8 +268,13 @@ namespace Lotba.Game
                     endHeight: 1.1f
                 ));
 
-                nextObstacleDistance = jumpEndZ + 16f;
+                currentSafeLane = lane;
+                patternEndZ = jumpEndZ;
             }
+
+            float intensity = Mathf.Max(0.5f, context.Rules.ObstacleIntensity * context.ObstacleIntensity);
+            float gap = Mathf.Clamp(22f / intensity, 16f, 26f);
+            nextObstacleDistance = patternEndZ + gap;
         }
     }
 }
