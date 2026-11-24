@@ -11,6 +11,8 @@ namespace Lotba.Game
     /// </summary>
     public sealed class TrackScheduler
     {
+        public const float GridStep = 3.0f;
+
         private readonly ObstacleSpawner obstacleSpawner = new ObstacleSpawner();
         private readonly GemSpawner gemSpawner = new GemSpawner();
         private readonly LetterSpawner letterSpawner = new LetterSpawner();
@@ -147,7 +149,7 @@ namespace Lotba.Game
             activeBlocks.Add(new ObstacleBlock(lane, startZ, endZ, minHeight, maxHeight));
         }
 
-        public bool HasObstacleAt(int lane, float z, float height = 1.1f, float padding = 0.8f)
+        public bool HasObstacleAt(int lane, float z, float height = 1.1f, float padding = 1.5f)
         {
             for (int i = 0; i < activeBlocks.Count; i++)
             {
@@ -208,8 +210,8 @@ namespace Lotba.Game
         {
             int targetLane = preferredLane >= 0 ? preferredLane : GetCorridorLaneAt(z);
 
-            // Verifica si targetLane está libre de obstáculos a nivel de suelo
-            if (!HasObstacleAt(targetLane, z, 1.1f, 0.4f))
+            // Verifica si targetLane está libre de obstáculos a nivel de suelo con tolerancia de grid
+            if (!HasObstacleAt(targetLane, z, 1.1f, 1.5f))
             {
                 return targetLane;
             }
@@ -222,7 +224,7 @@ namespace Lotba.Game
             for (int i = 0; i < tryOrder.Length; i++)
             {
                 int lane = tryOrder[i];
-                if (!HasObstacleAt(lane, z, 1.1f, 0.4f))
+                if (!HasObstacleAt(lane, z, 1.1f, 1.5f))
                 {
                     return lane;
                 }

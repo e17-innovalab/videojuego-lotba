@@ -43,46 +43,53 @@ namespace Lotba.Game
                 return;
             }
 
-            // Mayor espaciado y menor frecuencia según pedido del usuario:
-            // espaciado aumentado a 3.4m (antes 2.5m) e intervalo base a 46m (antes 24m)
-            float spacing = 3.4f;
-            float gemInterval = 46f;
-            float gemIntensity = Mathf.Max(0.25f, context.Rules.GemIntensity * context.GemIntensity);
+            // 1. Población prioritaria de superficies elevadas registradas (techos/rampas)
+            for (int i = 0; i < scheduler.ActiveSurfaces.Count; i++)
+            {
+                var surface = scheduler.ActiveSurfaces[i];
+                if (surface.StartZ < context.SpawnHorizon && populatedSurfaces.Add(surface.StartZ))
+                {
+                    SpawnSurfaceTrail(surface, TrackScheduler.GridStep, scheduler);
+                }
+            }
 
-            // Generación de un ÚNICO camino de gemas continuo (sin hileras paralelas en múltiples carriles)
+            // 2. Población prioritaria de arcos parabólicos de salto registrados (vallas/cajas bajas y descensos)
+            for (int i = 0; i < scheduler.ActiveJumpArcs.Count; i++)
+            {
+                var arc = scheduler.ActiveJumpArcs[i];
+                if (arc.StartZ < context.SpawnHorizon && populatedArcs.Add(arc.StartZ))
+                {
+                    SpawnParabolicArc(arc, scheduler);
+                }
+            }
+
+            // 3. Generación en piso de un ÚNICO camino de gemas continuo, espaciado y alineado a la grilla de 3m
+            float gemInterval = 48f;
+            float gemIntensity = Mathf.Max(0.25f, context.Rules.GemIntensity * context.GemIntensity);
+            nextGemDistance = Mathf.Round(nextGemDistance / TrackScheduler.GridStep) * TrackScheduler.GridStep;
+
             while (nextGemDistance < context.SpawnHorizon)
             {
                 if (scheduler.IsGemForbiddenAt(nextGemDistance))
                 {
-                    nextGemDistance += spacing * 4f;
+                    nextGemDistance += TrackScheduler.GridStep * 4f;
                     continue;
                 }
 
-                // 1. Si hay una superficie transitable (rampa/techo) en esta cota, el único camino de gemas sube por ella
+                // Si hay una superficie transitable o arco de salto activo en esta cota, el camino ya fue cubierto arriba; saltar más allá
                 if (scheduler.TryGetSurfaceAt(nextGemDistance, out TraversableSurface surface))
                 {
-                    if (!populatedSurfaces.Contains(surface.StartZ))
-                    {
-                        populatedSurfaces.Add(surface.StartZ);
-                        SpawnSurfaceTrail(surface, spacing, scheduler);
-                    }
-                    nextGemDistance = surface.EndZ + 12f;
+                    nextGemDistance = Mathf.Ceil((surface.EndZ + 6.0f) / TrackScheduler.GridStep) * TrackScheduler.GridStep;
                     continue;
                 }
 
-                // 2. Si hay un arco parabólico de salto en esta cota, el único camino de gemas describe la parábola en el aire
                 if (scheduler.TryGetJumpArcAt(nextGemDistance, out JumpArcTrajectory jumpArc))
                 {
-                    if (!populatedArcs.Contains(jumpArc.StartZ))
-                    {
-                        populatedArcs.Add(jumpArc.StartZ);
-                        SpawnParabolicArc(jumpArc, scheduler);
-                    }
-                    nextGemDistance = jumpArc.EndZ + 12f;
+                    nextGemDistance = Mathf.Ceil((jumpArc.EndZ + 6.0f) / TrackScheduler.GridStep) * TrackScheduler.GridStep;
                     continue;
                 }
 
-                // 3. Generación en piso: exactamente un único camino de gemas siguiendo el carril seguro
+                // Generación de hilera de suelo en el carril seguro libre de obstáculos
                 int count = 4;
                 int safeLane = scheduler.GetSafeLaneAt(nextGemDistance, -1);
 
@@ -98,53 +105,67 @@ namespace Lotba.Game
 
                 for (int i = 0; i < count; i++)
                 {
-                    float z = nextGemDistance + i * spacing;
+                    float z = nextGemDistance + i * TrackScheduler.GridStep;
 
                     if (scheduler.IsGemForbiddenAt(z) || scheduler.IsLetterAt(z)) continue;
 
-                    // Si hay una superficie o arco de salto en cualquier carril a esta cota, no colocar gemas de piso para no duplicar caminos
+                    // Si se aproxima a una rampa o un arco de salto, cortar la hilera de suelo
                     if (scheduler.TryGetSurfaceAt(z, out _) || scheduler.TryGetJumpArcAt(z, out _)) break;
 
                     int gemLane = scheduler.GetSafeLaneAt(z, safeLane);
 
-                    // NUNCA generar una gema si hay cualquier obstáculo (incluso cajas pequeñas o conos) en ese carril y cota
-                    if (scheduler.HasObstacleAt(gemLane, z, 1.1f, 1.0f)) continue;
+                    // NUNCA generar una gema si hay cualquier obstáculo a nivel de suelo con margen de seguridad de grilla (1.5m)
+                    if (scheduler.HasObstacleAt(gemLane, z, 1.1f, 1.5f)) continue;
 
                     bool itemPink = isPink && (i == count - 1);
                     scheduler.EmitItem(TrackSpawnItem.CreateGem(gemLane, z, 1.1f, pink: itemPink));
                 }
 
-                float jitter = 1f + (float)(random.NextDouble() * 0.15 - 0.05);
-                float step = Mathf.Max(spacing * count + 14f, (gemInterval * jitter) / gemIntensity);
+                float jitter = 1f + (float)(random.NextDouble() * 0.10 - 0.05);
+                float rawStep = Mathf.Max(TrackScheduler.GridStep * count + 15f, (gemInterval * jitter) / gemIntensity);
+                float step = Mathf.Round(rawStep / TrackScheduler.GridStep) * TrackScheduler.GridStep;
                 nextGemDistance += step;
             }
         }
 
         private void SpawnParabolicArc(JumpArcTrajectory arc, TrackScheduler scheduler)
         {
-            // Coloca 5 o 6 gemas describiendo la parábola física en el aire
-            int gemCount = Mathf.Clamp(Mathf.RoundToInt(arc.Length / 2.8f), 3, 6);
-            for (int i = 0; i < gemCount; i++)
-            {
-                float t = (i + 1f) / (gemCount + 1f);
-                float z = arc.StartZ + t * arc.Length;
-                float height = arc.EvaluateHeight(z);
-                int lane = t < 0.5f ? arc.FromLane : arc.ToLane;
+            // Coloca gemas alineadas estrictamente a la grilla modular describiendo la trayectoria parabólica en el aire
+            int steps = Mathf.Max(2, Mathf.RoundToInt(arc.Length / TrackScheduler.GridStep));
+            bool isHurdleJump = Mathf.Abs(arc.StartHeight - arc.EndHeight) < 0.2f && arc.PeakHeight > arc.StartHeight + 0.5f;
 
-                scheduler.EmitItem(TrackSpawnItem.CreateGem(lane, z, height, airborneNote: i));
+            if (isHurdleJump)
+            {
+                // Salto de valla estándar: exactamente 5 puntos sobre la grilla (-6m, -3m, 0m centro obstáculo, +3m, +6m)
+                for (int i = 0; i <= steps; i++)
+                {
+                    float z = arc.StartZ + i * TrackScheduler.GridStep;
+                    float height = arc.EvaluateHeight(z);
+                    int lane = arc.FromLane;
+                    scheduler.EmitItem(TrackSpawnItem.CreateGem(lane, z, height, airborneNote: i));
+                }
+            }
+            else
+            {
+                // Descenso de techo / rampa hacia el piso
+                for (int i = 1; i <= steps; i++)
+                {
+                    float z = arc.StartZ + i * TrackScheduler.GridStep;
+                    float height = arc.EvaluateHeight(z);
+                    int lane = arc.EvaluateProgress(z) < 0.5f ? arc.FromLane : arc.ToLane;
+                    scheduler.EmitItem(TrackSpawnItem.CreateGem(lane, z, height, airborneNote: i));
+                }
             }
         }
 
         private void SpawnSurfaceTrail(TraversableSurface surface, float spacing, TrackScheduler scheduler)
         {
-            float start = surface.StartZ + 1.5f;
+            float start = Mathf.Ceil((surface.StartZ + 1.5f) / spacing) * spacing;
             float end = surface.EndZ - 1.5f;
             if (end <= start) return;
 
-            int count = Mathf.FloorToInt((end - start) / spacing);
-            for (int i = 0; i < count; i++)
+            for (float z = start; z <= end; z += spacing)
             {
-                float z = start + i * spacing;
                 float height = surface.HeightAt(z) + 1.1f;
                 scheduler.EmitItem(TrackSpawnItem.CreateGem(surface.Lane, z, height));
             }
