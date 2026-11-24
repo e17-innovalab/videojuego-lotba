@@ -21,6 +21,8 @@ namespace Lotba.Game
         private readonly List<JumpArcTrajectory> activeJumpArcs = new List<JumpArcTrajectory>(16);
         private readonly List<ObstacleBlock> activeBlocks = new List<ObstacleBlock>(64);
         private readonly List<TrackSpan> letterReservations = new List<TrackSpan>(8);
+        private readonly Dictionary<int, int> activeGemLaneBySlot = new Dictionary<int, int>(256);
+        private readonly List<int> gemSlotCleanupBuffer = new List<int>(32);
 
         public IReadOnlyList<TraversableSurface> ActiveSurfaces => activeSurfaces;
         public IReadOnlyList<JumpArcTrajectory> ActiveJumpArcs => activeJumpArcs;
@@ -65,6 +67,8 @@ namespace Lotba.Game
             activeJumpArcs.Clear();
             activeBlocks.Clear();
             letterReservations.Clear();
+            activeGemLaneBySlot.Clear();
+            gemSlotCleanupBuffer.Clear();
             recoveryStartDistance = -1f;
             recoveryEndDistance = -1f;
 
@@ -92,6 +96,11 @@ namespace Lotba.Game
                 if (z >= recoveryStartDistance - 2f && z <= recoveryEndDistance + 2f)
                     return true;
             }
+
+            // Si está dentro de una zona restringida (transiciones o reservas de pista), prohibir gemas comunes
+            if (IsZoneRestricted(z))
+                return true;
+
             return false;
         }
 
@@ -178,11 +187,11 @@ namespace Lotba.Game
             return false;
         }
 
-        public bool TryGetSurfaceAt(float z, out TraversableSurface foundSurface)
+        public bool TryGetSurfaceAt(float z, out TraversableSurface foundSurface, float padding = 3.0f)
         {
             for (int i = activeSurfaces.Count - 1; i >= 0; i--)
             {
-                if (activeSurfaces[i].ContainsZ(z))
+                if (z >= (activeSurfaces[i].StartZ - padding) && z <= (activeSurfaces[i].EndZ + padding))
                 {
                     foundSurface = activeSurfaces[i];
                     return true;
@@ -192,11 +201,11 @@ namespace Lotba.Game
             return false;
         }
 
-        public bool TryGetJumpArcAt(float z, out JumpArcTrajectory foundArc)
+        public bool TryGetJumpArcAt(float z, out JumpArcTrajectory foundArc, float padding = 3.0f)
         {
             for (int i = activeJumpArcs.Count - 1; i >= 0; i--)
             {
-                if (z >= activeJumpArcs[i].StartZ && z <= activeJumpArcs[i].EndZ)
+                if (z >= (activeJumpArcs[i].StartZ - padding) && z <= (activeJumpArcs[i].EndZ + padding))
                 {
                     foundArc = activeJumpArcs[i];
                     return true;
@@ -235,6 +244,24 @@ namespace Lotba.Game
 
         public void EmitItem(TrackSpawnItem item)
         {
+            // Garantía estricta de camino único: en una misma cota de pista Z NUNCA se permiten gemas en dos carriles distintos
+            if (item.Kind == RunnerWorld.ItemKind.Gem)
+            {
+                int slot = Mathf.RoundToInt(item.TrackDistance / GridStep);
+                if (activeGemLaneBySlot.TryGetValue(slot, out int existingLane))
+                {
+                    if (existingLane != item.Lane)
+                    {
+                        // Ya existe una gema activa en otro carril a esta misma cota Z; descartar para no crear gemas paralelas
+                        return;
+                    }
+                }
+                else
+                {
+                    activeGemLaneBySlot[slot] = item.Lane;
+                }
+            }
+
             if (world != null)
             {
                 world.MaterializeSpawnItem(item);
@@ -277,6 +304,18 @@ namespace Lotba.Game
                 if (activeBlocks[i].EndZ < cleanupZ) activeBlocks.RemoveAt(i);
             for (int i = letterReservations.Count - 1; i >= 0; i--)
                 if (letterReservations[i].End < cleanupZ) letterReservations.RemoveAt(i);
+
+            int minSlotToKeep = Mathf.FloorToInt(cleanupZ / GridStep);
+            gemSlotCleanupBuffer.Clear();
+            foreach (var kvp in activeGemLaneBySlot)
+            {
+                if (kvp.Key < minSlotToKeep)
+                    gemSlotCleanupBuffer.Add(kvp.Key);
+            }
+            for (int i = 0; i < gemSlotCleanupBuffer.Count; i++)
+            {
+                activeGemLaneBySlot.Remove(gemSlotCleanupBuffer[i]);
+            }
 
             // 1. Letras coleccionables ("HABLAR ES GANAR") y registro de sus reservas de despeje
             letterSpawner.Populate(context, this);

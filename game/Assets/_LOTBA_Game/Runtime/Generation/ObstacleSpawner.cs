@@ -304,21 +304,24 @@ namespace Lotba.Game
                 // 2. Colectivo 1 en 'lane'
                 float bus1EndZ = rampEndZ + busLength;
                 scheduler.EmitItem(TrackSpawnItem.CreateObstacle(lane, rampEndZ + busLength * 0.5f, bus));
-                scheduler.RegisterSurface(new TraversableSurface(lane, rampEndZ, bus1EndZ, busHeight, busHeight));
                 scheduler.RegisterObstacleBlock(lane, startZ, bus1EndZ + 2f, 0f, busHeight);
 
-                // 3. Colectivo 2 en 'neighborLane' (desfasado 2.5 metros adelante)
-                float bus2StartZ = rampEndZ + 2.5f;
+                // 3. Colectivo 2 en 'neighborLane' (desfasado 1 celda de grilla adelante)
+                float bridgeStartZ = rampEndZ + TrackScheduler.GridStep;
+                float bus2StartZ = bridgeStartZ;
                 float bus2EndZ = bus2StartZ + busLength;
                 scheduler.EmitItem(TrackSpawnItem.CreateObstacle(neighborLane, bus2StartZ + busLength * 0.5f, bus));
-                scheduler.RegisterSurface(new TraversableSurface(neighborLane, bus2StartZ, bus2EndZ, busHeight, busHeight));
                 scheduler.RegisterObstacleBlock(neighborLane, bus2StartZ, bus2EndZ + 2f, 0f, busHeight);
 
                 // 4. Plataforma de cruce lateral entre ambos techos
-                float bridgeStartZ = bus2StartZ;
                 float bridgeEndZ = bus1EndZ;
                 scheduler.CreateRoofBridge(lane, neighborLane, bridgeStartZ, bridgeEndZ, busHeight, bus);
-                scheduler.RegisterSurface(new TraversableSurface(neighborLane, bridgeStartZ, bridgeEndZ, busHeight, busHeight, RunnerWorld.LaneSpacing));
+
+                // ÚNICO camino de gemas continuo que guía al ciclista sin duplicación de carriles:
+                // Colectivo 1 en 'lane' hasta llegar al puente:
+                scheduler.RegisterSurface(new TraversableSurface(lane, rampEndZ, bridgeStartZ, busHeight, busHeight));
+                // Colectivo 2 en 'neighborLane' desde el puente hasta la bajada:
+                scheduler.RegisterSurface(new TraversableSurface(neighborLane, bridgeStartZ, bus2EndZ, busHeight, busHeight));
 
                 // 5. Descenso balístico al final del segundo colectivo en 'neighborLane'
                 float dropStartZ = bus2EndZ;
