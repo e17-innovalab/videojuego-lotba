@@ -41,7 +41,8 @@ namespace Lotba.Game
 
             while (nextObstacleDistance < context.SpawnHorizon)
             {
-                bool isRecovery = context.ActiveZone == ZoneType.Recovery || context.RecoveryActive;
+                bool isRecovery = (context.ActiveZone == ZoneType.Recovery || context.RecoveryActive) &&
+                                  (context.RecoveryZoneEnd <= 0f || nextObstacleDistance < context.RecoveryZoneEnd);
 
                 if (scheduler.IsObstacleForbiddenAt(nextObstacleDistance, isRecovery))
                 {
@@ -49,7 +50,9 @@ namespace Lotba.Game
                     continue;
                 }
 
-                if (isRecovery && context.RecoveryZoneEnd > 0f && nextObstacleDistance >= context.RecoveryZoneEnd - 25f)
+                if (isRecovery && context.RecoveryZoneEnd > 0f &&
+                    nextObstacleDistance >= context.RecoveryZoneEnd - 25f &&
+                    nextObstacleDistance < context.RecoveryZoneEnd + 36f)
                 {
                     // Mantener los últimos 25m de la zona de recupero libres para la aproximación y recolección de la gema dorada
                     nextObstacleDistance = context.RecoveryZoneEnd + 36f;

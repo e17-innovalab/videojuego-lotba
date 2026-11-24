@@ -1405,7 +1405,8 @@ namespace Lotba.Game
             if (kind == ItemKind.Gem && cameraSession != null && cameraSession.RecoveryActive) return null;
             float placementHalfLength = definition != null ? definition.Length * .5f + definition.ContactPadding : 0f;
             if (trackReservations.Blocks(riderDistance + z, placementHalfLength)) return null;
-            if (!plannedWindowContent && transitionPatternReservations.Blocks(riderDistance + z, placementHalfLength)) return null;
+            bool isRecovery = cameraSession != null && cameraSession.RecoveryActive;
+            if (!isRecovery && !plannedWindowContent && transitionPatternReservations.Blocks(riderDistance + z, placementHalfLength)) return null;
             TrackItem item = null;
             foreach (TrackItem candidate in items)
             {
