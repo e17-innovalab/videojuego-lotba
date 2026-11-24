@@ -27,7 +27,7 @@ namespace Lotba.Game
         public void Reset(int baseSeed)
         {
             random = new System.Random(baseSeed ^ 0x71F3);
-            nextGemDistance = 20f;
+            nextGemDistance = 12f;
             gemRowsSincePink = 0;
             populatedArcs.Clear();
             populatedSurfaces.Clear();
@@ -95,7 +95,9 @@ namespace Lotba.Game
                 float clusterEndZ = clusterStartZ + (count - 1) * TrackScheduler.GridStep;
 
                 // Seleccionar un ÚNICO carril seguro para TODO el cluster, libre de obstáculos con 6m de despeje
-                int clusterLane = scheduler.GetSafeLaneForSpan(clusterStartZ, clusterEndZ, preferredLane: -1, clearance: 6.0f);
+                // El primer cluster de la partida (antes de 30m) siempre arranca en el carril 1 (centro donde empieza el jugador)
+                int preferredLane = clusterStartZ < 30f ? 1 : -1;
+                int clusterLane = scheduler.GetSafeLaneForSpan(clusterStartZ, clusterEndZ, preferredLane: preferredLane, clearance: 6.0f);
 
                 // Si ningún carril tiene despeje continuo durante este tramo, avanzar a la siguiente celda
                 if (!scheduler.IsLaneClearOfObstacles(clusterLane, clusterStartZ - 6.0f, clusterEndZ + 6.0f))

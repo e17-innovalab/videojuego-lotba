@@ -162,5 +162,42 @@ namespace Lotba.Game.Editor
                 return false;
             }
         }
+
+        public static void FindCenterSeeds()
+        {
+            var matching = new List<int>();
+            for (int s = 1000; s <= 3000; s++)
+            {
+                var scheduler = new TrackScheduler();
+                scheduler.Initialize(null, s);
+                if (scheduler.GetCorridorLaneAt(0f) == 1 && scheduler.GetCorridorLaneAt(15f) == 1)
+                {
+                    matching.Add(s);
+                }
+            }
+            Debug.Log($"[TrackAudit] Semillas con carril inicial 1 (centro): {string.Join(", ", matching.GetRange(0, Math.Min(10, matching.Count)))}");
+        }
+
+        public static void AuditSeedStart()
+        {
+            var scheduler = new TrackScheduler();
+            scheduler.Initialize(null, 1001);
+            var emitted = new List<string>();
+            scheduler.ItemEmitted += item =>
+            {
+                if (item.TrackDistance <= 120f)
+                {
+                    emitted.Add($"{item.Kind} en Carril {item.Lane} a {item.TrackDistance:F1}m (H={item.Height:F1}m)");
+                }
+            };
+            var route = AssetDatabase.LoadAssetAtPath<RouteDefinition>("Assets/_LOTBA_Game/Maps/Routes/Definitions/Route_LaBocaToObelisco.asset");
+            var rules = ZoneRules.CreateDefault(ZoneType.Normal);
+            for (float dist = 0f; dist <= 120f; dist += 5f)
+            {
+                var context = new GenerationContext(dist, 26f, 1, 1, dist + 80f, ZoneType.Normal, rules, route, null, false, false, -1f, 1001);
+                scheduler.PopulateAhead(context);
+            }
+            Debug.Log($"[TrackAudit - Inicio Semilla 1001]:\n{string.Join("\n", emitted)}");
+        }
     }
 }

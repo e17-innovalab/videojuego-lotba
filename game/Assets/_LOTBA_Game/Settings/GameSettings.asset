@@ -88,7 +88,7 @@ MonoBehaviour:
   minimumPatternLookAhead: 58
   preparePatternsBeyondVisibility: 1
   patternVisibilityMargin: 20
-  seed: 2710
+  seed: 1001
   depthBendEnabled: 1
   depthBendShader: {fileID: 4800000, guid: 3741174ce89046758e917aa0726183b0, type: 3}
   depthBendStart: 25

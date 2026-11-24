@@ -91,7 +91,7 @@ namespace Lotba.Game
         [Tooltip("Prepare patterns beyond the linear fog or camera clipping distance.")]
         [SerializeField] private bool preparePatternsBeyondVisibility = true;
         [SerializeField, Min(0f)] private float patternVisibilityMargin = 20f;
-        [SerializeField] private int seed = 2710;
+        [SerializeField] private int seed = 1001;
         [Header("World bend by distance")]
         [SerializeField] private bool depthBendEnabled = true;
         [SerializeField] private Shader depthBendShader;

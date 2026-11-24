@@ -755,7 +755,6 @@ namespace Lotba.Game
                 return;
             }
 #endif
-            for (int i = 0; i < 4; i++) Place(ItemKind.Gem, 1, 10 + i * 3, 1.1f, pink: false);
 #if UNITY_EDITOR
             SpawnVehicleCourse();
 #endif
