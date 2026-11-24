@@ -28,6 +28,8 @@ MonoBehaviour:
   obstacleReactionSeconds: 1.1
   gemRowIntervalSeconds: 1.45
   gemCollectionIntervalSeconds: 0.12
+  aerialGemCollectionIntervalSeconds: 0.15
+  aerialLandingGemBufferMetres: 6
   singleBlockerWeight: 0.8
   corridorGateWeight: 0.2
   slalomWeight: 0

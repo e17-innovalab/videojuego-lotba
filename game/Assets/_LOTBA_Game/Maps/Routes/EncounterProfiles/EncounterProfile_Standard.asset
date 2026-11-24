@@ -18,6 +18,8 @@ MonoBehaviour:
   roofJumpExitChance: 0.35
   gemRowIntervalSeconds: 1.3
   gemCollectionIntervalSeconds: 0.12
+  aerialGemCollectionIntervalSeconds: 0.15
+  aerialLandingGemBufferMetres: 6
   gemInterval: 34
   gemThreads: 1
   gemsPerThread: 6

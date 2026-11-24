@@ -29,6 +29,11 @@ namespace Lotba.Game
         public float recoveryMetresPer1000Points = 8f;
         [Min(0f), Tooltip("Metros adicionales distribuidos según el avance de la ruta.")]
         public float recoveryProgressionMetres = 60f;
+        [Header("Precio automático de mejora")]
+        [Range(0f, 1f), Tooltip("Fracción de las gemas esperadas en la zona ofrecida que cuesta la mejora.")]
+        public float upgradeGemCostFraction = .8f;
+        [Min(1), Tooltip("El precio automático se redondea al múltiplo más cercano de este valor.")]
+        public int upgradeGemCostRounding = 10;
         [Min(0f), Tooltip("Tramo sin obstáculos ni coleccionables después del desafío, para recuperar el ritmo y leer la siguiente señal.")]
         public float recoveryExitBreathMetres = 60f;
         [Min(1)] public int purchasedGemMultiplier = 2;
@@ -60,6 +65,31 @@ namespace Lotba.Game
             float maximum = Mathf.Max(minimum, maximumTransitionExitPatternMetres);
             float distance = Mathf.Max(0f, speed) * Mathf.Max(0f, transitionExitPatternSeconds);
             return Mathf.Clamp(distance, minimum, maximum);
+        }
+
+        public int UpgradeCostFor(RouteDefinition route, int offerSection, int decisionSection, bool automatic)
+        {
+            if (!automatic) return route.Sections[offerSection].SpeedUpgradeCost;
+
+            // A transition can inherit its offer from the previous zone. In that case
+            // estimate collectable gems from that zone's actual length and encounter profile.
+            int gemSection = offerSection;
+            if (route.Sections[decisionSection].Transition)
+            {
+                gemSection = decisionSection - 1;
+                while (gemSection >= 0 && route.Sections[gemSection].Transition) gemSection--;
+            }
+            if (gemSection < 0) return 0;
+            RouteSection source = route.Sections[gemSection];
+            if (source.SpeedUpgradeCost > 0) return source.SpeedUpgradeCost;
+            float length = source.ModuleCount * RoadStandard.ModuleLength;
+            if (length <= 0f) return 0;
+            EncounterProfile profile = source.EncounterProfile;
+            float density = profile != null ? profile.ExpectedGemsPerMetre : .12f;
+            float expectedGems = length * Mathf.Max(0f, density);
+            float rawCost = expectedGems * Mathf.Clamp01(upgradeGemCostFraction);
+            int rounding = Mathf.Max(1, upgradeGemCostRounding);
+            return rawCost <= 0f ? 0 : Mathf.Max(rounding, Mathf.RoundToInt(rawCost / rounding) * rounding);
         }
     }
 
@@ -99,9 +129,12 @@ namespace Lotba.Game
                     if (stop - entry >= 4f && (route.FinishDistance <= 0f || exit + 12f < route.FinishDistance))
                     {
                         var upgrade = route.SpeedOfferAt(i);
+                        int offerIndex = section.Transition && section.SpeedUpgradeCost == 0 && i > 0 ? i - 1 : i;
+                        int cost = settings.UpgradeCostFor(route, offerIndex, i,
+                            section.SpeedUpgradeCost == 0 && upgrade.SpeedUpgradeCost == 0);
                         result.Add(new SectionTransitionPlan(i, stop, new TrackSpan(entry, exit),
                             entry,
-                            deceleration, upgrade.SpeedUpgradeCost, upgrade.SpeedUpgradeMetresPerSecond));
+                            deceleration, cost, upgrade.SpeedUpgradeMetresPerSecond));
                         previousExit = exit;
                     }
                 }

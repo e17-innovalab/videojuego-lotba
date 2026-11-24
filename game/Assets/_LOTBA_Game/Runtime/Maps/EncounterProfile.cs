@@ -72,6 +72,10 @@ namespace Lotba.Game
         private float gemRowIntervalSeconds = 1.35f;
         [SerializeField, Min(.01f), Tooltip("Tiempo mínimo entre gemas de una hilera; el espacio crece con la velocidad de la partida.")]
         private float gemCollectionIntervalSeconds = .12f;
+        [SerializeField, Min(.01f), Tooltip("Separación temporal entre gemas aéreas y de techos; da margen para aterrizar y cambiar de carril.")]
+        private float aerialGemCollectionIntervalSeconds = .15f;
+        [SerializeField, Min(0f), Tooltip("Distancia después del aterrizaje antes de la primera gema sobre el techo destino.")]
+        private float aerialLandingGemBufferMetres = 6f;
         [SerializeField, Min(20f), Tooltip("Distancia base entre letras coleccionables.")]
         private float letterInterval = 100f;
         [SerializeField, Range(0f, .5f), Tooltip("Variación proporcional de la distancia entre letras.")]
@@ -104,6 +108,17 @@ namespace Lotba.Game
         public int GemsPerThread => Mathf.Clamp(gemsPerThread, 1, 12);
         public float GemSpacing => Mathf.Max(.5f, gemSpacing);
         public float GemInterval => Mathf.Max(4f, gemInterval);
+        /// <summary>Expected common gems per metre, estimated from rows, threads, row length and spacing.</summary>
+        public float ExpectedGemsPerMetre
+        {
+            get
+            {
+                float collectionSpacing = Mathf.Max(GemSpacing, 35f * GemCollectionIntervalSeconds);
+                float rowLength = Mathf.Max(0f, GemsPerThread - 1) * collectionSpacing;
+                float rowInterval = Mathf.Max(GemInterval, 35f * GemRowIntervalSeconds);
+                return GemThreads * GemsPerThread / Mathf.Max(1f, rowInterval + rowLength);
+            }
+        }
         public int PinkGemEveryRows => pinkGemEveryRows;
         public int PinkMiniRowCount => Mathf.Clamp(pinkMiniRowCount, 2, 5);
         public float PinkGemMinimumSpacing => Mathf.Max(0f, pinkGemMinimumSpacing);
@@ -128,6 +143,8 @@ namespace Lotba.Game
             advancedRoofJumpExitChance, DifficultyT(progress));
         public float GemRowIntervalSeconds => Mathf.Max(.1f, gemRowIntervalSeconds);
         public float GemCollectionIntervalSeconds => Mathf.Max(.01f, gemCollectionIntervalSeconds);
+        public float AerialGemCollectionIntervalSeconds => Mathf.Max(.01f, aerialGemCollectionIntervalSeconds);
+        public float AerialLandingGemBufferMetres => Mathf.Max(0f, aerialLandingGemBufferMetres);
         public float LetterInterval => Mathf.Max(20f, letterInterval);
         public float LetterIntervalVariation => Mathf.Clamp01(letterIntervalVariation);
         public float ExtraObstacleChance => extraObstacleChance;

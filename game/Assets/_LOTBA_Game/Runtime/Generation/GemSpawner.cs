@@ -50,11 +50,9 @@ namespace Lotba.Game
                 if (surface.StartZ < context.SpawnHorizon && populatedSurfaces.Add(surface.StartZ))
                 {
                     EncounterProfile surfaceProfile = context.ProfileAt(surface.StartZ);
-                    float collectionSpacing = surfaceProfile != null
-                        ? Mathf.Max(TrackScheduler.GridStep, surfaceProfile.GemSpacing,
-                            context.Speed * surfaceProfile.GemCollectionIntervalSeconds)
-                        : Mathf.Max(TrackScheduler.GridStep, context.Speed * .12f);
-                    SpawnSurfaceTrail(surface, collectionSpacing, scheduler);
+                    float collectionSpacing = GemPathPlanner.ElevatedSpacing(context.Speed, surfaceProfile);
+                    float landingBuffer = surfaceProfile != null ? surfaceProfile.AerialLandingGemBufferMetres : 6f;
+                    SpawnSurfaceTrail(surface, collectionSpacing, landingBuffer, scheduler);
                 }
             }
 
@@ -65,10 +63,7 @@ namespace Lotba.Game
                 if (arc.StartZ < context.SpawnHorizon && populatedArcs.Add(arc.StartZ))
                 {
                     EncounterProfile arcProfile = context.ProfileAt(arc.StartZ);
-                    float collectionSpacing = arcProfile != null
-                        ? Mathf.Max(TrackScheduler.GridStep, arcProfile.GemSpacing,
-                            context.Speed * arcProfile.GemCollectionIntervalSeconds)
-                        : Mathf.Max(TrackScheduler.GridStep, context.Speed * .12f);
+                    float collectionSpacing = GemPathPlanner.ElevatedSpacing(context.Speed, arcProfile);
                     SpawnParabolicArc(arc, scheduler, collectionSpacing);
                 }
             }
@@ -202,9 +197,9 @@ namespace Lotba.Game
             }
         }
 
-        private void SpawnSurfaceTrail(TraversableSurface surface, float spacing, TrackScheduler scheduler)
+        private void SpawnSurfaceTrail(TraversableSurface surface, float spacing, float landingBuffer, TrackScheduler scheduler)
         {
-            float start = Mathf.Ceil((surface.StartZ + 1.5f) / spacing) * spacing;
+            float start = GemPathPlanner.FirstSurfaceGem(surface, scheduler.ActiveJumpArcs, spacing, landingBuffer);
             float end = surface.EndZ - 1.5f;
             if (end <= start) return;
 

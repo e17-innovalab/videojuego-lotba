@@ -19,6 +19,8 @@ MonoBehaviour:
   obstacleReactionSeconds: 1
   gemRowIntervalSeconds: 1.35
   gemCollectionIntervalSeconds: 0.12
+  aerialGemCollectionIntervalSeconds: 0.15
+  aerialLandingGemBufferMetres: 6
   gemThreads: 1
   gemsPerThread: 2
   gemSpacing: 2.5

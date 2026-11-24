@@ -31,6 +31,19 @@ namespace Lotba.Game
 
             while (nextLetterDistance < context.SpawnHorizon)
             {
+                if (context.Route != null && !context.Route.AllowLettersAt(nextLetterDistance))
+                {
+                    float sectionEnd = context.Route.SectionEndDistanceAt(nextLetterDistance);
+                    if (float.IsInfinity(sectionEnd))
+                    {
+                        nextLetterDistance = float.PositiveInfinity;
+                        return;
+                    }
+
+                    nextLetterDistance = sectionEnd + TrackScheduler.GridStep;
+                    continue;
+                }
+
                 EncounterProfile profile = context.ProfileAt(nextLetterDistance);
                 float letterInterval = profile != null ? profile.LetterInterval : 100f;
                 float intervalVariation = profile != null ? profile.LetterIntervalVariation : .1f;

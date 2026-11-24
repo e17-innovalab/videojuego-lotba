@@ -27,6 +27,8 @@ MonoBehaviour:
     recoveryMetresPer100Gems: 8
     recoveryMetresPer1000Points: 8
     recoveryProgressionMetres: 60
+    upgradeGemCostFraction: 0.8
+    upgradeGemCostRounding: 10
     recoveryExitBreathMetres: 60
     purchasedGemMultiplier: 2
     purchasedPointMultiplier: 2
