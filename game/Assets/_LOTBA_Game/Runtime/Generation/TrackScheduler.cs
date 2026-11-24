@@ -26,6 +26,7 @@ namespace Lotba.Game
 
         public IReadOnlyList<TraversableSurface> ActiveSurfaces => activeSurfaces;
         public IReadOnlyList<JumpArcTrajectory> ActiveJumpArcs => activeJumpArcs;
+        public event Action<TrackSpawnItem> ItemEmitted;
 
         private RunnerWorld world;
         private float recoveryStartDistance = -1f;
@@ -298,6 +299,13 @@ namespace Lotba.Game
             // Garantía estricta de camino único: en una misma cota de pista Z NUNCA se permiten gemas en dos carriles distintos
             if (item.Kind == RunnerWorld.ItemKind.Gem)
             {
+                // Verificación de colisión estricta con obstáculos físicos
+                if (item.Height <= 1.5f && HasObstacleAt(item.Lane, item.TrackDistance, item.Height, padding: 2.0f))
+                {
+                    Debug.LogWarning($"[LOTBA-AUDIT] Gema de piso en carril {item.Lane} a {item.TrackDistance:F1}m rechazada porque coincide con un obstáculo físico.");
+                    return;
+                }
+
                 int slot = Mathf.RoundToInt(item.TrackDistance / GridStep);
                 if (activeGemLaneBySlot.TryGetValue(slot, out int existingLane))
                 {
@@ -312,6 +320,8 @@ namespace Lotba.Game
                     activeGemLaneBySlot[slot] = item.Lane;
                 }
             }
+
+            ItemEmitted?.Invoke(item);
 
             if (world != null)
             {
@@ -368,11 +378,15 @@ namespace Lotba.Game
                 activeGemLaneBySlot.Remove(gemSlotCleanupBuffer[i]);
             }
 
+            // CRÍTICO: Geometría física (letras y obstáculos) SIEMPRE se genera con un horizonte adelantado (+48m).
+            // De este modo, la pista física está 100% resuelta y sellada antes de que el GemSpawner intente trazar el camino.
+            var geometryContext = context.WithHorizon(context.SpawnHorizon + 48f);
+
             // 1. Letras coleccionables ("HABLAR ES GANAR") y registro de sus reservas de despeje
-            letterSpawner.Populate(context, this);
+            letterSpawner.Populate(geometryContext, this);
 
             // 2. Geometría (Obstáculos, Colectivos, Superficies) respetando reservas
-            obstacleSpawner.Populate(context, this);
+            obstacleSpawner.Populate(geometryContext, this);
 
             // 3. Gemas (montadas sobre superficies, arcos de salto o en camino libre)
             gemSpawner.Populate(context, this);

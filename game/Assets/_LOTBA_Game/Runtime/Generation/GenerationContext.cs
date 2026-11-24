@@ -55,5 +55,10 @@ namespace Lotba.Game
             ObstacleIntensity = obstacleIntensity;
             GemIntensity = gemIntensity;
         }
+
+        public GenerationContext WithHorizon(float newHorizon) => new GenerationContext(
+            Distance, Speed, CurrentLane, SafeLane, newHorizon, ActiveZone, Rules, Route,
+            Profile, PinkGemsUnlocked, RecoveryActive, RecoveryZoneEnd, Seed, ObstacleIntensity, GemIntensity
+        );
     }
 }

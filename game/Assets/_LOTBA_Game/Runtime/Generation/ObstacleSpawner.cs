@@ -234,20 +234,20 @@ namespace Lotba.Game
             scheduler.EmitItem(TrackSpawnItem.CreateObstacle(safeLane, z, lowObstacle));
             scheduler.RegisterObstacleBlock(safeLane, z - obsHalf, z + obsHalf, 0f, lowObstacle.Height);
 
-            // Arco parabólico físico que coincide exactamente con el salto de la bici: 1.1m -> 2.65m -> 1.1m
-            // Abarca 4 pasos de grilla (12m de z - 6m a z + 6m):
-            // z - 6 (suelo), z - 3 (ascenso), z (pico sobre el obstáculo), z + 3 (descenso), z + 6 (suelo)
+            // Arco parabólico físico que coincide exactamente con el salto de la bici:
+            // La bici salta durante 0.72s a ~25-26 m/s = 18 metros de longitud total de salto.
+            // Inicia en z - 9.0m, alcanza el ápice (2.85m) en z (sobre el obstáculo), y aterriza en z + 9.0m.
             scheduler.RegisterJumpArc(new JumpArcTrajectory(
                 fromLane: safeLane,
                 toLane: safeLane,
-                startZ: z - 6.0f,
-                endZ: z + 6.0f,
+                startZ: z - 9.0f,
+                endZ: z + 9.0f,
                 startHeight: 1.1f,
-                peakHeight: 2.65f,
+                peakHeight: 2.85f,
                 endHeight: 1.1f
             ));
 
-            float maxEndZ = z + 6.0f;
+            float maxEndZ = z + 9.0f;
 
             // Ocasionalmente bloquea un carril vecino para enmarcar el salto
             if (random.NextDouble() < 0.45)

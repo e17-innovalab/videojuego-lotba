@@ -357,6 +357,8 @@ namespace Lotba.Game
             if (boostSpeedLines != null) boostSpeedLines.Render(settings, session, showBoostLines);
             RenderWordBanner(running);
             RenderPinkGemStreak(session, running);
+            if (developmentLabel != null && active)
+                developmentLabel.text = $"{GameIdentity.DevelopmentLabel} · {Mathf.FloorToInt(session.Distance)}m (Semilla {settings.Seed})";
             pause.interactable = !SettingsOpen && !session.OfferPending;
             if (speedOffer != null)
             {

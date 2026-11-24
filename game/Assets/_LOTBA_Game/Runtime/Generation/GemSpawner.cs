@@ -142,8 +142,11 @@ namespace Lotba.Game
 
             if (isHurdleJump)
             {
-                // Salto de valla estándar: exactamente 5 puntos sobre la grilla (-6m, -3m, 0m centro obstáculo, +3m, +6m)
-                for (int i = 0; i <= steps; i++)
+                // Salto de valla estándar de 18m (6 pasos de grilla):
+                // Inicia en arc.StartZ (z - 9m) y termina en arc.EndZ (z + 9m).
+                // A los extremos (i = 0 y i = steps) el ciclista está en suelo (1.1m).
+                // Colocamos las 5 gemas aéreas (i = 1 a steps - 1) que coinciden exactamente con la altura del ciclista en el aire:
+                for (int i = 1; i < steps; i++)
                 {
                     float z = arc.StartZ + i * TrackScheduler.GridStep;
                     float height = arc.EvaluateHeight(z);

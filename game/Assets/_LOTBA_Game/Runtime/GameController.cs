@@ -133,7 +133,13 @@ namespace Lotba.Game
                 if (pauseRequested)
                 {
                     if (session.State == RunState.Paused) { session.Resume(); }
-                    else { session.Pause(); audioFeedback.Stop(); devices.CancelFeedback(); }
+                    else
+                    {
+                        session.Pause();
+                        audioFeedback.Stop();
+                        devices.CancelFeedback();
+                        Debug.Log($"[PAUSA] Metro: {session.Distance:F1}m · Semilla: {settings.Seed} · Velocidad: {session.Speed:F1}m/s");
+                    }
                 }
                 if (speedChoiceRequested.HasValue)
                 {
