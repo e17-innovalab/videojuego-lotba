@@ -81,6 +81,8 @@ MonoBehaviour:
   enableRecoveryFog: 0
   recoveryCurtainPrefab: {fileID: 4904403769921249031, guid: a5f95583c13225049a16ec99428ce6ff, type: 3}
   recoveryGemPrefab: {fileID: 1720567491562502469, guid: 6f3ba9bce064ebe41a45d0aa54cc01c0, type: 3}
+  recoveryGemPreviewDistance: 60
+  recoveryGemChaseHeight: 6
   recoveryCelebrationPrefab: {fileID: 4567754396485161988, guid: a4e2489ae5caffb48997f9a389a78229, type: 3}
   recoveryMissPrefab: {fileID: 4131392718214520758, guid: ba9c9d3c9da486840aaebb3bb8b837d3, type: 3}
   recoveryFogDifficulty:

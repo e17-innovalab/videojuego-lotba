@@ -24,22 +24,13 @@ namespace Lotba.Game
 
         [Header("Recovery · Gem")]
         private RecoveryGemView recoveryGemInstance;
+        private RecoveryGemView recoveryGemPreviewInstance;
         private int activeRecoveryGemAttempt = -1;
         private float recoveryGemLaneX;
+        private float recoveryGemTargetHeight = 1.2f;
         private bool recoveryGemResolved;
+        private bool recoveryGemPreviewApproachingDestination;
         private System.Random recoveryGemRandom = new System.Random(2710);
-
-        // Day environment references & captured defaults
-        private Light sunLight;
-        private float daySunIntensity = 0.9f;
-        private Color daySunColor = Color.white;
-        private Color dayAmbientColor = new Color(0.65f, 0.70f, 0.75f, 1f);
-        // Night environment targets (violeta noche estilizado y con buena visibilidad)
-        private readonly Color nightAmbientColor = new Color(0.40f, 0.30f, 0.55f, 1f);
-        private readonly Color nightSunColor = new Color(0.70f, 0.55f, 0.95f, 1f);
-        private const float nightSunIntensity = 0.45f;
-
-        private bool environmentCaptured;
 
         public void RenderRecoveryCurtain(RunSession session)
         {
@@ -56,58 +47,9 @@ namespace Lotba.Game
                 : prefab.AuthoredDistanceZ;
         }
 
-        private void CaptureEnvironment()
-        {
-            if (environmentCaptured) return;
-            dayAmbientColor = RenderSettings.ambientLight;
-            var sunGo = GameObject.Find("Sun");
-            if (sunGo != null)
-            {
-                sunLight = sunGo.GetComponent<Light>();
-                if (sunLight != null)
-                {
-                    daySunIntensity = sunLight.intensity;
-                    daySunColor = sunLight.color;
-                }
-            }
-            environmentCaptured = true;
-        }
-
-        private void RestoreDayEnvironment()
-        {
-            if (!environmentCaptured) return;
-            RenderSettings.ambientLight = dayAmbientColor;
-            if (sunLight != null)
-            {
-                sunLight.intensity = daySunIntensity;
-                sunLight.color = daySunColor;
-            }
-        }
-
-        private void UpdateRecoveryEnvironment(RunSession session)
-        {
-            CaptureEnvironment();
-
-            bool isNight = session != null && session.State == RunState.Running && session.RecoveryActive;
-            float lerpSpeed = Time.unscaledDeltaTime * 3.5f;
-
-            Color targetAmbient = isNight ? nightAmbientColor : dayAmbientColor;
-            float targetSunIntensity = isNight ? nightSunIntensity : daySunIntensity;
-            Color targetSunColor = isNight ? nightSunColor : daySunColor;
-
-            RenderSettings.ambientLight = Color.Lerp(RenderSettings.ambientLight, targetAmbient, lerpSpeed);
-
-            if (sunLight != null)
-            {
-                sunLight.intensity = Mathf.Lerp(sunLight.intensity, targetSunIntensity, lerpSpeed);
-                sunLight.color = Color.Lerp(sunLight.color, targetSunColor, lerpSpeed);
-            }
-        }
-
         private void UpdateRecoveryCurtainPresentation()
         {
             var session = curtainSession;
-            UpdateRecoveryEnvironment(session);
             if (session == null) return;
             bool active = session.State == RunState.Running && session.RecoveryActive && settings.EnableRecoveryFog;
             if (active && recoveryCurtain == null)
@@ -160,14 +102,39 @@ namespace Lotba.Game
 
                         // Position near the end of the recovery track (15 m before the end)
                         float remainingDistance = Mathf.Max(25f, (session.RecoveryChallengeEnd - session.Distance) - 15f);
-                        recoveryGemInstance.transform.localPosition = new Vector3(recoveryGemLaneX, 1.2f, remainingDistance);
+                        recoveryGemTargetHeight = 1.2f;
+                        float targetWorldDistance = session.Distance + remainingDistance;
+                        if (trackScheduler.TryGetSurfaceAt(targetWorldDistance, out TraversableSurface surface, 0f) &&
+                            !surface.IsRamp && surface.HighHeight > .5f)
+                        {
+                            recoveryGemLaneX = (surface.Lane - 1) * LaneSpacing;
+                            recoveryGemTargetHeight = surface.HeightAt(targetWorldDistance) + 1.2f;
+                        }
+                        recoveryGemInstance.transform.localPosition = new Vector3(recoveryGemLaneX, recoveryGemTargetHeight, remainingDistance);
                         recoveryGemInstance.ResetGem();
+                        bool targetVisible = remainingDistance <= settings.RecoveryGemPreviewDistance;
+                        recoveryGemInstance.SetVisualVisible(targetVisible);
+                        if (!targetVisible)
+                        {
+                            if (recoveryGemPreviewInstance == null)
+                                recoveryGemPreviewInstance = Instantiate(settings.RecoveryGemPrefab, transform, false);
+                            recoveryGemPreviewInstance.ResetGem();
+                            recoveryGemPreviewInstance.ConfigurePursuit(rider, recoveryGemInstance.transform,
+                                settings.RecoveryGemPreviewDistance, settings.RecoveryGemChaseHeight);
+                            recoveryGemPreviewInstance.PlayIntro();
+                            recoveryGemPreviewApproachingDestination = false;
+                        }
+                        else if (recoveryGemPreviewInstance != null)
+                        {
+                            HideRecoveryGemPreview();
+                        }
                     }
                 }
             }
-            else if (!session.RecoveryActive && recoveryGemInstance != null && recoveryGemInstance.gameObject.activeSelf)
+            else if (!session.RecoveryActive)
             {
-                recoveryGemInstance.gameObject.SetActive(false);
+                if (recoveryGemInstance != null) recoveryGemInstance.gameObject.SetActive(false);
+                HideRecoveryGemPreview();
             }
 
             if (recoveryGemInstance == null || !recoveryGemInstance.gameObject.activeSelf || recoveryGemResolved)
@@ -176,10 +143,34 @@ namespace Lotba.Game
             Vector3 currentPos = recoveryGemInstance.transform.localPosition;
             float nextZ = currentPos.z - travel;
 
+            if (recoveryGemPreviewInstance != null && recoveryGemPreviewInstance.gameObject.activeSelf)
+            {
+                if (nextZ <= settings.RecoveryGemPreviewDistance)
+                {
+                    recoveryGemInstance.transform.localPosition = new Vector3(recoveryGemLaneX, recoveryGemTargetHeight, nextZ);
+                    if (!recoveryGemPreviewApproachingDestination)
+                    {
+                        recoveryGemPreviewInstance.BeginFinalApproach();
+                        recoveryGemPreviewApproachingDestination = true;
+                    }
+                    recoveryGemPreviewInstance.Step(dt, session.Elapsed);
+                    if (recoveryGemPreviewInstance.IsAtDestination)
+                    {
+                        HideRecoveryGemPreview();
+                        recoveryGemInstance.SetVisualVisible(true);
+                    }
+                }
+                else
+                {
+                    recoveryGemPreviewInstance.Step(dt, session.Elapsed);
+                }
+            }
+
             if (nextZ >= 0f)
             {
-                recoveryGemInstance.transform.localPosition = new Vector3(recoveryGemLaneX, 1.2f, nextZ);
-                recoveryGemInstance.Step(dt, session.Elapsed);
+                recoveryGemInstance.transform.localPosition = new Vector3(recoveryGemLaneX, recoveryGemTargetHeight, nextZ);
+                if (recoveryGemInstance.gameObject.activeSelf)
+                    recoveryGemInstance.Step(dt, session.Elapsed);
                 return;
             }
 
@@ -190,19 +181,21 @@ namespace Lotba.Game
             float riderHeight = step.HeightAt(fraction);
 
             bool inLane = Mathf.Abs(recoveryGemLaneX - riderX) < 0.85f;
-            bool canCollect = JumpArc.CanCollect(riderHeight, 1.2f);
+            bool canCollect = JumpArc.CanCollect(riderHeight, recoveryGemTargetHeight);
 
             if (inLane && canCollect)
             {
                 session.CollectRecoveryGem();
                 recoveryGemInstance.OnCollected();
-                EmitPickupFlash(transform.TransformPoint(new Vector3(recoveryGemLaneX, 1.2f, 0f)), settings.GemFlash);
+                HideRecoveryGemPreview();
+                EmitPickupFlash(transform.TransformPoint(new Vector3(recoveryGemLaneX, recoveryGemTargetHeight, 0f)), settings.GemFlash);
                 GemFeedback?.Invoke(0, session.CanActivateTurbo);
             }
             else
             {
                 session.MissRecoveryGem();
                 recoveryGemInstance.OnMissed();
+                HideRecoveryGemPreview();
             }
         }
 
@@ -210,17 +203,22 @@ namespace Lotba.Game
         {
             activeRecoveryGemAttempt = -1;
             recoveryGemResolved = false;
+            recoveryGemPreviewApproachingDestination = false;
             if (recoveryGemInstance != null)
             {
                 recoveryGemInstance.gameObject.SetActive(false);
             }
+            HideRecoveryGemPreview();
             trackScheduler?.NotifyRecoveryExited();
-            RestoreDayEnvironment();
         }
 
-        private void OnDisable()
+        private void HideRecoveryGemPreview()
         {
-            RestoreDayEnvironment();
+            if (recoveryGemPreviewInstance == null) return;
+            recoveryGemPreviewInstance.SetVisualVisible(false);
+            recoveryGemPreviewInstance.gameObject.SetActive(false);
+            recoveryGemPreviewApproachingDestination = false;
         }
+
     }
 }

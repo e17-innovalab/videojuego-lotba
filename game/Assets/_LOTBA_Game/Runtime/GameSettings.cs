@@ -78,6 +78,12 @@ namespace Lotba.Game
         public RecoveryCurtain RecoveryCurtainPrefab => recoveryCurtainPrefab;
         [SerializeField] private RecoveryGemView recoveryGemPrefab;
         public RecoveryGemView RecoveryGemPrefab => recoveryGemPrefab;
+        [SerializeField, Min(10f), Tooltip("Distancia visible de la señal dorada; la gema real toma el relevo aquí sin alterar el final del recupero.")]
+        private float recoveryGemPreviewDistance = 60f;
+        public float RecoveryGemPreviewDistance => Mathf.Max(10f, recoveryGemPreviewDistance);
+        [SerializeField, Min(0f), Tooltip("Altura de persecución de la señal dorada antes de que baje hasta la gema recolectable.")]
+        private float recoveryGemChaseHeight = 6f;
+        public float RecoveryGemChaseHeight => Mathf.Max(0f, recoveryGemChaseHeight);
         [SerializeField] private RecoveryCelebrationView recoveryCelebrationPrefab;
         public RecoveryCelebrationView RecoveryCelebrationPrefab => recoveryCelebrationPrefab;
         [SerializeField] private RecoveryMissView recoveryMissPrefab;
