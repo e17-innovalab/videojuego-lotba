@@ -51,7 +51,7 @@ namespace Lotba.Game
     [Serializable]
     public sealed class RecoveryCollisionPolicy
     {
-        [UnityEngine.Range(0f, 1f)] public float pointFraction = .25f;
+        [UnityEngine.Range(0f, 1f)] public float pointFraction = .5f;
         [UnityEngine.Min(0)] public int minimumPointLoss = 50;
         [UnityEngine.Range(0f, 1f)] public float gemFraction = .5f;
         public ResourceAmount Loss(long points, int gems) => new ResourceAmount(

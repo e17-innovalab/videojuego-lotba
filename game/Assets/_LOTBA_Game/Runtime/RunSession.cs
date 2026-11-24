@@ -245,9 +245,9 @@ namespace Lotba.Game
             PinkGemStreak = 0;
             turbo.ClearCharge();
             bool duringBoost = BoostActive;
-            int divisor = duringBoost ? 2 : 4;
+            int divisor = 2; // Pérdida del 50% de las gemas
             int gemLoss = GemBalance / divisor + (GemBalance % divisor == 0 ? 0 : 1);
-            long loss = duringBoost ? 0 : Math.Min(Score, Math.Max(50L, Score / 4));
+            long loss = duringBoost ? 0 : Math.Min(Score, Math.Max(50L, Score / 2)); // Pérdida del 50% de los puntos
             bool inRecovery = RecoveryActive;
             if (inRecovery)
             {

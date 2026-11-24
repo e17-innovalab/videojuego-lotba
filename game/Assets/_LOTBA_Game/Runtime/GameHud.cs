@@ -268,7 +268,7 @@ namespace Lotba.Game
             if (pinkGemBadge != null)
             {
                 int multiplier = session.ScoreMultiplier;
-                pinkGemBadge.gameObject.SetActive(visible && (session.PinkGemsUnlocked || session.PinkGemStreak > 0));
+                pinkGemBadge.gameObject.SetActive(visible && session.PinkGemStreak > 0);
                 if (displayedPinkGemMultiplier != multiplier)
                 {
                     displayedPinkGemMultiplier = multiplier;
