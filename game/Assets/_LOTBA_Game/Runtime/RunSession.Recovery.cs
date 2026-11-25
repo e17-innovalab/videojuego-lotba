@@ -33,19 +33,20 @@ namespace Lotba.Game
         public int RecoveryOffers { get; private set; }
         public int RecoveryUnavailable { get; private set; }
         public int RecoveryOffersClosed { get; private set; }
-        public bool HasRecoveryLoss => (lossLedger != null && lossLedger.HasLoss) || RecoveryLoss > 0 || RecoveryPointLoss > 0;
-        public int PendingRecoveryGems => lossLedger != null && lossLedger.HasLoss ? lossLedger.PendingGems : RecoveryAmount;
-        public long PendingRecoveryPoints => lossLedger != null && lossLedger.HasLoss ? lossLedger.PendingPoints : RecoveryPointAmount;
+        public bool HasRecoveryLoss => lossLedger.HasLossIn(RecoverySourceSection);
+        public int PendingRecoveryGems => lossLedger.PendingGemsIn(RecoverySourceSection);
+        public long PendingRecoveryPoints => lossLedger.PendingPointsIn(RecoverySourceSection);
 
         internal void AddLossToLedger(long lostPoints, int lostGems, int sequence)
         {
             if (RecoveryActive || recoveryFork.Active) return;
-            lossLedger.Add(lostPoints, lostGems, sequence);
+            lossLedger.Add(lostPoints, lostGems, sequence, telemetrySection);
         }
 
         private void ScheduleRecoveryFork()
         {
-            var loss = lossLedger.Consume(out int[] lossSequences);
+            int sourceSection = RecoverySourceSection;
+            var loss = lossLedger.Consume(sourceSection, out int[] lossSequences);
             RecoveryLoss = loss.Gems; RecoveryPointLoss = loss.Points;
             RecoveryAmount = loss.Gems;
             RecoveryPointAmount = loss.Points;
@@ -59,7 +60,8 @@ namespace Lotba.Game
                 RecoveryUnavailable++;
                 recoveryOpportunity = new RunRecoveryOpportunity
                 {
-                    offerId = "offer-" + DecisionsShown, section = telemetrySection,
+                    offerId = "offer-" + DecisionsShown, section = sourceSection,
+                    decisionNumber = DecisionsShown,
                     eligiblePoints = loss.Points, eligibleGems = loss.Gems,
                     eligibleLossSequences = lossSequences,
                     offeredPoints = RecoveryPointAmount, offeredGems = RecoveryAmount,
@@ -76,7 +78,8 @@ namespace Lotba.Game
             recoveryZoneEnd = recoveryChallengeEnd + Math.Max(0f, transitionSettings.recoveryExitBreathMetres);
             recoveryOpportunity = new RunRecoveryOpportunity
             {
-                offerId = "offer-" + DecisionsShown, section = telemetrySection,
+                offerId = "offer-" + DecisionsShown, section = sourceSection,
+                decisionNumber = DecisionsShown,
                 eligiblePoints = loss.Points, eligibleGems = loss.Gems,
                 eligibleLossSequences = lossSequences,
                 offeredPoints = RecoveryPointAmount, offeredGems = RecoveryAmount,
@@ -119,7 +122,6 @@ namespace Lotba.Game
             GemsRecovered += RecoveryAmount;
             PointsRecovered += RecoveryPointAmount;
             Score += RecoveryPointAmount;
-            Gems += RecoveryAmount;
             if (recoveryOpportunity != null)
             {
                 recoveryOpportunity.returnedPoints = RecoveryPointAmount;
@@ -181,6 +183,17 @@ namespace Lotba.Game
                 RecoveryOffersClosed++;
                 recoveryOpportunity.outcome = "closed"; recoveryOpportunity.cause = reason;
                 Record("recovery_fork_closed", reason);
+            }
+            else if (recoveryOpportunity != null && recoveryOpportunity.outcome == "offered" &&
+                     !recoveryOpportunity.accepted)
+            {
+                recoveryOpportunity.outcome = "closed";
+                recoveryOpportunity.cause = reason;
+                recoveryOpportunity.endDistanceMetres = Distance;
+                recoveryOpportunity.endTimeSeconds = Elapsed;
+                RecoveryOffersClosed++;
+                Record("recovery_offer_closed", reason, decisionNumber: DecisionsShown);
+                lossLedger.Consume(recoveryOpportunity.section, out _);
             }
         }
 

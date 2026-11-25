@@ -10,7 +10,6 @@ namespace Lotba.Game
     {
         private readonly GameSettings settings;
         private readonly SectionTransitionSettings transitionSettings;
-        private readonly LanePatternParameters exitPatternParameters;
         private readonly RouteDefinition telemetryRoute;
         private int telemetrySection;
         public RunTelemetry Telemetry { get; private set; }
@@ -83,7 +82,6 @@ namespace Lotba.Game
         {
             this.settings = settings ?? throw new ArgumentNullException(nameof(settings));
             transitionSettings = settings.Transitions.Capture();
-            exitPatternParameters = settings.TransitionExitPattern != null ? settings.TransitionExitPattern.Capture() : null;
             this.telemetryRoute = telemetryRoute;
             BrakingConfiguration = settings.Braking.Capture();
             braking = new BrakingState(BrakingConfiguration);
@@ -108,8 +106,6 @@ namespace Lotba.Game
                 seed = settings.Seed,
                 routeDistanceMetres = finishDistance,
                 braking = RunBrakingConfiguration.From(BrakingConfiguration),
-                transitions = transitionSettings.Capture(),
-                exitPattern = RunLanePattern.From(exitPatternParameters),
                 startedAtUtc = DateTime.UtcNow.ToString("O")
             };
             RefreshTransitionOffer();
@@ -338,8 +334,6 @@ namespace Lotba.Game
                     recoveryOffersClosed = RecoveryOffersClosed,
                     purchasedGemMultiplier = PurchasedGemMultiplier, purchasedPointMultiplier = PurchasedPointMultiplier,
                     brakePresses = BrakePresses, brakeReleases = BrakeReleases, brakeHeldSeconds = BrakeHeldSeconds,
-                    trackResets = TrackResets, clearedObstacles = ClearedObstacles, clearedGems = ClearedGems,
-                    clearedLetters = ClearedLetters, clearedPlatforms = ClearedPlatforms,
                     gemsLost = GemsLost, gemsRecovered = GemsRecovered, gemBalance = GemBalance, boostCollisions = BoostCollisions,
                     pinkGemsCollected = PinkGemsCollected, pinkGemsMissed = PinkGemsMissed,
                     pinkGemNearMisses = PinkGemNearMisses,
@@ -363,7 +357,7 @@ namespace Lotba.Game
 
         private void Record(string type, string detail = null, long delta = 0,
             int gemDelta = 0, bool duringBoost = false, int decisionNumber = 0, int streakBefore = 0,
-            bool pinkGemNearMiss = false, int pinkDodgeEncounter = 0, RunTrackReset trackReset = null)
+            bool pinkGemNearMiss = false, int pinkDodgeEncounter = 0)
         {
             if (Telemetry == null) return;
             Telemetry.events.Add(new RunTelemetryEvent
@@ -379,7 +373,6 @@ namespace Lotba.Game
                 pinkDodgeEncounter = pinkDodgeEncounter,
                 purchasedSpeedKmh = PurchasedSpeed * 3.6f,
                 turboConfiguration = type == "boost_activated" ? RunTurboConfiguration.From(activeTurbo) : null,
-                trackReset = trackReset,
                 recovery = type.StartsWith("recovery_", StringComparison.Ordinal) || (type == "obstacle_hit" && RecoveryActive) ? RecoverySnapshot() : null,
                 transitionSection = CurrentTransition?.Section ?? -1,
                 lossOrigin = type == "obstacle_hit" ? RecoveryActive ? "recovery" : "normal" : null,

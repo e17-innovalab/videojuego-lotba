@@ -26,7 +26,5 @@ namespace Lotba.Game
         public int seed;
         public float routeDistanceMetres;
         public RunBrakingConfiguration braking;
-        public SectionTransitionSettings transitions;
-        public RunLanePattern exitPattern;
     }
 }

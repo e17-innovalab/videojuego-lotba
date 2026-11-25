@@ -14,26 +14,46 @@ namespace Lotba.Game
 
     public sealed class SectionLossLedger
     {
-        private long points;
-        private int gems;
-        private readonly List<int> lossSequences = new List<int>();
-        public bool HasLoss => points > 0 || gems > 0;
-        public long PendingPoints => points;
-        public int PendingGems => gems;
-        public void Add(long lostPoints, int lostGems, int sequence)
+        private sealed class SectionLoss
         {
-            points += Math.Max(0, lostPoints);
-            gems += Math.Max(0, lostGems);
-            if ((lostPoints > 0 || lostGems > 0) && sequence > 0) lossSequences.Add(sequence);
+            public long points;
+            public int gems;
+            public readonly List<int> sequences = new List<int>();
         }
-        /// <summary>Each loss belongs to one opportunity only, including declined opportunities.</summary>
-        public ResourceAmount Consume(out int[] sequences)
+
+        private readonly Dictionary<int, SectionLoss> sections = new Dictionary<int, SectionLoss>();
+        public bool HasLossIn(int section)
         {
-            var result = new ResourceAmount(points, gems);
-            sequences = lossSequences.ToArray(); lossSequences.Clear();
-            points = 0; gems = 0;
-            return result;
+            return sections.TryGetValue(section, out SectionLoss loss) && (loss.points > 0 || loss.gems > 0);
         }
+        public long PendingPointsIn(int section) => sections.TryGetValue(section, out SectionLoss loss) ? loss.points : 0;
+        public int PendingGemsIn(int section) => sections.TryGetValue(section, out SectionLoss loss) ? loss.gems : 0;
+
+        public int[] SnapshotLossSequences(int section) => sections.TryGetValue(section, out SectionLoss loss)
+            ? loss.sequences.ToArray()
+            : Array.Empty<int>();
+
+        public void Add(long lostPoints, int lostGems, int sequence, int section)
+        {
+            if (!sections.TryGetValue(section, out SectionLoss loss))
+                sections.Add(section, loss = new SectionLoss());
+            loss.points += Math.Max(0, lostPoints);
+            loss.gems += Math.Max(0, lostGems);
+            if ((lostPoints > 0 || lostGems > 0) && sequence > 0) loss.sequences.Add(sequence);
+        }
+
+        public ResourceAmount Consume(int section, out int[] sequences)
+        {
+            if (!sections.TryGetValue(section, out SectionLoss loss))
+            {
+                sequences = Array.Empty<int>();
+                return new ResourceAmount(0, 0);
+            }
+            sections.Remove(section);
+            sequences = loss.sequences.ToArray();
+            return new ResourceAmount(loss.points, loss.gems);
+        }
+
     }
 
     /// <summary>Distance exposure only. The caller resolves contacts before checking completion.</summary>

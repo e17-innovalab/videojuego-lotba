@@ -7,7 +7,7 @@ namespace Lotba.Game
     [Serializable]
     public sealed class RunTelemetry
     {
-        public const int CurrentSchemaVersion = 22;
+        public const int CurrentSchemaVersion = 20;
         public int schemaVersion = CurrentSchemaVersion;
         public static string SchemaLabel(int version) => $"Datos v{version}";
         public string runId = Guid.NewGuid().ToString("N");
@@ -19,8 +19,6 @@ namespace Lotba.Game
         public float durationSeconds;
         public float routeDistanceMetres;
         public RunBrakingConfiguration braking;
-        public SectionTransitionSettings transitions;
-        public RunLanePattern exitPattern;
         public List<RunTelemetryEvent> events = new List<RunTelemetryEvent>();
         public List<RunRecoveryOpportunity> recoveryOpportunities = new List<RunRecoveryOpportunity>();
         public RunTelemetrySummary summary;
@@ -50,7 +48,6 @@ namespace Lotba.Game
         public float purchasedSpeedKmh;
         // Added to the unpublished v20 contract; historical local reports may lack it.
         public RunTurboConfiguration turboConfiguration;
-        public RunTrackReset trackReset;
         public int transitionSection = -1;
         public RunRecoveryOpportunity recovery;
         public string lossOrigin;
@@ -58,23 +55,10 @@ namespace Lotba.Game
     }
 
     [Serializable]
-    public sealed class RunLanePattern
-    {
-        public string name;
-        public float maximumObstacleLength, maximumObstacleWidth;
-        public LanePatternRow[] rows;
-        public static RunLanePattern From(LanePatternParameters value) => value == null || value.ValidationError != null ? null : new RunLanePattern
-        {
-            name = value.Name, maximumObstacleLength = value.MaximumObstacleLength,
-            maximumObstacleWidth = value.MaximumObstacleWidth, rows = Array.ConvertAll(value.Rows, row => row.Copy())
-        };
-    }
-
-    [Serializable]
     public sealed class RunRecoveryOpportunity
     {
         public string offerId, attemptId, outcome, cause;
-        public int section;
+        public int section, decisionNumber;
         public bool accepted;
         public int[] eligibleLossSequences;
         public long eligiblePoints, offeredPoints, returnedPoints;
@@ -86,23 +70,6 @@ namespace Lotba.Game
         public RunTurboConfiguration turbo;
         public RunRecoveryOpportunity Copy() => (RunRecoveryOpportunity)MemberwiseClone();
         public string Display() => $"{offerId} · {attemptId} · tramo {section} · {outcome} ({cause}) · ofrecido {offeredPoints} puntos / {offeredGems} gemas · devuelto {returnedPoints} / {returnedGems} · reto {challengeMetres:0.#} m";
-    }
-
-    [Serializable]
-    public sealed class RunTrackReset
-    {
-        public float startMetres, endMetres;
-        public int obstacles, gems, letters, platforms, surfaceViews;
-        public int fromLane, toLane;
-        public bool grounded;
-        public static RunTrackReset From(TrackClearanceResult result, int fromLane, int toLane) => new RunTrackReset
-        {
-            startMetres = result.Span.Start, endMetres = result.Span.End,
-            obstacles = result.Obstacles, gems = result.Gems, letters = result.Letters,
-            platforms = result.Platforms, surfaceViews = result.SurfaceViews,
-            fromLane = fromLane, toLane = toLane, grounded = true
-        };
-        public string Display() => $"{startMetres:0.#}–{endMetres:0.#} m · retirados: {obstacles} obstáculos, {gems} gemas, {letters} letras, {platforms} apoyos · carril {fromLane}→{toLane}";
     }
 
     [Serializable]
@@ -159,7 +126,6 @@ namespace Lotba.Game
         public float realTimeSeconds;
         public int brakePresses, brakeReleases;
         public float brakeHeldSeconds;
-        public int trackResets, clearedObstacles, clearedGems, clearedLetters, clearedPlatforms;
         public int decisionsShown, decisionsKept;
         public int gemsLost, gemsRecovered, gemBalance, boostCollisions;
         public int gemsSpent, speedUpgrades;

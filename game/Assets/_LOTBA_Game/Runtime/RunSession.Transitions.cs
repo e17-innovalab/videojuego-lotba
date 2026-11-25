@@ -28,6 +28,7 @@ namespace Lotba.Game
             Speed = 0f;
             MovementSpeed = 0f;
             DecisionsShown++;
+            CreateTransitionRecoveryOpportunity();
             Record("transition_decision_shown", decisionNumber: DecisionsShown);
         }
 
@@ -46,6 +47,7 @@ namespace Lotba.Game
             if (!accelerate)
             {
                 DecisionsKept++;
+                DeclineTransitionRecoveryOpportunity("continue");
                 Record("speed_kept", decisionNumber: DecisionsShown);
             }
             else if (UpgradeCost > 0)
@@ -56,10 +58,12 @@ namespace Lotba.Game
                 PurchasedPointMultiplier += Math.Max(0, transitionSettings.purchasedPointMultiplier - 1);
                 PinkGemsUnlocked = true;
                 SpeedUpgrades++;
+                DeclineTransitionRecoveryOpportunity("speed_upgrade");
                 Record("speed_upgrade_purchased", gemDelta: -UpgradeCost, decisionNumber: DecisionsShown);
             }
             else
             {
+                DeclineTransitionRecoveryOpportunity("boost_offer");
                 ActivateBoost(null, DecisionsShown);
             }
             LeaveTransition();
@@ -68,32 +72,25 @@ namespace Lotba.Game
         public void ChooseTransitionRecovery()
         {
             if (!transitionDecisionPending || State != RunState.Running) return;
-            if (!HasRecoveryLoss) return;
+            if (!HasRecoveryLoss || (PendingRecoveryPoints <= 0 && PendingRecoveryGems <= 0)) return;
 
-            if (lossLedger.HasLoss)
-            {
-                var loss = lossLedger.Consume(out int[] lossSequences);
-                RecoveryLoss = loss.Gems;
-                RecoveryPointLoss = loss.Points;
-                RecoveryAmount = loss.Gems;
-                RecoveryPointAmount = loss.Points;
-                recoveryOpportunity = new RunRecoveryOpportunity
-                {
-                    offerId = "trans-offer-" + DecisionsShown,
-                    section = telemetrySection,
-                    eligiblePoints = loss.Points,
-                    eligibleGems = loss.Gems,
-                    eligibleLossSequences = lossSequences,
-                    offeredPoints = RecoveryPointAmount,
-                    offeredGems = RecoveryAmount,
-                    challengeMetres = transitionSettings.RecoveryDistance(RecoveryAmount,
-                        RecoveryPointAmount, finishDistance > 0f ? Distance / finishDistance : 0f),
-                    offerDistanceMetres = Distance,
-                    outcome = "offered"
-                };
-                if (Telemetry != null) Telemetry.recoveryOpportunities.Add(recoveryOpportunity);
-                RecoveryOffers++;
-            }
+            // The opportunity was recorded when the recovery option became visible.
+            // Keep it distinct from any earlier fork opportunity tied to the same losses.
+            if (recoveryOpportunity == null || recoveryOpportunity.section != RecoverySourceSection ||
+                recoveryOpportunity.outcome != "offered" || recoveryOpportunity.accepted)
+                CreateTransitionRecoveryOpportunity();
+            if (recoveryOpportunity == null || recoveryOpportunity.outcome != "offered") return;
+
+            var loss = lossLedger.Consume(recoveryOpportunity.section, out int[] lossSequences);
+            RecoveryLoss = loss.Gems;
+            RecoveryPointLoss = loss.Points;
+            RecoveryAmount = loss.Gems;
+            RecoveryPointAmount = loss.Points;
+            recoveryOpportunity.eligiblePoints = loss.Points;
+            recoveryOpportunity.eligibleGems = loss.Gems;
+            recoveryOpportunity.eligibleLossSequences = lossSequences;
+            recoveryOpportunity.offeredPoints = RecoveryPointAmount;
+            recoveryOpportunity.offeredGems = RecoveryAmount;
 
             RecoveryActive = true;
             RecoveryAttempts++;
@@ -104,24 +101,74 @@ namespace Lotba.Game
                     finishDistance > 0f ? Distance / finishDistance : 0f);
             recoveryChallengeEnd = Distance + challengeDistance;
             recoveryZoneEnd = recoveryChallengeEnd + Math.Max(0f, transitionSettings.recoveryExitBreathMetres);
-            RecoveryZoneCollisions = 0;
-            RecoveryZonePointsLost = 0;
-            RecoveryZoneGemsLost = 0;
-            if (recoveryOpportunity != null)
-            {
-                recoveryOpportunity.attemptId = "attempt-" + RecoveryAttempts;
-                recoveryOpportunity.accepted = true;
-                recoveryOpportunity.startDistanceMetres = Distance;
-                recoveryOpportunity.startTimeSeconds = Elapsed;
-                recoveryOpportunity.outcome = "active";
-            }
+            recoveryOpportunity.attemptId = "attempt-" + RecoveryAttempts;
+            recoveryOpportunity.accepted = true;
+            recoveryOpportunity.startDistanceMetres = Distance;
+            recoveryOpportunity.startTimeSeconds = Elapsed;
+            recoveryOpportunity.outcome = "active";
             RecoveryOutcome = null;
-            Record("recovery_entered", "transition_choice");
+            Record("recovery_entered", "transition_choice", decisionNumber: DecisionsShown);
 
             LeaveTransition();
         }
 
         private void InitializeTransitions() => transitions = SectionTransitionPlan.Build(telemetryRoute, transitionSettings);
+
+        private int RecoverySourceSection
+        {
+            get
+            {
+                if (telemetryRoute == null || CurrentTransition == null) return telemetrySection;
+                int section = CurrentTransition.Section;
+                if (section < 0 || section >= telemetryRoute.Sections.Length) return telemetrySection;
+                while (section >= 0 && telemetryRoute.Sections[section].Transition) section--;
+                return section >= 0 ? section : CurrentTransition.Section;
+            }
+        }
+
+        private void CreateTransitionRecoveryOpportunity()
+        {
+            if (!HasRecoveryLoss || (PendingRecoveryPoints <= 0 && PendingRecoveryGems <= 0)) return;
+
+            int sourceSection = RecoverySourceSection;
+            int[] lossSequences = lossLedger.SnapshotLossSequences(sourceSection);
+            long eligiblePoints = PendingRecoveryPoints;
+            int eligibleGems = PendingRecoveryGems;
+            float challengeDistance = transitionSettings.RecoveryDistance(eligibleGems, eligiblePoints,
+                finishDistance > 0f ? Distance / finishDistance : 0f);
+
+            recoveryOpportunity = new RunRecoveryOpportunity
+            {
+                offerId = "trans-offer-" + DecisionsShown,
+                section = sourceSection,
+                decisionNumber = DecisionsShown,
+                eligiblePoints = eligiblePoints,
+                eligibleGems = eligibleGems,
+                eligibleLossSequences = lossSequences,
+                offeredPoints = eligiblePoints,
+                offeredGems = eligibleGems,
+                challengeMetres = challengeDistance,
+                offerDistanceMetres = Distance,
+                outcome = "offered"
+            };
+            Telemetry.recoveryOpportunities.Add(recoveryOpportunity);
+            RecoveryOffers++;
+        }
+
+        private void DeclineTransitionRecoveryOpportunity(string reason)
+        {
+            if (recoveryOpportunity == null || recoveryOpportunity.section != RecoverySourceSection ||
+                recoveryOpportunity.outcome != "offered" || recoveryOpportunity.accepted) return;
+
+            recoveryOpportunity.outcome = "declined";
+            recoveryOpportunity.cause = reason;
+            recoveryOpportunity.endDistanceMetres = Distance;
+            recoveryOpportunity.endTimeSeconds = Elapsed;
+            lossLedger.Consume(recoveryOpportunity.section, out _);
+            RecoveryDeclined++;
+            Record("recovery_declined", reason, decisionNumber: DecisionsShown);
+        }
+
         private void AnnounceTransitionIfNeeded()
         {
             if (!TransitionApproaching || transitionAnnounced) return;

@@ -31,9 +31,7 @@ namespace Lotba.Game
                     route = telemetry.route,
                     seed = telemetry.seed,
                     routeDistanceMetres = telemetry.routeDistanceMetres,
-                    braking = telemetry.braking,
-                    transitions = telemetry.transitions,
-                    exitPattern = telemetry.exitPattern
+                    braking = telemetry.braking
                 },
                 summary = telemetry.summary,
                 recoveryOpportunities = new List<RunRecoveryOpportunity>(telemetry.recoveryOpportunities),

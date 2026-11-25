@@ -230,9 +230,6 @@ namespace Lotba.Game
                 foreach (var entry in report.events)
                     if (entry.type == "boost_activated" && entry.turboConfiguration != null)
                         measured.AppendLine($"Turbo · {entry.timeSeconds:0.#} s · {entry.detail ?? "oferta gratis"}: {entry.turboConfiguration.Display()}");
-            foreach (var entry in report.events)
-                if (entry.type == "track_reset" && entry.trackReset != null)
-                    measured.AppendLine($"Limpieza · {entry.timeSeconds:0.#} s: {entry.trackReset.Display()}");
             if (report.recoveryOpportunities != null)
                 foreach (var opportunity in report.recoveryOpportunities) measured.AppendLine(opportunity.Display());
             recordedMetrics.text = measured.ToString();
