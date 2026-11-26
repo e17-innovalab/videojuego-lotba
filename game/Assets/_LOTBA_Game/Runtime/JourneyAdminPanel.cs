@@ -12,6 +12,7 @@ namespace Lotba.Game
         [SerializeField] private GameObject overlayRoot;
         [Header("Authored panels")]
         [SerializeField] private GameObject loginPanel, configurePanel, activePanel;
+        [SerializeField] private GameObject missingJourneyNote;
         [Header("Access")]
         [SerializeField] private TMP_InputField usernameInput, passwordInput;
         [SerializeField] private Button loginButton, loginBackButton;
@@ -54,6 +55,7 @@ namespace Lotba.Game
 
         private void Awake()
         {
+            if (missingJourneyNote != null) missingJourneyNote.SetActive(false);
             if (loginButton != null) loginButton.onClick.AddListener(Login);
             if (loginBackButton != null) loginBackButton.onClick.AddListener(Close);
             if (beginButton != null) beginButton.onClick.AddListener(BeginJourney);
@@ -85,7 +87,7 @@ namespace Lotba.Game
             confirmClosing = false;
             if (dateLabel != null) dateLabel.text = DateTime.Now.ToString("dd/MM/yyyy");
             if (loginButtonLabel != null) loginButtonLabel.text = "INGRESAR";
-            if (loginError != null) loginError.text = "";
+            ClearLoginFeedback();
             if (usernameInput != null) usernameInput.text = adminUsername;
             if (passwordInput != null) passwordInput.text = "";
             if (setupError != null) setupError.text = "";
@@ -174,14 +176,23 @@ namespace Lotba.Game
             JourneySessionStore.End();
             current = null;
             finishJourney?.Invoke();
+            confirmClosing = false;
             if (loginButtonLabel != null) loginButtonLabel.text = "INGRESAR";
-            Show(loginPanel);
+            ClearLoginFeedback();
+            Show(null);
         }
 
         private void Close()
         {
             confirmClosing = false;
+            ClearLoginFeedback();
             Show(null);
+        }
+
+        private void ClearLoginFeedback()
+        {
+            if (passwordInput != null) passwordInput.text = "";
+            if (loginError != null) loginError.text = "";
         }
 
         private void SelectShift(int index)
@@ -197,6 +208,7 @@ namespace Lotba.Game
             if (loginPanel != null) loginPanel.SetActive(target == loginPanel);
             if (configurePanel != null) configurePanel.SetActive(target == configurePanel);
             if (activePanel != null) activePanel.SetActive(target == activePanel);
+            if (missingJourneyNote != null) missingJourneyNote.SetActive(target == loginPanel && current == null);
             if (overlayRoot != null && target == null) overlayRoot.SetActive(false);
         }
     }
