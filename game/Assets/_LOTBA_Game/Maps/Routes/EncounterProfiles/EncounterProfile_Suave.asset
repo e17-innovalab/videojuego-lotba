@@ -9,12 +9,29 @@ MonoBehaviour:
   m_Name: EncounterProfile_Suave
   gemInterval: 40
   vehiclePatternInterval: 125
+  vehiclePatternIntervalSeconds: 5.5
+  letterInterval: 100
+  letterIntervalVariation: 0.1
+  trafficObstacleChance: 0.25
+  longVehicleChance: 0.1
+  threeBusRampChance: 0.05
+  roofJumpExitChance: 0.1
+  obstacleReactionSeconds: 1
+  gemRowIntervalSeconds: 1.35
+  gemCollectionIntervalSeconds: 0.12
+  aerialGemCollectionIntervalSeconds: 0.15
+  aerialLandingGemBufferMetres: 6
   gemThreads: 1
   gemsPerThread: 2
   gemSpacing: 2.5
   pinkGemEveryRows: 4
+  pinkMiniRowCount: 3
   pinkGemMinimumSpacing: 110
   pinkGemDodgeChance: 0.4
   pinkGemDodgeReactionTime: 0.08
   obstacleInterval: 31
   obstacleClearance: 15
+  singleBlockerWeight: 0.8
+  corridorGateWeight: 0.2
+  slalomWeight: 0
+  hurdleChance: 0.05

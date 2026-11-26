@@ -8,13 +8,30 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 715aafaee0f5451d9d3c310173d4ba27, type: 3}
   m_Name: EncounterProfile_Moderado
   vehiclePatternInterval: 190
+  vehiclePatternIntervalSeconds: 5.5
+  letterInterval: 105
+  letterIntervalVariation: 0.1
+  obstacleReactionSeconds: 0.65
+  trafficObstacleChance: 0.6
+  longVehicleChance: 0.25
+  threeBusRampChance: 0.25
+  roofJumpExitChance: 0.3
+  gemRowIntervalSeconds: 1.35
+  gemCollectionIntervalSeconds: 0.12
+  aerialGemCollectionIntervalSeconds: 0.15
+  aerialLandingGemBufferMetres: 6
   gemInterval: 37
   gemThreads: 1
   gemsPerThread: 3
   gemSpacing: 2.5
   pinkGemEveryRows: 4
+  pinkMiniRowCount: 3
   pinkGemMinimumSpacing: 110
   pinkGemDodgeChance: 0.65
   pinkGemDodgeReactionTime: 0.04
-  obstacleInterval: 25
-  obstacleClearance: 11
+  obstacleInterval: 20
+  obstacleClearance: 8
+  singleBlockerWeight: 0.5
+  corridorGateWeight: 0.35
+  slalomWeight: 0.15
+  hurdleChance: 0.1

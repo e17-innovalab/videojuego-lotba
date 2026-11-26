@@ -7,6 +7,25 @@ namespace Lotba.Game
     [CreateAssetMenu(menuName = "LOTBA/Game settings")]
     public sealed class GameSettings : ScriptableObject
     {
+        [Header("Transiciones y recupero")]
+        [SerializeField] private SectionTransitionSettings transitions = new SectionTransitionSettings();
+        public SectionTransitionSettings Transitions => transitions;
+        [SerializeField] private TransitionDecisionView transitionViewPrefab;
+        public TransitionDecisionView TransitionViewPrefab => transitionViewPrefab;
+        [SerializeField] private DecisionCountdownView decisionCountdownPrefab;
+        public DecisionCountdownView DecisionCountdownPrefab => decisionCountdownPrefab;
+        [SerializeField, Min(.5f), Tooltip("Segundos de cuenta regresiva después de confirmar una decisión.")]
+        private float decisionCountdownSeconds = 3f;
+        public float DecisionCountdownSeconds => Mathf.Max(.5f, decisionCountdownSeconds);
+        [SerializeField] private RecoveryAnnouncementView recoveryAnnouncementPrefab;
+        public RecoveryAnnouncementView RecoveryAnnouncementPrefab => recoveryAnnouncementPrefab;
+        [SerializeField] private Transform sectionGatePrefab;
+        public Transform SectionGatePrefab => sectionGatePrefab;
+        [SerializeField, Min(20f), Tooltip("Distancia inicial a la que aparece el cartel de bienvenida de la primera zona.")]
+        private float initialWelcomeSignDistance = 110f;
+        public float InitialWelcomeSignDistance => initialWelcomeSignDistance;
+        [SerializeField] private LanePatternDefinition transitionExitPattern;
+        public LanePatternDefinition TransitionExitPattern => transitionExitPattern;
         [SerializeField, Min(1f)] private float initialSpeed = 18f;
         [FormerlySerializedAs("maximumSpeed")]
         [SerializeField, Min(1f), Tooltip("Objetivo de la aceleración inicial. La aceleración sostenida continúa después.")]
@@ -24,7 +43,7 @@ namespace Lotba.Game
         [Header("Turbo · reglas independientes")]
         [SerializeField, InspectorName("Turbo manual")] private TurboProfile manualTurbo = new TurboProfile();
         [SerializeField, InspectorName("Turbo de oferta gratis")] private TurboProfile speedOfferTurbo = new TurboProfile();
-        [SerializeField, InspectorName("Turbo de recupero")] private TurboProfile recoveryTurbo = new TurboProfile();
+        [SerializeField, InspectorName("Turbo de recupero"), Tooltip("El recupero termina por distancia; la duración de este perfil no determina su final.")] private TurboProfile recoveryTurbo = new TurboProfile();
         public TurboProfile ManualTurbo => manualTurbo;
         public TurboProfile SpeedOfferTurbo => speedOfferTurbo;
         public TurboProfile RecoveryTurbo => recoveryTurbo;
@@ -38,11 +57,6 @@ namespace Lotba.Game
         [SerializeField, Min(0f)] private float boostCameraPullback = .65f;
         [SerializeField, Range(0f, 20f)] private float boostCameraFieldOfView = 5f;
         [SerializeField, Min(.01f)] private float boostCameraBlendRate = 5f;
-        [SerializeField] private Color boostLineColor = new Color(.68f, .88f, 1f, .55f);
-        [SerializeField, Range(0, 32)] private int boostLineCount = 14;
-        [SerializeField, Min(.01f)] private float boostLineSpeed = 2.4f;
-        [SerializeField, Range(.01f, .3f)] private float boostLineLength = .15f;
-        [SerializeField, Min(.1f)] private float boostLineWidth = 2f;
         public Shader TurboAuraShader => turboAuraShader;
         public Texture2D TurboAuraTexture => turboAuraTexture;
         public float TurboAuraIntensity => turboAuraIntensity;
@@ -50,16 +64,35 @@ namespace Lotba.Game
         public float BoostCameraPullback => boostCameraPullback;
         public float BoostCameraFieldOfView => boostCameraFieldOfView;
         public float BoostCameraBlendRate => boostCameraBlendRate;
-        public Color BoostLineColor => boostLineColor;
-        public int BoostLineCount => boostLineCount;
-        public float BoostLineSpeed => boostLineSpeed;
-        public float BoostLineLength => boostLineLength;
-        public float BoostLineWidth => boostLineWidth;
+        [Header("Recovery · fork")]
+        [SerializeField] private Transform recoveryPortalContinuePrefab;
+        public Transform RecoveryPortalContinuePrefab => recoveryPortalContinuePrefab;
+        [SerializeField] private Transform recoveryPortalRecoverPrefab;
+        public Transform RecoveryPortalRecoverPrefab => recoveryPortalRecoverPrefab;
+        [SerializeField] private Transform recoveryBarrierPrefab;
+        public Transform RecoveryBarrierPrefab => recoveryBarrierPrefab;
         [Header("Recovery · front curtain")]
+        [SerializeField] private bool enableRecoveryFog = false;
+        public bool EnableRecoveryFog { get => enableRecoveryFog; set => enableRecoveryFog = value; }
         [SerializeField] private RecoveryCurtain recoveryCurtainPrefab;
         public RecoveryCurtain RecoveryCurtainPrefab => recoveryCurtainPrefab;
+        [SerializeField] private RecoveryGemView recoveryGemPrefab;
+        public RecoveryGemView RecoveryGemPrefab => recoveryGemPrefab;
+        [SerializeField, Min(10f), Tooltip("Distancia visible de la señal dorada; la gema real toma el relevo aquí sin alterar el final del recupero.")]
+        private float recoveryGemPreviewDistance = 60f;
+        public float RecoveryGemPreviewDistance => Mathf.Max(10f, recoveryGemPreviewDistance);
+        [SerializeField, Min(0f), Tooltip("Altura de persecución de la señal dorada antes de que baje hasta la gema recolectable.")]
+        private float recoveryGemChaseHeight = 6f;
+        public float RecoveryGemChaseHeight => Mathf.Max(0f, recoveryGemChaseHeight);
+        [SerializeField] private RecoveryCelebrationView recoveryCelebrationPrefab;
+        public RecoveryCelebrationView RecoveryCelebrationPrefab => recoveryCelebrationPrefab;
+        [SerializeField] private RecoveryMissView recoveryMissPrefab;
+        public RecoveryMissView RecoveryMissPrefab => recoveryMissPrefab;
         [SerializeField, InspectorName("Dificultad de niebla")] private RecoveryFogDifficulty recoveryFogDifficulty = new RecoveryFogDifficulty();
         public RecoveryFogDifficulty RecoveryFogDifficulty => recoveryFogDifficulty;
+        [SerializeField, Min(0), InspectorName("Módulos a limpiar por delante"), Tooltip("Además del módulo actual, que siempre se limpia.")]
+        private int recoveryClearModulesAhead = 2;
+        public int RecoveryClearModuleCount => 1 + Mathf.Max(0, recoveryClearModulesAhead);
         [SerializeField, Range(.07f, .25f)] private float laneChangeTime = .11f;
         [Header("Track patterns (metres)")]
         [SerializeField, Min(1f)] private float initialPatternSpacing = 28f;
@@ -74,7 +107,7 @@ namespace Lotba.Game
         [Tooltip("Prepare patterns beyond the linear fog or camera clipping distance.")]
         [SerializeField] private bool preparePatternsBeyondVisibility = true;
         [SerializeField, Min(0f)] private float patternVisibilityMargin = 20f;
-        [SerializeField] private int seed = 2710;
+        [SerializeField] private int seed = 1001;
         [Header("World bend by distance")]
         [SerializeField] private bool depthBendEnabled = true;
         [SerializeField] private Shader depthBendShader;

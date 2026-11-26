@@ -80,7 +80,10 @@ namespace Lotba.Game
             else if (report.schemaVersion >= 3)
                 events.AppendLine($"Choques con impulso: {Highlight(result.boostCollisions)}");
             if (report.schemaVersion >= 13)
-                events.AppendLine($"Intentos de recuperación: {Highlight(result.recoveryAttempts)}");
+            {
+                events.AppendLine($"Recuperos logrados: {Highlight(result.recoverySucceeded)} / {result.recoveryAttempts} · " +
+                    $"Reintegrado: +{result.pointsRecovered} pts · Perdido en atajo: -{result.recoveryZonePointsLost} pts (Neto: {result.recoveryNetPoints:+#;-#;0} pts)");
+            }
             if (report.schemaVersion >= 20)
             {
                 if (report.braking != null)
@@ -89,6 +92,10 @@ namespace Lotba.Game
                     if (entry.type == "boost_activated" && entry.turboConfiguration != null)
                         events.AppendLine($"Turbo · {entry.timeSeconds:0.#} s: {entry.turboConfiguration.Display()}");
             }
+            if (report.recoveryOpportunities != null)
+                foreach (var opportunity in report.recoveryOpportunities) events.AppendLine(opportunity.Display());
+            if (report.schemaVersion >= 20)
+                events.AppendLine($"Recuperado: {result.pointsRecovered} puntos / {result.gemsRecovered} gemas · Tiempo real: {result.realTimeSeconds:0.#} s");
             eventsBody.transform.parent.gameObject.SetActive(events.Length > 0);
             eventsBody.text = events.ToString().TrimEnd();
 

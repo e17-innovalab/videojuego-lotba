@@ -12,9 +12,11 @@ namespace Lotba.Game
         [SerializeField] private MapDefinition map;
         [Tooltip("Optional encounter tuning for this section. Empty uses the default generation.")]
         [SerializeField] private EncounterProfile encounterProfile;
-        [Tooltip("Gem cost at the exit of this section. Zero keeps the temporary boost offer.")]
+        [Tooltip("Gem cost at this section's exit. Zero calculates it from the previous playable zone's expected gems; use a positive value to override. Zero cost with zero speed increase keeps the temporary boost offer.")]
         [SerializeField, Min(0)] private int speedUpgradeCost;
         [SerializeField, Min(0f)] private float speedUpgradeMetresPerSecond;
+        [Tooltip("Whether collectible letters may be generated in this route section.")]
+        [SerializeField] private bool allowLetters = true;
         [Tooltip("Number of 12 m modules. Zero means infinite and is allowed only in the final section.")]
         [SerializeField, Min(0)] private int moduleCount;
         [SerializeField] private bool transition;
@@ -28,6 +30,7 @@ namespace Lotba.Game
         public EncounterProfile EncounterProfile => encounterProfile;
         public int SpeedUpgradeCost => speedUpgradeCost;
         public float SpeedUpgradeMetresPerSecond => speedUpgradeMetresPerSecond;
+        public bool AllowLetters => allowLetters;
         public int ModuleCount => moduleCount;
         public bool Transition => transition;
         public TransitionTurn Turn => transitionTurn;
@@ -141,8 +144,22 @@ namespace Lotba.Game
             return sections.Length - 1;
         }
         public MapDefinition MapAtDistance(float distance) => sections[SectionAt(distance, out _)].Map;
-        public bool HasDecision(int index) => sections[index].ModuleCount > 0 &&
-            (sections[index].Transition || (index > 0 && index < sections.Length - 1));
+        public bool AllowLettersAt(float distance) => sections[SectionAt(distance, out _)].AllowLetters;
+        public MapDefinition DestinationMapAfterSection(int sectionIndex)
+        {
+            for (int i = sectionIndex + 1; i < sections.Length; i++)
+                if (!sections[i].Transition) return sections[i].Map;
+            return sectionIndex >= 0 && sectionIndex < sections.Length ? sections[sectionIndex].Map : null;
+        }
+        public float SectionEndDistanceAt(float distance)
+        {
+            int section = SectionAt(distance, out float start);
+            return sections[section].ModuleCount == 0
+                ? float.PositiveInfinity
+                : start + sections[section].ModuleCount * RoadStandard.ModuleLength;
+        }
+        public bool HasDecision(int index) => sections[index].ModuleCount > 0 && index < sections.Length - 1 &&
+            (sections[index].Transition || (!sections[index + 1].Transition && !sections[index].Transition));
 
         public RouteSection SpeedOfferAt(int index) =>
             sections[index].Transition && sections[index].SpeedUpgradeCost == 0 && index > 0

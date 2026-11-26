@@ -13,12 +13,17 @@ namespace Lotba.Game
         [SerializeField] private DeviceFeedbackAndInput devices;
         private RunSession session;
         private SessionReportTransport reportTransport;
+        private JourneySession journeySession;
         private float nextReportSaveAttempt;
         private bool startRequested, brakeRequested, jumpRequested, pauseRequested, menuRequested, sessionReportSaved;
         private bool overloadRequested;
         private int laneRequested;
         private bool? speedChoiceRequested;
-        private bool? recoveryChoiceRequested;
+        private bool recoveryChoiceRequested;
+        private bool? queuedSpeedChoice;
+        private bool queuedRecoveryChoice, decisionCountdownActive, decisionChoiceReady;
+        private float decisionCountdownRemaining;
+        private string previousRecoveryOutcome;
         private bool muted, trackingSwipe;
         private const string QualityPreference = "Lotba.CityRush.Quality";
         private static readonly string[] QualityNames = { "Low", "Medium", "High" };
@@ -31,6 +36,8 @@ namespace Lotba.Game
         private void Awake()
         {
             reportTransport = gameObject.AddComponent<SessionReportTransport>();
+            journeySession = JourneySessionStore.Load();
+            hud.InitializeJourneyAdmin(reportTransport, journeySession, ContinueJourney, CloseJourney);
             Application.targetFrameRate = Application.platform == RuntimePlatform.WebGLPlayer ? -1 : 60;
             muted = PlayerPrefs.GetInt("Lotba.CityRush.Muted", 0) != 0;
             InitializeQuality();
@@ -40,7 +47,7 @@ namespace Lotba.Game
             world.ConfigureDepthBend(IsHighQuality);
             world.ConfigurePickupEffects(UseBoostCamera);
             world.ConfigureGemGlow(IsHighQuality);
-            hud.StartRequested += RequestStart; hud.BrakeRequested += RequestBrake;
+            hud.StartRequested += RequestStart; hud.JourneyAdminRequested += hud.OpenJourneyAdmin; hud.BrakeRequested += RequestBrake;
             hud.PauseRequested += RequestPause; hud.MenuRequested += RequestMenu;
             hud.SoundRequested += ToggleSound; hud.SettingsRequested += OpenSettings;
             hud.MusicVolumeRequested += audioFeedback.SetMusicLevel;
@@ -101,7 +108,7 @@ namespace Lotba.Game
                 ResetRun(false);
                 audioFeedback.UpdateMusic(session.State);
                 speedChoiceRequested = null;
-                recoveryChoiceRequested = null;
+                recoveryChoiceRequested = false;
                 startRequested = brakeRequested = jumpRequested = pauseRequested = menuRequested = false; laneRequested = 0;
                 hud.Render(session, settings, muted, devices, IsHighQuality);
                 return;
@@ -115,6 +122,7 @@ namespace Lotba.Game
                 ResetRun(true);
             }
             bool wasFinished = session.State == RunState.Finished;
+            session.AdvancePresentationClock(Time.unscaledDeltaTime);
             float speedBeforeBrake = session.Speed;
             bool heldBrake = Application.isFocused && !hud.SettingsOpen &&
                 (hud.BrakeHeld || (Keyboard.current != null && Keyboard.current.spaceKey.isPressed));
@@ -131,22 +139,64 @@ namespace Lotba.Game
                 if (pauseRequested)
                 {
                     if (session.State == RunState.Paused) { session.Resume(); }
-                    else { session.Pause(); audioFeedback.Stop(); devices.CancelFeedback(); }
+                    else
+                    {
+                        session.Pause();
+                        audioFeedback.Stop();
+                        devices.CancelFeedback();
+                        Debug.Log($"[PAUSA] Metro: {session.Distance:F1}m · Semilla: {settings.Seed} · Velocidad: {session.Speed:F1}m/s");
+                    }
                 }
-                if (speedChoiceRequested.HasValue)
+                if (!decisionCountdownActive && !decisionChoiceReady && session.State == RunState.Running)
                 {
-                    int previousBoosts = session.VoluntaryBoosts;
-                    session.ChooseSpeed(speedChoiceRequested.Value);
-                    if (session.VoluntaryBoosts > previousBoosts) audioFeedback.PlayBoostStart();
+                    if (speedChoiceRequested.HasValue)
+                    {
+                        queuedSpeedChoice = speedChoiceRequested;
+                        speedChoiceRequested = null;
+                        StartDecisionCountdown();
+                    }
+                    else if (recoveryChoiceRequested)
+                    {
+                        queuedRecoveryChoice = true;
+                        recoveryChoiceRequested = false;
+                        StartDecisionCountdown();
+                    }
                 }
-                if (session.RecoveryImpactPending && session.State == RunState.Running && world.RecoveryImpactComplete)
-                    session.ShowRecoveryOffer();
-                if (recoveryChoiceRequested.HasValue && session.RecoveryOfferPending && session.State == RunState.Running)
+
+                if (decisionCountdownActive && session.State == RunState.Running)
                 {
-                    int cleared = world.PrepareRecoveryResume(session);
-                    session.ChooseRecovery(recoveryChoiceRequested.Value, cleared, world.SelectRecoveryFogZ(session));
+                    decisionCountdownRemaining -= Time.unscaledDeltaTime;
+                    if (decisionCountdownRemaining <= 0f)
+                    {
+                        decisionCountdownActive = false;
+                        decisionChoiceReady = true;
+                        hud.ShowDecisionCountdown(false, 0);
+                    }
+                    else hud.ShowDecisionCountdown(true, Mathf.CeilToInt(decisionCountdownRemaining), queuedRecoveryChoice);
                 }
-                if (session.State == RunState.Running && !session.OfferPending)
+
+                if (decisionChoiceReady && session.State == RunState.Running)
+                {
+                    if (queuedSpeedChoice.HasValue)
+                    {
+                        int previousBoosts = session.VoluntaryBoosts;
+                        session.ChooseTransitionUpgrade(queuedSpeedChoice.Value);
+                        if (session.VoluntaryBoosts > previousBoosts) audioFeedback.PlayBoostStart();
+                        queuedSpeedChoice = null;
+                    }
+                    else if (queuedRecoveryChoice)
+                    {
+                        session.ChooseTransitionRecovery();
+                        queuedRecoveryChoice = false;
+                        if (session.RecoveryActive)
+                            world.PrepareRecoveryChallenge(session);
+                        else
+                            world.ClearGemsAhead(session.Distance, Mathf.Max(session.RecoveryZoneEnd + 10f, session.Distance + 600f));
+                    }
+                    decisionChoiceReady = false;
+                    if (!session.OfferPending) { laneRequested = 0; jumpRequested = false; trackingSwipe = false; }
+                }
+                if (session.State == RunState.Running)
                 {
                     if (laneRequested != 0 && session.Move(laneRequested)) audioFeedback.PlayLaneSlide();
                     if (jumpRequested && world.TryJump(session.Elapsed))
@@ -155,20 +205,32 @@ namespace Lotba.Game
                         audioFeedback.PlayJump();
                     }
                     float budget = Mathf.Min(Time.unscaledDeltaTime, .15f);
-                    while (budget > 0 && session.State == RunState.Running && !session.OfferPending)
+                    while (budget > 0 && session.State == RunState.Running)
                     {
-                        int previousRecoveryBoosts = session.RecoveryBoosts;
                         float step = Mathf.Min(.02f, budget); session.Tick(step);
-                        if (session.RecoveryBoosts > previousRecoveryBoosts) audioFeedback.PlayBoostStart();
                         if (session.State == RunState.Running)
                         {
+                            float obstacleMult = session.RecoveryActive ? 1.6f : (1f + .75f * session.AccumulatedRisk);
                             world.SetEncounterIntensity(1f + .35f * session.AccumulatedRisk,
-                                settings.BaseObstacleIntensity * (1f + .75f * session.AccumulatedRisk));
+                                settings.BaseObstacleIntensity * obstacleMult);
                             int previousDecisions = session.DecisionsShown;
                             world.Advance(session, step, false, UseBoostCamera, IsHighQuality);
                             if (session.DecisionsShown > previousDecisions) audioFeedback.PlayDecisionShown();
                         }
                         budget -= step;
+                    }
+                    if (previousRecoveryOutcome != session.RecoveryOutcome)
+                    {
+                        previousRecoveryOutcome = session.RecoveryOutcome;
+                        if (session.RecoveryOutcome == "succeeded")
+                        {
+                            audioFeedback.PlayRecoveryCelebration();
+                            devices.Feedback(false);
+                        }
+                        else if (session.RecoveryOutcome == "failed")
+                        {
+                            audioFeedback.PlayRecoveryNearMiss();
+                        }
                     }
                 }
             }
@@ -184,20 +246,21 @@ namespace Lotba.Game
             if (session.State == RunState.Finished && !sessionReportSaved && Time.unscaledTime >= nextReportSaveAttempt)
             {
                 nextReportSaveAttempt = Time.unscaledTime + 5f;
-                string reportPath = SessionReportWriter.Save(session.Telemetry);
+                string reportPath = SessionReportWriter.Save(session.Telemetry, journey: journeySession?.Snapshot());
                 sessionReportSaved = reportPath != null;
                 if (sessionReportSaved) reportTransport.TrackSaved(reportPath);
             }
             world.RenderRecoveryCurtain(session);
+            world.RenderRecoveryFork(session);
+            world.RenderSectionMarkers(session.Distance, session.State == RunState.Running || session.State == RunState.Paused, session.RecoveryForkActive);
             world.RenderHeldBrake(session.BrakeMode == BrakingMode.HoldToStop && session.BrakeHeld &&
                 (session.State == RunState.Running || session.State == RunState.Paused),
-                session.State == RunState.Running && !session.OfferPending,
+                session.State == RunState.Running,
                 UseBoostCamera, session.Speed, !session.BrakingSpeedRestricted);
-            devices.UpdateBoostFeedback(session.State == RunState.Running
-                ? session.BoostTimeLeft : 0f);
+            devices.UpdateBoostFeedback(session.State == RunState.Running && !session.OfferPending && session.BoostActive);
             if (session.State != RunState.Finished) audioFeedback.UpdateMusic(session.State);
             speedChoiceRequested = null;
-            recoveryChoiceRequested = null;
+            recoveryChoiceRequested = false;
             startRequested = brakeRequested = jumpRequested = pauseRequested = menuRequested = false; laneRequested = 0;
             hud.SetSpeedLinesOrigin(world.RiderScreenPosition);
             hud.Render(session, settings, muted, devices, IsHighQuality);
@@ -207,6 +270,9 @@ namespace Lotba.Game
             hud.ClearBrakeHold();
             sessionReportSaved = false;
             nextReportSaveAttempt = 0f;
+            previousRecoveryOutcome = null;
+            queuedSpeedChoice = null; queuedRecoveryChoice = decisionCountdownActive = decisionChoiceReady = false;
+            decisionCountdownRemaining = 0f; hud.ShowDecisionCountdown(false, 0);
             session = new RunSession(settings, world.Route); world.ResetTrack(); hud.ResetView(); audioFeedback.Stop(); devices.CancelFeedback(); trackingSwipe = false;
             if (start) { session.Start(); }
             else world.PrepareOpening();
@@ -258,7 +324,16 @@ namespace Lotba.Game
             audioFeedback.PlayLetterPickup();
             if (complete) audioFeedback.PlayWordCompleted();
         }
-        private void RequestStart() => startRequested = true;
+        private void RequestStart()
+        {
+            journeySession = JourneySessionStore.Load();
+            if (journeySession == null)
+            {
+                hud.OpenJourneyAdmin();
+                return;
+            }
+            startRequested = true;
+        }
         private void RequestBrake() => brakeRequested = true;
         public void RequestOverloadEnd() => overloadRequested = true;
         private void ActivateTurbo()
@@ -273,12 +348,27 @@ namespace Lotba.Game
         {
             if (session.OfferPending && !speedChoiceRequested.HasValue) speedChoiceRequested = accelerate;
         }
-        private void ChooseRecovery(bool accept)
+        private void ChooseRecovery()
         {
-            if (session.RecoveryOfferPending && !recoveryChoiceRequested.HasValue) recoveryChoiceRequested = accept;
+            if (session.OfferPending && !recoveryChoiceRequested) recoveryChoiceRequested = true;
+        }
+        private void StartDecisionCountdown()
+        {
+            decisionCountdownRemaining = settings.DecisionCountdownSeconds;
+            decisionCountdownActive = true;
+            hud.ShowDecisionCountdown(true, Mathf.CeilToInt(decisionCountdownRemaining), queuedRecoveryChoice);
         }
         private void RequestPause() { if (!hud.SettingsOpen) pauseRequested = true; }
         private void RequestMenu() => menuRequested = true;
+        private void ContinueJourney()
+        {
+            journeySession = JourneySessionStore.Load();
+            hud.CloseJourneyAdmin();
+        }
+        private void CloseJourney()
+        {
+            journeySession = JourneySessionStore.Load();
+        }
         private void RequestLane(int direction) => laneRequested = direction;
         private void OpenSettings()
         {
@@ -343,7 +433,7 @@ namespace Lotba.Game
         private void OnDestroy()
         {
             if (hud == null) return;
-            hud.StartRequested -= RequestStart; hud.BrakeRequested -= RequestBrake;
+            hud.StartRequested -= RequestStart; hud.JourneyAdminRequested -= hud.OpenJourneyAdmin; hud.BrakeRequested -= RequestBrake;
             hud.PauseRequested -= RequestPause; hud.MenuRequested -= RequestMenu;
             hud.SoundRequested -= ToggleSound; hud.SettingsRequested -= OpenSettings;
             hud.MusicVolumeRequested -= audioFeedback.SetMusicLevel;

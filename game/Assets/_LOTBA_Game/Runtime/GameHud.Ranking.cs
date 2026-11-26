@@ -20,7 +20,7 @@ namespace Lotba.Game
         [SerializeField] private UnityEngine.UI.Button rankingButton, rankingOffer, rankingCloseButton, saveRankingButton, eraseNicknameButton;
         [SerializeField] private TMP_Text rankingOfferLabel, rankingCloseLabel, rankingEntryLabel;
         [Header("Récords · Anclas en modo consulta")]
-        [SerializeField] private Rect rankingReadCard = Rect.MinMaxRect(.05f, .20f, .95f, .80f);
+        [SerializeField] private Rect rankingReadCard = Rect.MinMaxRect(.5f, 1f, .5f, 1f);
         [SerializeField] private Rect rankingReadList = Rect.MinMaxRect(.055f, .20f, .945f, .88f);
         [SerializeField] private Rect rankingReadActions = Rect.MinMaxRect(.055f, .045f, .945f, .16f);
         [SerializeField] private Rect rankingReadClose = Rect.MinMaxRect(.20f, 0f, .80f, 1f);

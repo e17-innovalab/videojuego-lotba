@@ -25,7 +25,7 @@ namespace Lotba.Game
         {
             startedAt = now;
             duration = Math.Max(0f, seconds);
-            activated = duration > 0f;
+            activated = requiresExplicitStop || duration > 0f;
             this.requiresExplicitStop = requiresExplicitStop;
         }
 

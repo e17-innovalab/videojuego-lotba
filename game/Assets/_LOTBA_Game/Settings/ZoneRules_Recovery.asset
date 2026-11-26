@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eb817a79730006d4d919d51c52f2f0bb, type: 3}
+  m_Name: ZoneRules_Recovery
+  m_EditorClassIdentifier: Lotba.Game::Lotba.Game.ZoneRules
+  allowCommonGems: 0
+  allowPinkGems: 0
+  allowLetters: 0
+  allowElevatedEncounters: 1
+  allowProfileObstacles: 1
+  obstacleIntensityMultiplier: 1.7
+  gemIntensityMultiplier: 0
+  minimumObstacleSpacing: 12
+  encounterProfile: {fileID: 11400000, guid: 2c85f45a0c8b4b7d9b74cbbf01f37950, type: 2}
+  recoveryAerialSet: {fileID: 11400000, guid: c8d73f4e1a264f7d8be53b4f5a96d4c2, type: 2}

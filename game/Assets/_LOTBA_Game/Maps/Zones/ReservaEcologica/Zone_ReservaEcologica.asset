@@ -17,6 +17,7 @@ MonoBehaviour:
   landmark: {fileID: 0}
   zoneBackdrop: {fileID: 1000, guid: d1c8628335c34ce1b0f8dd83de0de731, type: 3}
   roadMaterial: {fileID: 2100000, guid: bdb8c39df2c344ea8c01000000000005, type: 2}
+  welcomeSignMaterial: {fileID: 2100000, guid: bdb8c39df2c344ea8c0100000000000e, type: 2}
   obstacles: {fileID: 11400000, guid: 2dc20dc1ae5d4a5d90e7ab7497eb6968, type: 2}
   landmarkDistance: 115
   sky: {r: 0.37, g: 0.71, b: 0.89, a: 1}

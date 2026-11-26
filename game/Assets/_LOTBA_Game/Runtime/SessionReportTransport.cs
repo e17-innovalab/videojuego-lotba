@@ -17,6 +17,7 @@ namespace Lotba.Game
         public const string SessionsRoute = "/api/v1/sessions";
         public const int MaximumPayloadBytes = 2 * 1024 * 1024;
         public const float RetryCooldownSeconds = 45f;
+        public const float OnlineRetryIntervalSeconds = 15f;
         public SessionDeliveryStore Store { get; private set; }
         public string BaseUrl { get; private set; }
         public string ActiveReport { get; private set; }
@@ -28,6 +29,7 @@ namespace Lotba.Game
         public event Action Changed;
         private bool healthCheck;
         private bool draining;
+        private bool wasOnline;
         private readonly Queue<DeliveryRequest> requests = new Queue<DeliveryRequest>();
         private readonly HashSet<string> queued = new HashSet<string>();
         private readonly Dictionary<string, float> destinationRetryAfter = new Dictionary<string, float>();
@@ -50,7 +52,22 @@ namespace Lotba.Game
 #endif
         }
 
-        private void Start() => QueueStartupPending();
+        private void Start()
+        {
+            wasOnline = HasNetworkConnectivity();
+            QueueStartupPending();
+            StartCoroutine(RetryPendingWhenOnline());
+        }
+
+        private IEnumerator RetryPendingWhenOnline()
+        {
+            var wait = new WaitForSecondsRealtime(OnlineRetryIntervalSeconds);
+            while (true)
+            {
+                yield return wait;
+                RetryPendingIfReady();
+            }
+        }
 
         private void OnApplicationFocus(bool hasFocus)
         {
@@ -64,6 +81,7 @@ namespace Lotba.Game
 
         private void QueueStartupPending()
         {
+            if (Store == null) return;
             try
             {
                 foreach (string path in Store.Reports())
@@ -84,7 +102,17 @@ namespace Lotba.Game
 
         public void RetryPendingIfReady()
         {
-            if (!HasNetworkConnectivity()) return;
+            if (Store == null) return;
+            if (!HasNetworkConnectivity())
+            {
+                wasOnline = false;
+                return;
+            }
+            if (!wasOnline)
+            {
+                wasOnline = true;
+                destinationRetryAfter.Clear();
+            }
             bool anyQueued = false;
             try
             {
@@ -97,10 +125,16 @@ namespace Lotba.Game
                         TryBindOrphanReport(path, record);
                         foreach (var delivery in record.deliveries)
                         {
-                            if (delivery.status == "pending" && !IsDestinationInCooldown(delivery.destination))
+                            if (delivery.status == "pending" &&
+                                !string.IsNullOrEmpty(delivery.destination) &&
+                                !IsDestinationInCooldown(delivery.destination))
                             {
-                                Enqueue(path, delivery.destination);
-                                anyQueued = true;
+                                var request = new DeliveryRequest { path = path, destination = delivery.destination };
+                                if (!queued.Contains(request.Key))
+                                {
+                                    Enqueue(path, delivery.destination);
+                                    anyQueued = true;
+                                }
                             }
                         }
                     }
@@ -162,7 +196,9 @@ namespace Lotba.Game
                 Notify("Partida guardada localmente.");
                 if (delivery != null)
                 {
-                    if (!HasNetworkConnectivity() || IsDestinationInCooldown(delivery.destination))
+                    bool online = HasNetworkConnectivity();
+                    if (!online) wasOnline = false;
+                    if (!online || IsDestinationInCooldown(delivery.destination))
                         Notify("Partida pendiente. Se reintentará automáticamente al recuperar conexión.");
                     else
                     {
@@ -348,7 +384,11 @@ namespace Lotba.Game
                     delivery.status = !string.IsNullOrEmpty(delivery.deliveredAtUtc) ? "delivered" : retry ? "pending" : "rejected";
                     delivery.lastError = "HTTP " + code + ": " +
                         (failure ?? request.error ?? "Respuesta sin confirmación válida para este runId.");
-                    if (retry) destinationRetryAfter[delivery.destination] = Time.realtimeSinceStartup + RetryCooldownSeconds;
+                    if (retry)
+                    {
+                        destinationRetryAfter[delivery.destination] = Time.realtimeSinceStartup + RetryCooldownSeconds;
+                        if (!HasNetworkConnectivity()) wasOnline = false;
+                    }
                 }
                 TryWrite(path, record);
             }

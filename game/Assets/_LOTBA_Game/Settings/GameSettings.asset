@@ -12,6 +12,37 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f2c7bfd5218df6f4ebb04055bb2d661a, type: 3}
   m_Name: GameSettings
   m_EditorClassIdentifier: Lotba.Game::Lotba.Game.GameSettings
+  transitions:
+    clearApproachMetres: 96
+    clearExitMetres: 96
+    announcementMetres: 120
+    referenceApproachSpeed: 70
+    announcementSeconds: 3
+    rejoinSeconds: 1.25
+    automaticDeceleration: 16
+    transitionExitPatternSeconds: 2.2
+    minimumTransitionExitPatternMetres: 72
+    maximumTransitionExitPatternMetres: 180
+    recoveryBaseDistanceMetres: 500
+    recoveryMetresPer100Gems: 8
+    recoveryMetresPer1000Points: 8
+    recoveryProgressionMetres: 60
+    upgradeGemCostFraction: 0.8
+    upgradeGemCostRounding: 10
+    recoveryExitBreathMetres: 60
+    purchasedGemMultiplier: 2
+    purchasedPointMultiplier: 2
+    recoveryCollision:
+      pointFraction: 0.25
+      minimumPointLoss: 50
+      gemFraction: 0.5
+  transitionViewPrefab: {fileID: 6130112520800718616, guid: 6c05944b41dd5db47b74ed9bc114d8b8, type: 3}
+  decisionCountdownPrefab: {fileID: 100004, guid: a8573d0f85cb45a18b562bb9af449d10, type: 3}
+  decisionCountdownSeconds: 3
+  recoveryAnnouncementPrefab: {fileID: 300004, guid: 2f4b953d1c2d4ac8bfefb9832f1a2ab0, type: 3}
+  sectionGatePrefab: {fileID: 8128184567064933309, guid: 6fc7feb8916a0124a8e9bc7c2bf599b2, type: 3}
+  initialWelcomeSignDistance: 110
+  transitionExitPattern: {fileID: 11400000, guid: d139aa9e931286442a93f7305cc6d821, type: 2}
   initialSpeed: 28.5
   cruiseSpeed: 41.5
   accelerationTime: 95
@@ -19,24 +50,24 @@ MonoBehaviour:
   riderImpactShader: {fileID: 4800000, guid: d0754c08401847a0b4258c29d03d1d75, type: 3}
   braking:
     progressiveEnabled: 1
-    deceleration: 50
+    deceleration: 60
     releaseAcceleration: 12
   brakeEffectsPrefab: {fileID: 1516136291399072021, guid: abbfa796a49aaca40b066fdd92ea2a4a, type: 3}
   manualTurbo:
-    durationSeconds: 6
-    speedBonus: 6
-    gemMultiplier: 2
-    pointMultiplier: 2
+    durationSeconds: 5
+    speedBonus: 7
+    gemMultiplier: 1
+    pointMultiplier: 1
   speedOfferTurbo:
     durationSeconds: 6
     speedBonus: 6
-    gemMultiplier: 2
-    pointMultiplier: 2
+    gemMultiplier: 1
+    pointMultiplier: 1
   recoveryTurbo:
-    durationSeconds: 6
-    speedBonus: 6
-    gemMultiplier: 2
-    pointMultiplier: 2
+    durationSeconds: 10
+    speedBonus: 10
+    gemMultiplier: 1
+    pointMultiplier: 1
   turboAuraShader: {fileID: 4800000, guid: c60303daed4c47cbba59a4efa5c969c3, type: 3}
   turboAuraTexture: {fileID: 2800000, guid: cf4b287221636c642a8d4fcb4284a493, type: 3}
   turboAuraIntensity: 0
@@ -44,16 +75,21 @@ MonoBehaviour:
   boostCameraPullback: 1.3
   boostCameraFieldOfView: 12
   boostCameraBlendRate: 7
-  boostLineColor: {r: 0.68, g: 0.88, b: 1, a: 0.9}
-  boostLineCount: 32
-  boostLineSpeed: 4.8
-  boostLineLength: 0.3
-  boostLineWidth: 5
+  recoveryPortalContinuePrefab: {fileID: 6332740948503998542, guid: 9287fa9bb9e37794e85896628b327fc0, type: 3}
+  recoveryPortalRecoverPrefab: {fileID: 7102075809175602689, guid: 8dcbfda10f1d8de468c69ad2b15a7a29, type: 3}
+  recoveryBarrierPrefab: {fileID: 1541978643439349511, guid: cb88e88ca40249542b0dfcf87c57191c, type: 3}
+  enableRecoveryFog: 0
   recoveryCurtainPrefab: {fileID: 4904403769921249031, guid: a5f95583c13225049a16ec99428ce6ff, type: 3}
+  recoveryGemPrefab: {fileID: 1720567491562502469, guid: 6f3ba9bce064ebe41a45d0aa54cc01c0, type: 3}
+  recoveryGemPreviewDistance: 60
+  recoveryGemChaseHeight: 6
+  recoveryCelebrationPrefab: {fileID: 4567754396485161988, guid: a4e2489ae5caffb48997f9a389a78229, type: 3}
+  recoveryMissPrefab: {fileID: 4131392718214520758, guid: ba9c9d3c9da486840aaebb3bb8b837d3, type: 3}
   recoveryFogDifficulty:
     closestZ: 20
     referenceGems: 20
     referenceMetres: 5000
+  recoveryClearModulesAhead: 3
   laneChangeTime: 0.2
   initialPatternSpacing: 28
   finalPatternSpacing: 26
@@ -65,7 +101,7 @@ MonoBehaviour:
   minimumPatternLookAhead: 58
   preparePatternsBeyondVisibility: 1
   patternVisibilityMargin: 20
-  seed: 2710
+  seed: 1001
   depthBendEnabled: 1
   depthBendShader: {fileID: 4800000, guid: 3741174ce89046758e917aa0726183b0, type: 3}
   depthBendStart: 25

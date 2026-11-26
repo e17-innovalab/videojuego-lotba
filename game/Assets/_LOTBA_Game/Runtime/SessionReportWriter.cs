@@ -13,7 +13,7 @@ namespace Lotba.Game
 
         public static string DefaultDirectory => Path.Combine(Application.persistentDataPath, FolderName);
 
-        public static SessionReport Build(RunTelemetry telemetry)
+        public static SessionReport Build(RunTelemetry telemetry, SessionJourneyContext journey = null)
         {
             if (telemetry == null || telemetry.summary == null) return null;
 
@@ -34,17 +34,25 @@ namespace Lotba.Game
                     braking = telemetry.braking
                 },
                 summary = telemetry.summary,
+                recoveryOpportunities = new List<RunRecoveryOpportunity>(telemetry.recoveryOpportunities),
                 events = telemetry.events != null
                     ? new List<RunTelemetryEvent>(telemetry.events)
-                    : new List<RunTelemetryEvent>()
+                    : new List<RunTelemetryEvent>(),
+                journey = journey == null ? null : new SessionJourneyContext
+                {
+                    journeyId = journey.journeyId,
+                    schoolName = journey.schoolName,
+                    schoolShift = journey.schoolShift,
+                    schoolDate = journey.schoolDate
+                }
             };
         }
 
-        public static string Save(RunTelemetry telemetry, string directory = null)
+        public static string Save(RunTelemetry telemetry, string directory = null, SessionJourneyContext journey = null)
         {
             try
             {
-                SessionReport report = Build(telemetry);
+                SessionReport report = Build(telemetry, journey);
                 if (report == null) return null;
 
                 string targetDirectory = string.IsNullOrWhiteSpace(directory) ? DefaultDirectory : directory;

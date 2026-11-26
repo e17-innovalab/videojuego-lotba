@@ -32,6 +32,26 @@ namespace Lotba.Game
                 .WhereReportFiles()
             : Array.Empty<string>();
 
+        public void CountJourney(string journeyId, out int total, out int delivered, out int pending)
+        {
+            total = delivered = pending = 0;
+            if (string.IsNullOrWhiteSpace(journeyId)) return;
+            foreach (string path in Reports())
+            {
+                try
+                {
+                    var report = JsonUtility.FromJson<SessionReport>(File.ReadAllText(path));
+                    if (report?.journey?.journeyId != journeyId) continue;
+                    total++;
+                    var record = Read(path);
+                    bool wasDelivered = record.deliveries.Exists(item => item.status == "delivered");
+                    if (wasDelivered) delivered++;
+                    else pending++;
+                }
+                catch (Exception ex) { Debug.LogWarning("[Journey] No se pudo contar un reporte: " + ex.Message); }
+            }
+        }
+
         public SessionDeliveryRecord Read(string path)
         {
             if (File.Exists(RecordPath(path)))
