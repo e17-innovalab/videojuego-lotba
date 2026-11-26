@@ -5293,7 +5293,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1956377665526365218
 RectTransform:
   m_ObjectHideFlags: 0
@@ -6940,8 +6940,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: 0, y: -82}
-  m_SizeDelta: {x: 0, y: 70}
+  m_AnchoredPosition: {x: 0, y: -120}
+  m_SizeDelta: {x: 0, y: 100}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!222 &3170062703891611379
 CanvasRenderer:
@@ -9333,7 +9333,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: -30, y: 0}
+  m_SizeDelta: {x: -20, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1141225399628226653
 CanvasRenderer:
@@ -9363,8 +9363,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "Para jugar, primero inici\xE1 sesi\xF3n en y configur\xE1 una jornada
-    indicando el colegio y el turno."
+  m_text: "Para jugar, primero inici\xE1 sesi\xF3n y configur\xE1 una jornada indicando
+    el colegio y el turno."
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 82ca6665cd188ed448581ad7273d4090, type: 2}
   m_sharedMaterial: {fileID: 1376847794955761614, guid: 82ca6665cd188ed448581ad7273d4090, type: 2}
@@ -9391,8 +9391,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 12
-  m_fontSizeBase: 12
+  m_fontSize: 16
+  m_fontSizeBase: 16
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
