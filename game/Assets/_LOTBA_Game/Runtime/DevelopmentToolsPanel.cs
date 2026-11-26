@@ -207,7 +207,15 @@ namespace Lotba.Game
             var record = transport.Store.Read(selected);
             var text = new StringBuilder().AppendLine($"Versión {report.metadata.gameVersion} · {RunTelemetry.SchemaLabel(report.metadata.schemaVersion)}")
                 .AppendLine($"{report.summary.timeSeconds:0.0} s activos · {report.events.Count} eventos · {new FileInfo(selected).Length / 1024f:0.0} KB")
-                .AppendLine("ID: " + record.runId).AppendLine()
+                .AppendLine("ID: " + record.runId);
+            if (report.journey != null)
+            {
+                text.AppendLine("Jornada: " + (string.IsNullOrWhiteSpace(report.journey.schoolName) ? "Sin colegio" : report.journey.schoolName));
+                text.AppendLine("Turno: " + (string.IsNullOrWhiteSpace(report.journey.schoolShift) ? "Sin turno" : report.journey.schoolShift));
+                text.AppendLine("Fecha: " + FormatJourneyDate(report.journey.schoolDate));
+            }
+            else text.AppendLine("Jornada: sin contexto (partida anterior o sin jornada activa).");
+            text.AppendLine()
                 .AppendLine($"{report.summary.score} puntos · {report.summary.gems} gemas · {report.summary.collisions} choques")
                 .AppendLine($"Final: {Ending(report.summary.ending)}").AppendLine();
             if (record.deliveries.Count == 0) text.AppendLine("Sin destino asignado.");
@@ -235,6 +243,7 @@ namespace Lotba.Game
             recordedMetrics.text = measured.ToString();
         }
 
+        private static string FormatJourneyDate(string value) => DateTime.TryParse(value, out var date) ? date.ToString("dd/MM/yyyy") : (string.IsNullOrWhiteSpace(value) ? "Sin fecha" : value);
         private static string DeliveryStatus(string value) => value == "delivered" ? "Entregada" : value == "rejected" ? "Rechazada" : "Pendiente";
         private static string Ending(string value) => value == "brake" ? "Frenado voluntario" : value == "overload" ? "Sobrecarga" : value == "route_complete" ? "Recorrido completado" : value;
         private static string FriendlyMessage(string value)
