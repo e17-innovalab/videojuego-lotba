@@ -49,7 +49,44 @@ namespace Lotba.Game
 #endif
         }
 
-        private void Start() => QueueStartupPending();
+        private void Start()
+        {
+            QueueStartupPending();
+            StartCoroutine(RetryPendingWhenOnline());
+        }
+
+        private IEnumerator RetryPendingWhenOnline()
+        {
+            var wait = new WaitForSecondsRealtime(15f);
+            while (true)
+            {
+                yield return wait;
+                if (Application.internetReachability == NetworkReachability.NotReachable) continue;
+                QueuePendingReports();
+            }
+        }
+
+        private void QueuePendingReports()
+        {
+            if (Store == null) return;
+            try
+            {
+                foreach (string path in Store.Reports())
+                {
+                    try
+                    {
+                        foreach (var delivery in Store.Read(path).deliveries)
+                        {
+                            if (delivery.status != "pending" || string.IsNullOrEmpty(delivery.destination)) continue;
+                            unavailableDestinations.Remove(delivery.destination);
+                            Enqueue(path, delivery.destination);
+                        }
+                    }
+                    catch (Exception ex) { Debug.LogWarning("[Telemetry] " + ex.Message); }
+                }
+            }
+            catch (Exception ex) { Notify("No se pudo leer la cola: " + ex.Message); }
+        }
 
         private void QueueStartupPending()
         {

@@ -13,6 +13,7 @@ namespace Lotba.Game
         [SerializeField] private DeviceFeedbackAndInput devices;
         private RunSession session;
         private SessionReportTransport reportTransport;
+        private JourneySession journeySession;
         private float nextReportSaveAttempt;
         private bool startRequested, brakeRequested, jumpRequested, pauseRequested, menuRequested, sessionReportSaved;
         private bool overloadRequested;
@@ -35,6 +36,8 @@ namespace Lotba.Game
         private void Awake()
         {
             reportTransport = gameObject.AddComponent<SessionReportTransport>();
+            journeySession = JourneySessionStore.Load();
+            hud.InitializeJourneyAdmin(reportTransport, journeySession, ContinueJourney, CloseJourney);
             Application.targetFrameRate = Application.platform == RuntimePlatform.WebGLPlayer ? -1 : 60;
             muted = PlayerPrefs.GetInt("Lotba.CityRush.Muted", 0) != 0;
             InitializeQuality();
@@ -44,7 +47,7 @@ namespace Lotba.Game
             world.ConfigureDepthBend(IsHighQuality);
             world.ConfigurePickupEffects(UseBoostCamera);
             world.ConfigureGemGlow(IsHighQuality);
-            hud.StartRequested += RequestStart; hud.BrakeRequested += RequestBrake;
+            hud.StartRequested += RequestStart; hud.JourneyAdminRequested += hud.OpenJourneyAdmin; hud.BrakeRequested += RequestBrake;
             hud.PauseRequested += RequestPause; hud.MenuRequested += RequestMenu;
             hud.SoundRequested += ToggleSound; hud.SettingsRequested += OpenSettings;
             hud.MusicVolumeRequested += audioFeedback.SetMusicLevel;
@@ -243,7 +246,7 @@ namespace Lotba.Game
             if (session.State == RunState.Finished && !sessionReportSaved && Time.unscaledTime >= nextReportSaveAttempt)
             {
                 nextReportSaveAttempt = Time.unscaledTime + 5f;
-                string reportPath = SessionReportWriter.Save(session.Telemetry);
+                string reportPath = SessionReportWriter.Save(session.Telemetry, journey: journeySession?.Snapshot());
                 sessionReportSaved = reportPath != null;
                 if (sessionReportSaved) reportTransport.TrackSaved(reportPath);
             }
@@ -321,7 +324,16 @@ namespace Lotba.Game
             audioFeedback.PlayLetterPickup();
             if (complete) audioFeedback.PlayWordCompleted();
         }
-        private void RequestStart() => startRequested = true;
+        private void RequestStart()
+        {
+            journeySession = JourneySessionStore.Load();
+            if (journeySession == null)
+            {
+                hud.OpenJourneyAdmin();
+                return;
+            }
+            startRequested = true;
+        }
         private void RequestBrake() => brakeRequested = true;
         public void RequestOverloadEnd() => overloadRequested = true;
         private void ActivateTurbo()
@@ -348,6 +360,15 @@ namespace Lotba.Game
         }
         private void RequestPause() { if (!hud.SettingsOpen) pauseRequested = true; }
         private void RequestMenu() => menuRequested = true;
+        private void ContinueJourney()
+        {
+            journeySession = JourneySessionStore.Load();
+            hud.CloseJourneyAdmin();
+        }
+        private void CloseJourney()
+        {
+            journeySession = JourneySessionStore.Load();
+        }
         private void RequestLane(int direction) => laneRequested = direction;
         private void OpenSettings()
         {
@@ -412,7 +433,7 @@ namespace Lotba.Game
         private void OnDestroy()
         {
             if (hud == null) return;
-            hud.StartRequested -= RequestStart; hud.BrakeRequested -= RequestBrake;
+            hud.StartRequested -= RequestStart; hud.JourneyAdminRequested -= hud.OpenJourneyAdmin; hud.BrakeRequested -= RequestBrake;
             hud.PauseRequested -= RequestPause; hud.MenuRequested -= RequestMenu;
             hud.SoundRequested -= ToggleSound; hud.SettingsRequested -= OpenSettings;
             hud.MusicVolumeRequested -= audioFeedback.SetMusicLevel;

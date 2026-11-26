@@ -10,6 +10,16 @@ namespace Lotba.Game
         public RunTelemetrySummary summary;
         public List<RunTelemetryEvent> events = new List<RunTelemetryEvent>();
         public List<RunRecoveryOpportunity> recoveryOpportunities = new List<RunRecoveryOpportunity>();
+        public SessionJourneyContext journey;
+    }
+
+    [Serializable]
+    public sealed class SessionJourneyContext
+    {
+        public string journeyId;
+        public string schoolName;
+        public string schoolShift;
+        public string schoolDate;
     }
 
     [Serializable]

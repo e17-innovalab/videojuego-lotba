@@ -8,6 +8,7 @@ namespace Lotba.Game
     {
         [SerializeField] private TMPro.TMP_Text developmentLabel, identityFooter, buildVersion;
         [SerializeField] private GameObject readyPanel, pausePanel, resultPanel, raceHud, controls, settingsPanel;
+        [SerializeField] private GameObject readyMenuButtons;
         [SerializeField] private UnityEngine.UI.Button start, retry, menu, pause, resume, brake, pauseMenu, exit;
         [SerializeField] private UnityEngine.UI.Button[] configurationButtons;
         [SerializeField] private UnityEngine.UI.Button closeSettings, soundButton, vibrationButton;
@@ -75,9 +76,12 @@ namespace Lotba.Game
         public void ClearBrakeHold() => brakeHoldInput?.Clear();
         public bool SettingsOpen { get; private set; }
         [SerializeField] private RunTelemetryPanel telemetryPanel;
+        [SerializeField] private JourneyAdminPanel journeyAdminPanel;
+        [SerializeField] private UnityEngine.UI.Button journeyAdminButton;
         public bool TelemetryOpen => telemetryPanel != null && telemetryPanel.IsOpen;
+        public bool JourneyAdminOpen => journeyAdminPanel != null && journeyAdminPanel.gameObject.activeInHierarchy;
         public void CloseTelemetry() => telemetryPanel?.Close();
-        public event Action StartRequested, MenuRequested, PauseRequested, BrakeRequested, SoundRequested, SettingsRequested, VibrationRequested;
+        public event Action StartRequested, JourneyAdminRequested, MenuRequested, PauseRequested, BrakeRequested, SoundRequested, SettingsRequested, VibrationRequested;
         public event Action<int> QualityRequested;
         public event Action TurboRequested;
         public event Action UiClicked;
@@ -111,6 +115,7 @@ namespace Lotba.Game
             availableGemIcon = paceCardGemIcon.sprite;
             BindRanking();
             telemetryPanel.Bind();
+            if (journeyAdminButton != null) journeyAdminButton.onClick.AddListener(() => JourneyAdminRequested?.Invoke());
             previousQuality.onClick.AddListener(() => QualityRequested?.Invoke(-1));
             keepSpeedButton.onClick.AddListener(() => SpeedChosen?.Invoke(false));
             increaseSpeedButton.onClick.AddListener(() => SpeedChosen?.Invoke(true));
@@ -315,7 +320,15 @@ namespace Lotba.Game
             wordBanner.anchoredPosition = new Vector2(wordBannerVisiblePosition.x,
                 Mathf.SmoothStep(hiddenY, wordBannerVisiblePosition.y, slide));
         }
-        public void OpenSettings() => SettingsOpen = true;
+        public void OpenSettings()
+        {
+            if (settingsPanel != null) settingsPanel.transform.SetAsLastSibling();
+            SettingsOpen = true;
+        }
+        public void InitializeJourneyAdmin(SessionReportTransport transport, JourneySession journey, Action continueAction, Action finishAction) =>
+            journeyAdminPanel?.Initialize(transport, journey, continueAction, finishAction);
+        public void OpenJourneyAdmin() => journeyAdminPanel?.Open();
+        public void CloseJourneyAdmin() => journeyAdminPanel?.CloseToMenu();
         public void SetQuality(string label, bool canChange)
         {
             qualityLabel.text = label;
@@ -335,7 +348,17 @@ namespace Lotba.Game
             bool finished = session.State == RunState.Finished;
             bool openingEnding = finished && !endingBackground.gameObject.activeSelf;
             if (finished) SettingsOpen = false;
-            readyPanel.SetActive(session.State == RunState.Ready && !SettingsOpen && !RankingOpen);
+            bool ready = session.State == RunState.Ready;
+            bool showReadyMenu = ready && !SettingsOpen && !RankingOpen && !JourneyAdminOpen;
+            readyPanel.SetActive(ready);
+            if (start != null) start.gameObject.SetActive(showReadyMenu);
+            if (readyMenuButtons != null) readyMenuButtons.SetActive(showReadyMenu);
+            if (journeyAdminButton != null) journeyAdminButton.gameObject.SetActive(showReadyMenu);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD || LOTBA_DEVELOPMENT_TOOLS
+            if (developmentLauncher != null) developmentLauncher.SetActive(showReadyMenu);
+#else
+            if (developmentLauncher != null) developmentLauncher.SetActive(false);
+#endif
             bool showPause = session.State == RunState.Paused && !SettingsOpen;
             bool showOffer = running && session.OfferPending && !DecisionCountdownVisible;
             pausePanel.SetActive(showPause);
