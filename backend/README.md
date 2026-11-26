@@ -109,17 +109,19 @@ npm run dev:supabase
 
 ## 6. Formato `SessionReport`
 
-Cada reporte contiene tres bloques principales:
+Cada reporte contiene tres bloques obligatorios y dos opcionales incorporados en `v0.5.0`:
 
-- `metadata`
-- `summary`
-- `events`
+- `metadata` (obligatorio)
+- `summary` (obligatorio)
+- `events` (obligatorio)
+- `recoveryOpportunities` (opcional; ciclo completo por oportunidad de recupero en `v0.5.0`)
+- `journey` (opcional; contexto operativo de visita escolar: `journeyId`, `schoolName`, `schoolShift`, `schoolDate`)
 
 Detalles de versión y endings soportados:
 
 - `reportVersion = "1.0"`
-- Compatible con `schemaVersion = 13`, `19` y `20`
-- `gameVersion = "0.4.0"` en las pruebas de schema 19/20
+- Compatible con `schemaVersion = 13`, `19`, `20` temprano (`0.4.0` / `0.4.1`) y `20` definitivo (`0.5.0`)
+- Objetos vacíos serializados por `JsonUtility` de Unity se normalizan a `NULL` en PostgreSQL, diferenciando `NULL` (no disponible históricamente) de `0` (medido en cero)
 - Endings soportados:
   - `brake`
   - `route_complete`
@@ -127,9 +129,10 @@ Detalles de versión y endings soportados:
 
 ## 7. Base de datos PostgreSQL
 
-- **`public.sessions`**: una fila por partida.
+- **`public.sessions`**: una fila por partida (metadatos, jornada escolar `journey_*` y resumen agregado).
 - **`public.session_events`**: múltiples eventos asociados a una sesión (`sessions 1 → N session_events`).
-- **`public.ingest_session_report(jsonb)`**: RPC transaccional e idempotente encargada de insertar la sesión y todos sus eventos en una única transacción.
+- **`public.session_recovery_opportunities`**: oportunidades de recupero por sesión (`sessions 1 → N session_recovery_opportunities`).
+- **`public.ingest_session_report(jsonb)`**: RPC transaccional e idempotente encargada de insertar la sesión, sus eventos y sus oportunidades de recupero en una única transacción.
 
 ## 8. Migraciones SQL
 
@@ -151,42 +154,41 @@ Las migraciones ubicadas en `backend/sql/` **deben aplicarse en orden** y **no d
      - `vw_bi_behavior_metrics`
      - `vw_bi_speed_decisions`
 5. **`005_schema_v20_columns.sql`**
-   - Agrega columnas de `schemaVersion = 20` (`braking_*`, `recovery_boosts`, `brake_presses`, `brake_releases`, `brake_held_seconds` en `sessions`; `turbo_*` en `session_events`), actualiza `ingest_session_report` y extiende `vw_sessions_summary` y `vw_bi_session_overview` preservando compatibilidad con schema 13 y 19.
+   - Agrega columnas iniciales de `schemaVersion = 20` (`braking_*`, `recovery_boosts`, `brake_presses`, `brake_releases`, `brake_held_seconds` en `sessions`; `turbo_*` en `session_events`), actualiza `ingest_session_report` y extiende `vw_sessions_summary` y `vw_bi_session_overview`.
+6. **`006_schema_v20_recovery_and_journey.sql`**
+   - Completa el contrato `schemaVersion = 20` definitivo (`v0.5.0`): contexto de jornada escolar (`journey_*`), métricas de recupero y multiplicadores en `sessions`, campos nuevos por evento en `session_events`, tabla `session_recovery_opportunities`, normalización de objetos vacíos `JsonUtility`, diferenciación de decisiones en transición (`transition_decision_shown` y `recovery_entered` con `transition_choice`) y cuarta vista BI `vw_bi_recovery_opportunities`.
+7. **`007_bi_readonly_role.sql`**
+   - Encapsula las vistas bajo `lotba_bi_definer` (`NOLOGIN`, `security_invoker = false`) con RLS en las tres tablas base y configura `lotba_bi_readonly` (`LOGIN`, `CONNECTION LIMIT 10`, `default_transaction_read_only = on`) con acceso `SELECT` exclusivamente sobre las cuatro vistas BI (`vw_bi_session_overview`, `vw_bi_behavior_metrics`, `vw_bi_speed_decisions`, `vw_bi_recovery_opportunities`), sin almacenar ni alterar contraseñas existentes.
 
 ## 9. Seguridad
 
-- RPC `ingest_session_report(jsonb)` declarada con `SECURITY INVOKER`.
-- `anon` y `authenticated` sin permiso `EXECUTE` sobre la RPC.
+- RPC `ingest_session_report(jsonb)` declarada con `SECURITY INVOKER` y permisos `EXECUTE` restringidos a `service_role`.
+- RLS habilitado en `sessions`, `session_events` y `session_recovery_opportunities`; `anon` y `authenticated` sin privilegios sobre tablas, secuencias, funciones ni vistas.
 - `service_role` utilizado exclusivamente por el backend.
-- Vistas analíticas y de BI configuradas con `security_invoker = true`.
-- Vistas sin permiso `SELECT` para `PUBLIC`, `anon` ni `authenticated`.
+- El rol externo `lotba_bi_readonly` accede únicamente a las 4 vistas `vw_bi_*` mediante `lotba_bi_definer` (`CONNECTION LIMIT 10`, timeouts acotados y `default_transaction_read_only = on`). **Nunca exponer `SUPABASE_SECRET_KEY` ni credenciales en código o herramientas BI.**
 - El cliente Unity mantiene `redirectLimit = 0` en `POST /api/v1/sessions` por seguridad; la URL productiva configurada en `SessionReportTransport.DefaultBaseUrl` debe apuntar al origen **HTTPS canónico sin redirects** (`301`/`302`/`308`).
-- Para conectar un futuro dashboard externo (como Looker Studio), se recomienda crear un **rol PostgreSQL dedicado de solo lectura** (`read-only`). **No usar `service_role` directamente desde Looker Studio.**
 
-## 10. Tests y validaciones realizadas
+## 10. Tests y validaciones
 
-- Tests automatizados: `npm test` → **11/11 passing**.
-- Validación manual en Supabase DEV (`lotba-dev`):
-  - Ingesta real con `schemaVersion = 13`
-  - Ingesta real con `schemaVersion = 19`
-  - Idempotencia por `metadata.runId`
-  - Rollback transaccional ante fallo de eventos
-  - Ending `overload`
-  - Campos CASI / pink gems / pink dodge
-  - Analytics views (`003`)
-  - BI views (`004`)
-  - Compatibilidad histórica (valores `NULL` preservados en schema 13)
+- Tests automatizados del backend: `npm test`.
+- Validación en PostgreSQL local (instalación limpia `001`–`007` y simulación incremental sobre roles BI activos):
+  - Compatibilidad de `schemaVersion = 13`, `19`, `20` temprano y `20` definitivo (`v0.5.0`)
+  - Ingesta atómica e idempotente de `sessions`, `session_events` y `session_recovery_opportunities`
+  - Reconciliación entre payload JSON, tablas base y vistas analíticas/BI
+  - Verificación de permisos efectivos permitidos y denegados para `service_role`, `lotba_bi_readonly`, `anon` y `authenticated`
 
 ## 11. Estado del entorno
 
 - Proyecto Supabase utilizado hasta ahora: **DEV (`lotba-dev`)**.
 - Todavía **no existe deploy de producción** de este backend.
 - No publicar Secret Keys ni credenciales.
-- No almacenar ni enviar datos personales de alumnos.
+- No almacenar ni enviar datos personales de alumnos (únicamente el contexto institucional agregado de jornada/colegio/turno/fecha).
 
-## 12. Limitaciones actuales
+## 12. Limitaciones y observaciones de dominio conocidas
 
-- `recoveryAttempts` todavía no representa una mecánica completa de recovery.
-- El tiempo real de reacción durante una oferta de velocidad no se puede calcular porque el tiempo del juego se pausa mientras la oferta está abierta.
+- **Captura e inmutabilidad de `journey`:** en Unity (`GameController`), el contexto `journey` se exige al iniciar la partida y el botón de administración de jornada permanece oculto durante la carrera, pero el `Snapshot()` se toma al guardar el `SessionReport` al finalizar la partida (`RunState.Finished`). Una vez persistido en disco (`session_<runId>.json`), el archivo es inmutable ante cierres o cambios posteriores de jornada.
+- **Velocidad cero en transiciones (`transition_decision_shown`):** en `v0.5.0`, el corredor se detiene físicamente (`speedKmh = 0`) antes de registrar el evento de transición; por ello `speed_kmh_at_offer` se expone como `NULL` (no `0`) y la velocidad crucero previa se refleja en `base_speed_kmh_at_offer`.
+- **Ventana de salida de transición (`RecoverySourceSection` en `RunSession.Transitions.cs`):** cada sección de transición (`Transition = true`) se extiende unos metros después del punto `Stop` hasta cruzar `zone_entered` hacia el tramo jugable siguiente. Si ocurriera una colisión dentro de esa franja de salida, `AddLossToLedger` la registra en la sección de transición, mientras que la transición siguiente consulta únicamente `RecoverySourceSection` (retrocediendo sobre secciones `Transition = true`); por tanto, esa pérdida suma a `summary.pointsLost` / `gemsLost` pero no se ofrece en `trans-offer-*` (conviene tenerlo presente al contrastar `points_lost` total frente a `SUM(offered_points)`).
+- **Campo legado `summary.recoveryBoosts` en `v0.5.0`:** permanece en `0` en `v0.5.0` porque el rediseño de zonas de recupero lo reemplazó funcionalmente por `recoveryOffers`, `recoveryAttempts`, `recoverySucceeded`, `recoveryFailed`, `recoveryDeclined`, `recoveryInterrupted` y `recoveryOffersClosed`; la columna `recovery_boosts` se conserva para compatibilidad con reportes `v0.4.1`.
+- **Centinela `transitionSection = -1`:** dado que `JsonUtility` no serializa `int?` nulo, Unity emite `transitionSection = -1` en los eventos posteriores a la última transición planificada de la ruta (y el índice `>= 0` mientras exista una transición futura).
 - El near-miss de obstáculos comunes todavía no existe.
-- La identificación de localización/colegio todavía no está implementada.
